@@ -1,21 +1,22 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.IO;
+using BinaryExtensions;
 
 namespace ThimbleweedLibrary
 {
-    public class Bundle
+    public class BundleEntry
     {
-        private string FileName;
-        private string FileExtension;
-        private Int64 Offset;
-        private int Size;
-        private bool Compressed;
+        public string FileName;
+        public string FileExtension;
+        public Int64 Offset = -1;
+        public int Size = -1;
+        public bool Compressed;
     }
 
     public class BundleReader_ggpack
     {
-        private List<Bundle> BundleFiles;
+        public List<BundleEntry> BundleFiles;
         private string BundleFilename;
         private BinaryReader fileReader;
 
@@ -30,6 +31,9 @@ namespace ThimbleweedLibrary
             {
                 throw new ArgumentException("Invalid ggpack file!");
             }
+
+            BundleFiles = new List<BundleEntry>();
+            ParseFiles();
         }
 
         //Destructor
@@ -38,7 +42,7 @@ namespace ThimbleweedLibrary
             fileReader.Dispose();
         }
 
-        //Decrypt the first 4 bytes and see if its a valid bundle
+        //Decrypt the file records and see if its a valid bundle
         private bool DetectBundle()
         {
             uint DataOffset = fileReader.ReadUInt32();
@@ -128,8 +132,10 @@ namespace ThimbleweedLibrary
             return false;
         }
 
+
         public void ParseFiles()
         {
+            fileReader.SetPosition(0);
             uint DataOffset = fileReader.ReadUInt32();
             uint DataSize = fileReader.ReadUInt32();
             fileReader.BaseStream.Position = DataOffset;
@@ -141,24 +147,82 @@ namespace ThimbleweedLibrary
                     CopyStream(fileReader.BaseStream, decReader.BaseStream, Convert.ToInt32(DataSize));
                     ms.Position = 0;
 
-                    //Decode data records
+                    //Decode all data records
                     if (DecodeUnbreakableXor(ms) == false)
                     {
-                        return;
+                        throw new ArgumentException("Error parsing the packfile. Decode failed!");
                     }
-
-                    //using (FileStream file = new FileStream("c:/users/ben/desktop/file.bin", FileMode.Create, System.IO.FileAccess.Write))
-                    //    ms.CopyTo(file);
-                    //    ms.Position = 0;
 
                     //Check header is valid. First dword is 01,02,03,04
-                    if (decReader.ReadInt32() == 67305985)
+                    if (decReader.ReadInt32() != 67305985)
                     {
-                        return;
+                        throw new ArgumentException("Error parsing the packfile. Header invalid!");
                     }
-                    else
+
+                    //Seek past 4 unknown bytes = 01000000
+                    ms.Seek(4, SeekOrigin.Current);
+
+                    //Read and go to the start of records offset
+                    int RecordsStartOffset = decReader.ReadInt32() + 1;
+                    ms.Position = RecordsStartOffset;
+
+                    int EntryCounter = 0; //Used to determine if an entry is a filename/offset/size
+                    BundleEntry bundleEntry = new BundleEntry(); //
+                    while (true)
                     {
-                        return;
+                        // If we're got enough for 1 file entry. Ie all 3 fields have data in them. Then add the completed entry to the list and make a new one
+                        if (bundleEntry.FileName != null && bundleEntry.Offset != -1 && bundleEntry.Size != -1)
+                        {
+                            //Add the completed entry to the list
+                            BundleFiles.Add(bundleEntry);
+                            //Make a new one
+                            bundleEntry = new BundleEntry();
+                        }
+
+                        //Read the offset of the next string, go there, read it and come back.
+                        uint NextOffset = decReader.ReadUInt32();
+                        if (NextOffset == 4294967295) //FFFFFFFF - marker for end of records
+                        { break; }
+
+                        long OldPos = ms.Position;
+                        ms.Position = NextOffset;
+                        string TmpString = decReader.ReadStringASCIINullTerminated();
+                        ms.Position = OldPos;
+
+                        //Swallow these string markers
+                        if (TmpString == "files" || TmpString == "filename" || TmpString == "offset" || TmpString == "size")
+                        {
+                            continue;
+                        }
+
+                        int EntryType = EntryCounter % 3;
+                        EntryCounter += 1;
+
+                        if (EntryType == 0) //Filename
+                        {
+                            bundleEntry.FileName = TmpString;
+                            bundleEntry.FileExtension = Path.GetExtension(TmpString).TrimStart('.');
+                        }
+                        else if (EntryType == 1) //Offset
+                        {
+                            bundleEntry.Offset = Convert.ToInt32(TmpString);
+                        }
+                        else if (EntryType == 2) //Size
+                        {
+                            int TmpSize;
+                            if (Int32.TryParse(TmpString, out TmpSize) == false) //Some size entries are missing, so we've actually got a name entry here
+                           //Convert.ToInt32(TmpString) == 0) //Some size entries are missing, so we've actually got a name entry here
+                            {
+                                bundleEntry.FileName = TmpString;
+                                bundleEntry.FileExtension = Path.GetExtension(TmpString).TrimStart('.');
+                                EntryCounter += 1; //Inc it because there's a missing entry
+                                bundleEntry.Size = BundleFiles[BundleFiles.Count - 1].Size; //Use the size of the previous entry for now
+                            }
+                            else //There is a valid size entry
+                            {
+                                bundleEntry.Size = TmpSize;
+                            } 
+                        }
                     }
                 }
             }

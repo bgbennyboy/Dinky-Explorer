@@ -23,6 +23,17 @@ namespace ThimbleweedParkExplorer
                 return;
 
             BundleReader_ggpack Thimble = new BundleReader_ggpack(openFileDialog1.FileName);
+            //listView1.Items.Add(Thimble.BundleFiles[0].FileName);
+
+            foreach(BundleEntry bundleEntry in Thimble.BundleFiles)
+            {
+                ListViewItem item = new ListViewItem();
+                item.Text = bundleEntry.FileName;
+                item.SubItems.Add(bundleEntry.FileExtension);
+                item.SubItems.Add(bundleEntry.Offset.ToString());
+                item.SubItems.Add(bundleEntry.Size.ToString());
+                listView1.Items.Add(item);
+            }
         }
 
         private void log(string logText)
