@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using BinaryExtensions;
 
 namespace ThimbleweedLibrary
@@ -166,6 +167,99 @@ namespace ThimbleweedLibrary
                     int RecordsStartOffset = decReader.ReadInt32() + 1;
                     ms.Position = RecordsStartOffset;
 
+                    /*
+                    File records offsets section contains a series of offsets to the different information.
+                    Normal entries are 'Filename offset', 'DataOffset offset' and 'Size offset' - Seek to each offset and the value is stored as a string.
+                    However some filesize entries are missing and for 1 file in .ggpack2 the offset entry is missing.
+                    So you dont know until you seek to the offset if it is what you expect or if you're looking at a filename rather than the size/offset value you were expecting.
+                    This code works on the following basis:
+                        Filename entry is always there so just get that.
+                        If you read the offset value and it cant be converted to an integer - its a filename and there isnt an offset value. So add the file record you've got, seek back and start a new record.
+                        If you read the size value and it cant be converted to an integer - its a filename and there isnt an size value. So add the file record you've got, seek back and start a new record.
+                        If everything is fine and you've got a filename, offset and size then add the record and start a new one.
+                        After we've read everything - correct the sizes and offsets by looking at the difference between current and previous files.
+                    */
+                    BundleEntry bundleEntry = new BundleEntry();
+                    while (true) 
+                    {
+                        //Read the offset of the next string, go there, read it and come back.
+                        uint NextOffset = decReader.ReadUInt32();
+                        if (NextOffset == 4294967295) //0xFFFFFFFF - marker for end of all offset entries
+                        {
+                            break;
+                        }
+                        long OldPos = ms.Position;
+                        ms.Position = NextOffset;
+                        string TmpString = decReader.ReadStringASCIINullTerminated();
+                        ms.Position = OldPos;
+
+                        //Swallow these string markers
+                        if (TmpString == "files" || TmpString == "filename" || TmpString == "offset" || TmpString == "size")
+                        {
+                            continue;
+                        }
+
+                        //Check which one we are up to by seeing which is 'empty' file/offset/size
+                        if (bundleEntry.FileName == null)
+                        {
+                            bundleEntry.FileName = TmpString;
+                            bundleEntry.FileExtension = Path.GetExtension(TmpString).TrimStart('.');
+                        }
+                        else if (bundleEntry.Offset == -1)
+                        {
+                            int TmpInt = -1;
+                            if (Int32.TryParse(TmpString, out TmpInt) == false) //No offset value
+                            {
+                                bundleEntry.Offset = 0;
+                                bundleEntry.Size = 0;
+                                ms.Seek(-4, SeekOrigin.Current); //Seek back as we are probably looking at a filename now
+                                BundleFiles.Add(bundleEntry); //Add the completed entry to the list
+                                bundleEntry = new BundleEntry(); //Make a new one
+                                continue;
+                            }
+                            else
+                            {
+                                bundleEntry.Offset = TmpInt;
+                            }
+                        }
+                        else if (bundleEntry.Size == -1)
+                        {
+                            int TmpInt = -1;
+                            if (Int32.TryParse(TmpString, out TmpInt) == false) //No size value
+                            {  
+                                bundleEntry.Size = 0;
+                                ms.Seek(- 4, SeekOrigin.Current); //seek back as we are probably looking at a filename now
+                            }
+                            else
+                            {
+                                bundleEntry.Size = TmpInt;
+                            }
+                            BundleFiles.Add(bundleEntry); //Add the completed entry to the list
+                            bundleEntry = new BundleEntry(); //Make a new one
+                            continue;
+                        }
+                    }
+
+                    //Now correct missing sizes / offsets
+                    for (int i = 0; i < BundleFiles.Count; i++)
+                    {
+                        if (BundleFiles[i].Size == 0 )
+                        {
+                            if (i == BundleFiles.Count - 1) //Last entry - look at difference between data offset and its offset
+                            {
+                                BundleFiles[i].Size = Convert.ToInt32(DataOffset - BundleFiles[i].Offset); 
+                            }
+                            else
+                            BundleFiles[i].Size = Convert.ToInt32(BundleFiles[i+1].Offset - BundleFiles[i].Offset); //Look at difference between this and next offset
+                        }
+                        if (BundleFiles[i].Offset == 0) //So far only seen in 1 file in .ggpack2
+                        {
+                            BundleFiles[i].Offset = BundleFiles[i+1].Offset - BundleFiles[i-1].Offset;
+                        }
+                    }
+
+
+                    /*
                     int EntryCounter = 0; //Used to determine if an entry is a filename/offset/size
                     BundleEntry bundleEntry = new BundleEntry(); //
                     while (true)
@@ -195,6 +289,27 @@ namespace ThimbleweedLibrary
                             continue;
                         }
 
+                        //File records is weird, has missing size entries sometimes and even missing offset on ggpack2?
+                        bool isIntString = TmpString.All(char.IsDigit); //See if its actually an integer
+                        if (isIntString)
+                        {
+                            continue; 
+                        }
+
+                        OldPos = ms.Position;
+                        ms.Position = NextOffset;
+                        TmpString = decReader.ReadStringASCIINullTerminated();
+                        ms.Position = OldPos;
+                        bundleEntry.FileName = TmpString;
+
+                        isIntString = TmpString.All(char.IsDigit); //See if its actually an integer
+                        {
+                            continue; //add existing with no other fields
+                        }
+
+                        bundleEntry.Offset = Convert.ToInt32(TmpString);
+                        */
+                        /*
                         int EntryType = EntryCounter % 3;
                         EntryCounter += 1;
 
@@ -209,21 +324,22 @@ namespace ThimbleweedLibrary
                         }
                         else if (EntryType == 2) //Size
                         {
-                            int TmpSize;
-                            if (Int32.TryParse(TmpString, out TmpSize) == false) //Some size entries are missing, so we've actually got a name entry here
+                            int TmpSize = -1;
+                            if (Int32.TryParse(TmpString, out TmpSize) == false || TmpSize == 0) //Some size entries are missing, so we've actually got a name entry here
                            //Convert.ToInt32(TmpString) == 0) //Some size entries are missing, so we've actually got a name entry here
                             {
                                 bundleEntry.FileName = TmpString;
                                 bundleEntry.FileExtension = Path.GetExtension(TmpString).TrimStart('.');
                                 EntryCounter += 1; //Inc it because there's a missing entry
-                                bundleEntry.Size = BundleFiles[BundleFiles.Count - 1].Size; //Use the size of the previous entry for now
+                                bundleEntry.Size = 0; // BundleFiles[BundleFiles.Count - 1].Size; //Use the size of the previous entry for now
                             }
                             else //There is a valid size entry
                             {
                                 bundleEntry.Size = TmpSize;
                             } 
                         }
-                    }
+                        
+                    }*/
                 }
             }
         }

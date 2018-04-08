@@ -22,6 +22,8 @@ namespace ThimbleweedParkExplorer
             if (openFileDialog1.ShowDialog() != DialogResult.OK)
                 return;
 
+            listView1.Items.Clear();
+
             BundleReader_ggpack Thimble = new BundleReader_ggpack(openFileDialog1.FileName);
             //listView1.Items.Add(Thimble.BundleFiles[0].FileName);
 
