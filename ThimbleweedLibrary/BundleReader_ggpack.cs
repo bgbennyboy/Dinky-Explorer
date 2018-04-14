@@ -26,7 +26,7 @@ namespace ThimbleweedLibrary
         {
             BundleFilename = ResourceFile;
 
-            fileReader = new BinaryReader(File.Open(BundleFilename, FileMode.Open)); //free this in destructor
+            fileReader = new BinaryReader(File.Open(BundleFilename, FileMode.Open)); //free this in destructor -----------TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO 
 
             if (DetectBundle() == false)
             {
@@ -340,6 +340,42 @@ namespace ThimbleweedLibrary
                         }
                         
                     }*/
+                }
+            }
+        }
+
+
+        public void SaveFile(int FileNo, string PathAndFileName)
+        {
+            if (FileNo <0 || FileNo > BundleFiles.Count)
+                throw new ArgumentException(FileNo.ToString() + " Invalid file number! Save cancelled.");
+            if (BundleFiles[FileNo].Size == 0)
+                throw new ArgumentException(FileNo.ToString() + " Filesize <=0 Save cancelled.");
+
+            using (Stream file = File.Create(PathAndFileName))
+            {
+                SaveFileToStream(FileNo, file);
+            }
+        }
+
+        public void SaveFileToStream(int FileNo, Stream DestStream)
+        {
+            if (FileNo < 0 || FileNo > BundleFiles.Count)
+                throw new ArgumentException(FileNo.ToString() + " Invalid file number! Save cancelled.");
+            if (BundleFiles[FileNo].Size == 0)
+                throw new ArgumentException(FileNo.ToString() + " Filesize <=0 Save cancelled.");
+
+            fileReader.SetPosition(BundleFiles[FileNo].Offset);
+            using (MemoryStream ms = new MemoryStream())
+            {
+                CopyStream(fileReader.BaseStream, ms, BundleFiles[FileNo].Size);
+                ms.Position = 0;
+
+                //Decode data records
+                if (DecodeUnbreakableXor(ms) == true)
+                {
+                    ms.Position = 0;
+                    ms.CopyTo(DestStream);
                 }
             }
         }
