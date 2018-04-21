@@ -47,6 +47,7 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Decoders.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="BundleReader_ggpack.cs" />
   </ItemGroup>

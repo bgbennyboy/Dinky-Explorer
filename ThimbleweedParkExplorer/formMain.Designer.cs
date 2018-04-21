@@ -297,6 +297,7 @@
             this.objectListView1.UseCompatibleStateImageBehavior = false;
             this.objectListView1.UseFiltering = true;
             this.objectListView1.View = System.Windows.Forms.View.Details;
+            this.objectListView1.SelectedIndexChanged += new System.EventHandler(this.objectListView1_SelectedIndexChanged);
             // 
             // columnFilename
             // 
@@ -397,6 +398,7 @@
             this.textBoxPreview.Location = new System.Drawing.Point(0, 0);
             this.textBoxPreview.Multiline = true;
             this.textBoxPreview.Name = "textBoxPreview";
+            this.textBoxPreview.ScrollBars = System.Windows.Forms.ScrollBars.Both;
             this.textBoxPreview.Size = new System.Drawing.Size(269, 395);
             this.textBoxPreview.TabIndex = 0;
             // 

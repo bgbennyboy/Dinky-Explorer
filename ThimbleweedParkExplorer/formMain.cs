@@ -2,9 +2,11 @@
 using System;
 using System.Data;
 using System.Drawing;
+using System.IO;
 using System.Linq;
 using System.Windows.Forms;
 using ThimbleweedLibrary;
+
 
 //TODO
 //Save all files
@@ -125,13 +127,15 @@ namespace ThimbleweedParkExplorer
                 return;
             
             saveFileDialog1.Filter = "All Files|*.*";
-            saveFileDialog1.FileName = Thimble.BundleFiles[objectListView1.SelectedIndex].FileName;
+            saveFileDialog1.FileName = ((BundleEntry)objectListView1.SelectedObject).FileName;
 
             if (saveFileDialog1.ShowDialog() != DialogResult.OK)
                 return;
 
+            int index = Thimble.BundleFiles.IndexOf( (BundleEntry)objectListView1.SelectedObject );
+
             log("Saving file " + saveFileDialog1.FileName);
-            Thimble.SaveFile(objectListView1.SelectedIndex, saveFileDialog1.FileName);
+            Thimble.SaveFile(index, saveFileDialog1.FileName);
         }
 
         private void cueTextBox1_TextChanged(object sender, EventArgs e)
@@ -171,6 +175,35 @@ namespace ThimbleweedParkExplorer
 
             //Then make the clicked item checked
             ((ToolStripMenuItem)item).Checked = true;
+        }
+
+        private void objectListView1_SelectedIndexChanged(object sender, EventArgs e)
+        {
+            if (Thimble == null || Thimble.BundleFiles.Count == 0 || objectListView1.SelectedIndex == -1)
+                return;
+
+            int index = Thimble.BundleFiles.IndexOf((BundleEntry)objectListView1.SelectedObject);
+
+            switch (Thimble.BundleFiles[index].FileType)
+            {
+                case BundleEntry.FileTypes.Image:
+                    break;
+                case BundleEntry.FileTypes.Sound:
+                    break;
+                case BundleEntry.FileTypes.Text:
+                    using (MemoryStream ms = new MemoryStream())
+                    {
+                        Thimble.SaveFileToStream(index, ms);
+
+                        string[] tempArray = new string[] { }; //initialise an empty array of strings
+                        if (Decoders.ExtractText(ms, out tempArray) == true)
+                        {
+                            textBoxPreview.Lines = tempArray;
+                        }
+                    }
+                    break;
+
+            }
         }
     }
 

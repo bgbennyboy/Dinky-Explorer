@@ -124,7 +124,7 @@ namespace ThimbleweedLibrary
 
             //Loop through in blocks of 16 and xor the 6th and 7th bytes
             int i = 5;
-            while (i < buf_len)
+            while (i+1 < buf_len)
             {
                 buffer[i] = Convert.ToByte(buffer[i] ^ 0x0D);
                 buffer[i + 1] = Convert.ToByte(buffer[i + 1] ^ 0x0D);
@@ -408,7 +408,9 @@ namespace ThimbleweedLibrary
                     ms.Position = 0;
                     ms.CopyTo(DestStream);
                 }
+                DestStream.Position = 0;
             }
+
         }
 
         public static void CopyStream(Stream input, Stream output, int bytes)
