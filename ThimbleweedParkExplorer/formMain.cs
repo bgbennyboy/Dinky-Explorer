@@ -1,4 +1,5 @@
-﻿using System;
+﻿using BrightIdeasSoftware;
+using System;
 using System.Data;
 using System.Drawing;
 using System.IO;
@@ -8,6 +9,8 @@ using ThimbleweedLibrary;
 
 namespace ThimbleweedParkExplorer
 {
+
+
     public partial class formMain : Form
     {
         public BundleReader_ggpack Thimble;
@@ -48,8 +51,8 @@ namespace ThimbleweedParkExplorer
                 else
                     return "small_circle_white";
             };
-
         }
+
         private void btnOpen_Click(object sender, EventArgs e)
         {
             if (openFileDialog1.ShowDialog() != DialogResult.OK)
@@ -77,7 +80,7 @@ namespace ThimbleweedParkExplorer
             contextMenuView.Items.Clear();
 
             //Add all files and make it checked
-            var menuItem = contextMenuView.Items.Add("All files");
+            var menuItem = contextMenuView.Items.Add(Constants.AllFiles_ContextMenu);
             ((ToolStripMenuItem)menuItem).Checked = true;
 
             var entries = Thimble.BundleFiles.Select(x => x.FileExtension).Distinct().ToList();
@@ -117,6 +120,45 @@ namespace ThimbleweedParkExplorer
 
             log("Saving file " + saveFileDialog1.FileName);
             Thimble.SaveFile(objectListView1.SelectedIndex, saveFileDialog1.FileName);
+        }
+
+        private void cueTextBox1_TextChanged(object sender, EventArgs e)
+        {
+            objectListView1.ModelFilter = TextMatchFilter.Contains(objectListView1, cueTextBox1.Text);
+        }
+
+        void contextMenuView_ItemClicked(object sender, ToolStripItemClickedEventArgs e)
+        {
+            ToolStripItem item = e.ClickedItem;
+
+            //Clear the search box
+            cueTextBox1.Clear();
+
+            //Check for 'All Files' first
+            if (e.ClickedItem.Text == Constants.AllFiles_ContextMenu)
+            {
+                objectListView1.ModelFilter = null;
+            }
+            else
+            {
+                //Filter the listview by extension
+                objectListView1.ModelFilter = new ModelFilter(delegate (object x)
+                {
+                    return ((BundleEntry)x).FileExtension == item.Text;
+                });
+            }
+
+            //First remove check mark from any items that have it currently
+            for (int i = 0; i < contextMenuView.Items.Count; i++)
+            {
+                if (contextMenuView.Items[i] is ToolStripMenuItem) //The separator is a different type
+                {
+                    ((ToolStripMenuItem)contextMenuView.Items[i]).Checked = false;
+                }
+            }
+
+            //Then make the clicked item checked
+            ((ToolStripMenuItem)item).Checked = true;
         }
     }
 

@@ -83,7 +83,7 @@
             this.richTextBoxLog.Name = "richTextBoxLog";
             this.richTextBoxLog.ReadOnly = true;
             this.richTextBoxLog.ShowSelectionMargin = true;
-            this.richTextBoxLog.Size = new System.Drawing.Size(875, 68);
+            this.richTextBoxLog.Size = new System.Drawing.Size(854, 68);
             this.richTextBoxLog.TabIndex = 4;
             this.richTextBoxLog.Text = "Thimbleweed Park Explorer 0.1\nhttp://quickandeasysoftware.net";
             // 
@@ -101,7 +101,7 @@
             this.panel1.Margin = new System.Windows.Forms.Padding(4);
             this.panel1.MinimumSize = new System.Drawing.Size(0, 55);
             this.panel1.Name = "panel1";
-            this.panel1.Size = new System.Drawing.Size(875, 55);
+            this.panel1.Size = new System.Drawing.Size(854, 55);
             this.panel1.TabIndex = 0;
             // 
             // cueTextBox1
@@ -113,8 +113,9 @@
             this.cueTextBox1.Location = new System.Drawing.Point(434, 0);
             this.cueTextBox1.Margin = new System.Windows.Forms.Padding(4, 4, 4, 2);
             this.cueTextBox1.Name = "cueTextBox1";
-            this.cueTextBox1.Size = new System.Drawing.Size(441, 43);
+            this.cueTextBox1.Size = new System.Drawing.Size(420, 43);
             this.cueTextBox1.TabIndex = 13;
+            this.cueTextBox1.TextChanged += new System.EventHandler(this.cueTextBox1_TextChanged);
             // 
             // btnAbout
             // 
@@ -216,6 +217,7 @@
             this.toolStripMenuItem1});
             this.contextMenuView.Name = "contextMenuView";
             this.contextMenuView.Size = new System.Drawing.Size(96, 76);
+            this.contextMenuView.ItemClicked += new System.Windows.Forms.ToolStripItemClickedEventHandler(this.contextMenuView_ItemClicked);
             // 
             // testToolStripMenuItem
             // 
@@ -258,8 +260,8 @@
             this.splitContainer1.Panel2.Controls.Add(this.panelAudio);
             this.splitContainer1.Panel2.Controls.Add(this.panelBlank);
             this.splitContainer1.Panel2MinSize = 200;
-            this.splitContainer1.Size = new System.Drawing.Size(875, 397);
-            this.splitContainer1.SplitterDistance = 593;
+            this.splitContainer1.Size = new System.Drawing.Size(854, 397);
+            this.splitContainer1.SplitterDistance = 578;
             this.splitContainer1.SplitterWidth = 5;
             this.splitContainer1.TabIndex = 9;
             // 
@@ -285,10 +287,11 @@
             this.objectListView1.Margin = new System.Windows.Forms.Padding(4);
             this.objectListView1.Name = "objectListView1";
             this.objectListView1.ShowGroups = false;
-            this.objectListView1.Size = new System.Drawing.Size(591, 395);
+            this.objectListView1.Size = new System.Drawing.Size(576, 395);
             this.objectListView1.SmallImageList = this.imageList1;
             this.objectListView1.TabIndex = 6;
             this.objectListView1.UseCompatibleStateImageBehavior = false;
+            this.objectListView1.UseFiltering = true;
             this.objectListView1.View = System.Windows.Forms.View.Details;
             // 
             // columnFilename
@@ -336,7 +339,7 @@
             this.panelAudio.Location = new System.Drawing.Point(0, 0);
             this.panelAudio.Margin = new System.Windows.Forms.Padding(4);
             this.panelAudio.Name = "panelAudio";
-            this.panelAudio.Size = new System.Drawing.Size(275, 395);
+            this.panelAudio.Size = new System.Drawing.Size(269, 395);
             this.panelAudio.TabIndex = 1;
             // 
             // button1
@@ -359,7 +362,7 @@
             this.panelBlank.Location = new System.Drawing.Point(0, 0);
             this.panelBlank.Margin = new System.Windows.Forms.Padding(4);
             this.panelBlank.Name = "panelBlank";
-            this.panelBlank.Size = new System.Drawing.Size(275, 395);
+            this.panelBlank.Size = new System.Drawing.Size(269, 395);
             this.panelBlank.TabIndex = 0;
             // 
             // pictureBox1
@@ -369,7 +372,7 @@
             this.pictureBox1.Location = new System.Drawing.Point(0, 0);
             this.pictureBox1.Margin = new System.Windows.Forms.Padding(4);
             this.pictureBox1.Name = "pictureBox1";
-            this.pictureBox1.Size = new System.Drawing.Size(275, 395);
+            this.pictureBox1.Size = new System.Drawing.Size(269, 395);
             this.pictureBox1.SizeMode = System.Windows.Forms.PictureBoxSizeMode.CenterImage;
             this.pictureBox1.TabIndex = 0;
             this.pictureBox1.TabStop = false;
@@ -378,7 +381,7 @@
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.ClientSize = new System.Drawing.Size(875, 520);
+            this.ClientSize = new System.Drawing.Size(854, 520);
             this.Controls.Add(this.splitContainer1);
             this.Controls.Add(this.panel1);
             this.Controls.Add(this.richTextBoxLog);
