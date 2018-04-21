@@ -249,10 +249,14 @@ namespace ThimbleweedLibrary
                             continue;
                         }
                     }
-
+                   
                     //Now correct missing sizes / offsets
                     for (int i = 0; i < BundleFiles.Count; i++)
                     {
+                        if (BundleFiles[i].Offset == 0) //So far only seen in 1 file in .ggpack2
+                        {
+                            BundleFiles[i].Offset = BundleFiles[i - 1].Offset + BundleFiles[i - 1].Size; //BundleFiles[i + 1].Offset - BundleFiles[i - 1].Offset;
+                        }
                         if (BundleFiles[i].Size == 0 )
                         {
                             if (i == BundleFiles.Count - 1) //Last entry - look at difference between data offset and its offset
@@ -260,12 +264,10 @@ namespace ThimbleweedLibrary
                                 BundleFiles[i].Size = Convert.ToInt32(DataOffset - BundleFiles[i].Offset); 
                             }
                             else
-                            BundleFiles[i].Size = Convert.ToInt32(BundleFiles[i+1].Offset - BundleFiles[i].Offset); //Look at difference between this and next offset
+                                if (BundleFiles[i + 1].Offset > 0) //1 file in ggpack2 has no size and the file after has no offset
+                                    BundleFiles[i].Size = Convert.ToInt32(BundleFiles[i+1].Offset - BundleFiles[i].Offset); //Look at difference between this and next offset
                         }
-                        if (BundleFiles[i].Offset == 0) //So far only seen in 1 file in .ggpack2
-                        {
-                            BundleFiles[i].Offset = BundleFiles[i+1].Offset - BundleFiles[i-1].Offset;
-                        }
+
                     }
 
 
