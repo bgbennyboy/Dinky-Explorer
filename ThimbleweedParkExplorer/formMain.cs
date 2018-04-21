@@ -2,15 +2,27 @@
 using System;
 using System.Data;
 using System.Drawing;
-using System.IO;
 using System.Linq;
 using System.Windows.Forms;
 using ThimbleweedLibrary;
 
+//TODO
+//Save all files
+//Fix second packfile
+//More icons
+//Integrated text/image/sound
+//Saving of text/image/sound in different formats
+//Icon for the program
+//Default image for the right bar like in DF Explorer
+//Progress bar for saving all files
+//An about form
+//Send to hex editor button as usual
+//Decoding of wimpy files - tree files?
+
+
+
 namespace ThimbleweedParkExplorer
 {
-
-
     public partial class formMain : Form
     {
         public BundleReader_ggpack Thimble;
@@ -111,7 +123,7 @@ namespace ThimbleweedParkExplorer
         {
             if (Thimble == null || Thimble.BundleFiles.Count == 0 || objectListView1.SelectedIndex == -1)
                 return;
-
+            
             saveFileDialog1.Filter = "All Files|*.*";
             saveFileDialog1.FileName = Thimble.BundleFiles[objectListView1.SelectedIndex].FileName;
 

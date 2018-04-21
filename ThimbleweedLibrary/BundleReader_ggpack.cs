@@ -8,10 +8,19 @@ namespace ThimbleweedLibrary
 {
     public class BundleEntry
     {
+        public enum FileTypes
+        {
+            None,
+            Image,
+            Sound,
+            Text
+        };
+
         public string FileName;
         public string FileExtension;
         public Int64 Offset = -1;
         public int Size = -1;
+        public FileTypes FileType = FileTypes.None;
         public bool Compressed;
     }
 
@@ -35,6 +44,7 @@ namespace ThimbleweedLibrary
 
             BundleFiles = new List<BundleEntry>();
             ParseFiles();
+            UpdateFileTypes();
         }
 
         //Destructor
@@ -84,7 +94,7 @@ namespace ThimbleweedLibrary
         /// Takes a stream and decodes it, overwriting the contents. Doesnt actually check if valid data produced.
         /// </summary>
         /// <param name="DecodeStream"></param>
-        /// <returns>F</returns>
+        /// <returns></returns>
         private bool DecodeUnbreakableXor(MemoryStream DecodeStream)
         {
             var magic_bytes = new byte[] { 0x4F, 0xD0, 0xA0, 0xAC, 0x4A, 0x5B, 0xB9, 0xE5, 0x93, 0x79, 0x45, 0xA5, 0xC1, 0xCB, 0x31, 0x93 };  //0x5B - possibly 0x56?
@@ -344,6 +354,27 @@ namespace ThimbleweedLibrary
             }
         }
 
+        public void UpdateFileTypes()
+        {
+            for (int i = 0; i < BundleFiles.Count; i++)
+            {
+                switch (BundleFiles[i].FileExtension)
+                {
+                    case "ogg":
+                    case "wav":
+                        BundleFiles[i].FileType = BundleEntry.FileTypes.Sound;
+                        break;
+
+                    case "png":
+                        BundleFiles[i].FileType = BundleEntry.FileTypes.Image;
+                        break;
+
+                    case "txt":
+                        BundleFiles[i].FileType = BundleEntry.FileTypes.Text;
+                        break;
+                }
+            }
+        }
 
         public void SaveFile(int FileNo, string PathAndFileName)
         {

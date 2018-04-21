@@ -55,6 +55,8 @@
             this.panelBlank = new System.Windows.Forms.Panel();
             this.pictureBox1 = new System.Windows.Forms.PictureBox();
             this.saveFileDialog1 = new System.Windows.Forms.SaveFileDialog();
+            this.panelText = new System.Windows.Forms.Panel();
+            this.textBoxPreview = new System.Windows.Forms.TextBox();
             this.panel1.SuspendLayout();
             this.contextMenuView.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.splitContainer1)).BeginInit();
@@ -65,6 +67,7 @@
             this.panelAudio.SuspendLayout();
             this.panelBlank.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.pictureBox1)).BeginInit();
+            this.panelText.SuspendLayout();
             this.SuspendLayout();
             // 
             // openFileDialog1
@@ -257,6 +260,7 @@
             // 
             // splitContainer1.Panel2
             // 
+            this.splitContainer1.Panel2.Controls.Add(this.panelText);
             this.splitContainer1.Panel2.Controls.Add(this.panelAudio);
             this.splitContainer1.Panel2.Controls.Add(this.panelBlank);
             this.splitContainer1.Panel2MinSize = 200;
@@ -377,6 +381,25 @@
             this.pictureBox1.TabIndex = 0;
             this.pictureBox1.TabStop = false;
             // 
+            // panelText
+            // 
+            this.panelText.Controls.Add(this.textBoxPreview);
+            this.panelText.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.panelText.Location = new System.Drawing.Point(0, 0);
+            this.panelText.Margin = new System.Windows.Forms.Padding(4);
+            this.panelText.Name = "panelText";
+            this.panelText.Size = new System.Drawing.Size(269, 395);
+            this.panelText.TabIndex = 2;
+            // 
+            // textBoxPreview
+            // 
+            this.textBoxPreview.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.textBoxPreview.Location = new System.Drawing.Point(0, 0);
+            this.textBoxPreview.Multiline = true;
+            this.textBoxPreview.Name = "textBoxPreview";
+            this.textBoxPreview.Size = new System.Drawing.Size(269, 395);
+            this.textBoxPreview.TabIndex = 0;
+            // 
             // formMain
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
@@ -403,6 +426,8 @@
             this.panelAudio.PerformLayout();
             this.panelBlank.ResumeLayout(false);
             ((System.ComponentModel.ISupportInitialize)(this.pictureBox1)).EndInit();
+            this.panelText.ResumeLayout(false);
+            this.panelText.PerformLayout();
             this.ResumeLayout(false);
             this.PerformLayout();
 
@@ -435,6 +460,8 @@
         private System.Windows.Forms.SaveFileDialog saveFileDialog1;
         private System.Windows.Forms.Panel panelAudio;
         private System.Windows.Forms.Button button1;
+        private System.Windows.Forms.Panel panelText;
+        private System.Windows.Forms.TextBox textBoxPreview;
     }
 }
 
