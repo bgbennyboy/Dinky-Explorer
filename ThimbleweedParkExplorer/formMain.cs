@@ -7,10 +7,8 @@ using System.Linq;
 using System.Windows.Forms;
 using ThimbleweedLibrary;
 
-
 //TODO
 //Save all files
-//Fix second packfile
 //More icons
 //Integrated text/image/sound
 //Saving of text/image/sound in different formats
@@ -20,8 +18,6 @@ using ThimbleweedLibrary;
 //An about form
 //Send to hex editor button as usual
 //Decoding of wimpy files - tree files?
-
-
 
 namespace ThimbleweedParkExplorer
 {
@@ -36,7 +32,7 @@ namespace ThimbleweedParkExplorer
             //Set search box height
             cueTextBox1.AutoSize = false;
             cueTextBox1.Height = panel1.Height;
-            
+
             //Add 16x16 resources to the imagelist
             var list = ThimbleweedParkExplorer.Properties.Resources.ResourceManager.GetResourceSet(new System.Globalization.CultureInfo("en-us"), true, true);
             foreach (System.Collections.DictionaryEntry img in list)
@@ -57,7 +53,8 @@ namespace ThimbleweedParkExplorer
 
         private void InitializeListView()
         {
-            this.columnFilename.ImageGetter = delegate (object rowObject) {
+            this.columnFilename.ImageGetter = delegate (object rowObject)
+            {
                 BundleEntry b = (BundleEntry)rowObject;
                 //Song s = (Song)rowObject;
                 if (b.FileExtension == "ogg" || b.FileExtension == "wav")
@@ -102,11 +99,10 @@ namespace ThimbleweedParkExplorer
             entries.Insert(0, "-"); //Add the separator
 
             //Loop through and add the strings from the list
-            for (int i= 0; i < entries.Count; i++)
+            for (int i = 0; i < entries.Count; i++)
             {
                 contextMenuView.Items.Add(entries[i], Properties.Resources.small_circle_white);
             }
-
 
             //Now do the images
             for (int i = 0; i < contextMenuView.Items.Count; i++)
@@ -118,21 +114,20 @@ namespace ThimbleweedParkExplorer
 
         private void formMain_Load(object sender, EventArgs e)
         {
-     
         }
 
         private void btnSaveFile_Click(object sender, EventArgs e)
         {
             if (Thimble == null || Thimble.BundleFiles.Count == 0 || objectListView1.SelectedIndex == -1)
                 return;
-            
+
             saveFileDialog1.Filter = "All Files|*.*";
             saveFileDialog1.FileName = ((BundleEntry)objectListView1.SelectedObject).FileName;
 
             if (saveFileDialog1.ShowDialog() != DialogResult.OK)
                 return;
 
-            int index = Thimble.BundleFiles.IndexOf( (BundleEntry)objectListView1.SelectedObject );
+            int index = Thimble.BundleFiles.IndexOf((BundleEntry)objectListView1.SelectedObject);
 
             log("Saving file " + saveFileDialog1.FileName);
             Thimble.SaveFile(index, saveFileDialog1.FileName);
@@ -143,7 +138,7 @@ namespace ThimbleweedParkExplorer
             objectListView1.ModelFilter = TextMatchFilter.Contains(objectListView1, cueTextBox1.Text);
         }
 
-        void contextMenuView_ItemClicked(object sender, ToolStripItemClickedEventArgs e)
+        private void contextMenuView_ItemClicked(object sender, ToolStripItemClickedEventArgs e)
         {
             ToolStripItem item = e.ClickedItem;
 
@@ -188,8 +183,10 @@ namespace ThimbleweedParkExplorer
             {
                 case BundleEntry.FileTypes.Image:
                     break;
+
                 case BundleEntry.FileTypes.Sound:
                     break;
+
                 case BundleEntry.FileTypes.Text:
                     using (MemoryStream ms = new MemoryStream())
                     {
@@ -202,11 +199,7 @@ namespace ThimbleweedParkExplorer
                         }
                     }
                     break;
-
             }
         }
     }
-
-
-
 }
