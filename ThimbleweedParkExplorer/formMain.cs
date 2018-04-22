@@ -64,6 +64,8 @@ namespace ThimbleweedParkExplorer
                     return Properties.Resources.small_audio;
                 else if (b.FileType == BundleEntry.FileTypes.Text)
                     return Properties.Resources.small_text;
+                else if (b.FileType == BundleEntry.FileTypes.Image)
+                    return Properties.Resources.small_image;
                 else
                     return Properties.Resources.small_circle_white;
             };
@@ -77,15 +79,18 @@ namespace ThimbleweedParkExplorer
             if (Thimble != null) 
                 Thimble.Dispose();
             Thimble = new BundleReader_ggpack(openFileDialog1.FileName);
+            richTextBoxLog.Clear();
+            log("Opened " + openFileDialog1.SafeFileName);
             objectListView1.Items.Clear();
             objectListView1.SetObjects(Thimble.BundleFiles);
             objectListView1.AutoResizeColumns();
             AddFiletypeContextEntries();
+
         }
 
         private void log(string logText)
         {
-            richTextBoxLog.AppendText(Environment.NewLine + logText);
+            richTextBoxLog.AppendText(logText + Environment.NewLine);
         }
 
         private void btnView_Click(object sender, EventArgs e)
@@ -116,7 +121,12 @@ namespace ThimbleweedParkExplorer
             {
                 if (contextMenuView.Items[i].Text == "ogg" || contextMenuView.Items[i].Text == "wav")
                     contextMenuView.Items[i].Image = Properties.Resources.small_audio;
-                if (contextMenuView.Items[i].Text == "txt")
+                if (contextMenuView.Items[i].Text == "png")
+                    contextMenuView.Items[i].Image = Properties.Resources.small_image;
+                if (contextMenuView.Items[i].Text == "txt" || contextMenuView.Items[i].Text == "tsv" || 
+                    contextMenuView.Items[i].Text == "nut" || contextMenuView.Items[i].Text == "json" || 
+                    contextMenuView.Items[i].Text == "fnt" || contextMenuView.Items[i].Text == "byack" || 
+                    contextMenuView.Items[i].Text == "lip")
                     contextMenuView.Items[i].Image = Properties.Resources.small_text;
             }
         }

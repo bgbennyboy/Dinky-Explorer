@@ -296,6 +296,12 @@ namespace ThimbleweedLibrary
                         break;
 
                     case "txt":
+                    case "tsv":
+                    case "nut":
+                    case "json":
+                    case "fnt":
+                    case "byack":
+                    case "lip":
                         BundleFiles[i].FileType = BundleEntry.FileTypes.Text;
                         break;
                 }
@@ -322,9 +328,9 @@ namespace ThimbleweedLibrary
             if (BundleFiles[FileNo].Size == 0)
                 throw new ArgumentException(FileNo.ToString() + " Filesize <=0 Save cancelled.");
 
-            fileReader.Position = BundleFiles[FileNo].Offset;
             using (MemoryStream ms = new MemoryStream())
             {
+                fileReader.Position = BundleFiles[FileNo].Offset;
                 CopyStream(fileReader.BaseStream, ms, BundleFiles[FileNo].Size);
                 ms.Position = 0;
 
