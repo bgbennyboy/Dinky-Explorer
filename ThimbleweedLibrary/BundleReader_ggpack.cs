@@ -22,7 +22,7 @@ namespace ThimbleweedLibrary
         public FileTypes FileType = FileTypes.None;
     }
 
-    public class BundleReader_ggpack
+    public class BundleReader_ggpack: IDisposable
     {
         public List<BundleEntry> BundleFiles;
         private string BundleFilename;
@@ -45,11 +45,38 @@ namespace ThimbleweedLibrary
             UpdateFileTypes();
         }
 
+        private bool _disposed = false;
+
+        protected virtual void Dispose(bool disposing)
+        {
+            if (!_disposed)
+            {
+                if (disposing)
+                {
+                    // Dispose any managed objects
+                    // ...
+                    fileReader.Dispose();
+                }
+
+                // Now disposed of any unmanaged objects
+                // ...
+
+                _disposed = true;
+            }
+        }
+
+        public void Dispose()
+        {
+            Dispose(true);
+            GC.SuppressFinalize(this);
+        }
+
         //Destructor
         ~BundleReader_ggpack()
         {
-            fileReader.Dispose();
+            Dispose(false);
         }
+
 
         //Decrypt the file records and see if its a valid bundle
         private bool DetectBundle()

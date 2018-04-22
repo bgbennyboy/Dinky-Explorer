@@ -7,18 +7,7 @@
         /// </summary>
         private System.ComponentModel.IContainer components = null;
 
-        /// <summary>
-        /// Clean up any resources being used.
-        /// </summary>
-        /// <param name="disposing">true if managed resources should be disposed; otherwise, false.</param>
-        protected override void Dispose(bool disposing)
-        {
-            if (disposing && (components != null))
-            {
-                components.Dispose();
-            }
-            base.Dispose(disposing);
-        }
+
 
         #region Windows Form Designer generated code
 
@@ -86,9 +75,9 @@
             this.richTextBoxLog.Name = "richTextBoxLog";
             this.richTextBoxLog.ReadOnly = true;
             this.richTextBoxLog.ShowSelectionMargin = true;
-            this.richTextBoxLog.Size = new System.Drawing.Size(854, 68);
+            this.richTextBoxLog.Size = new System.Drawing.Size(894, 68);
             this.richTextBoxLog.TabIndex = 4;
-            this.richTextBoxLog.Text = "Thimbleweed Park Explorer 0.1\nhttp://quickandeasysoftware.net";
+            this.richTextBoxLog.Text = "Thimbleweed Park Explorer\nhttp://quickandeasysoftware.net";
             // 
             // panel1
             // 
@@ -104,7 +93,7 @@
             this.panel1.Margin = new System.Windows.Forms.Padding(4);
             this.panel1.MinimumSize = new System.Drawing.Size(0, 55);
             this.panel1.Name = "panel1";
-            this.panel1.Size = new System.Drawing.Size(854, 55);
+            this.panel1.Size = new System.Drawing.Size(894, 55);
             this.panel1.TabIndex = 0;
             // 
             // cueTextBox1
@@ -116,7 +105,7 @@
             this.cueTextBox1.Location = new System.Drawing.Point(434, 0);
             this.cueTextBox1.Margin = new System.Windows.Forms.Padding(4, 4, 4, 2);
             this.cueTextBox1.Name = "cueTextBox1";
-            this.cueTextBox1.Size = new System.Drawing.Size(420, 43);
+            this.cueTextBox1.Size = new System.Drawing.Size(460, 43);
             this.cueTextBox1.TabIndex = 13;
             this.cueTextBox1.TextChanged += new System.EventHandler(this.cueTextBox1_TextChanged);
             // 
@@ -225,7 +214,8 @@
             // testToolStripMenuItem
             // 
             this.testToolStripMenuItem.Name = "testToolStripMenuItem";
-            this.testToolStripMenuItem.Size = new System.Drawing.Size(95, 22);
+            this.testToolStripMenuItem.Size = new System.Drawing.Size(180, 22);
+            this.testToolStripMenuItem.Tag = "";
             this.testToolStripMenuItem.Text = "Test";
             // 
             // testToolStripMenuItem1
@@ -264,8 +254,8 @@
             this.splitContainer1.Panel2.Controls.Add(this.panelAudio);
             this.splitContainer1.Panel2.Controls.Add(this.panelBlank);
             this.splitContainer1.Panel2MinSize = 200;
-            this.splitContainer1.Size = new System.Drawing.Size(854, 397);
-            this.splitContainer1.SplitterDistance = 578;
+            this.splitContainer1.Size = new System.Drawing.Size(894, 397);
+            this.splitContainer1.SplitterDistance = 605;
             this.splitContainer1.SplitterWidth = 5;
             this.splitContainer1.TabIndex = 9;
             // 
@@ -291,7 +281,7 @@
             this.objectListView1.Margin = new System.Windows.Forms.Padding(4);
             this.objectListView1.Name = "objectListView1";
             this.objectListView1.ShowGroups = false;
-            this.objectListView1.Size = new System.Drawing.Size(576, 395);
+            this.objectListView1.Size = new System.Drawing.Size(603, 395);
             this.objectListView1.SmallImageList = this.imageList1;
             this.objectListView1.TabIndex = 6;
             this.objectListView1.UseCompatibleStateImageBehavior = false;
@@ -344,7 +334,7 @@
             this.panelText.Location = new System.Drawing.Point(0, 0);
             this.panelText.Margin = new System.Windows.Forms.Padding(4);
             this.panelText.Name = "panelText";
-            this.panelText.Size = new System.Drawing.Size(269, 395);
+            this.panelText.Size = new System.Drawing.Size(282, 395);
             this.panelText.TabIndex = 2;
             // 
             // textBoxPreview
@@ -354,7 +344,7 @@
             this.textBoxPreview.Multiline = true;
             this.textBoxPreview.Name = "textBoxPreview";
             this.textBoxPreview.ScrollBars = System.Windows.Forms.ScrollBars.Both;
-            this.textBoxPreview.Size = new System.Drawing.Size(269, 395);
+            this.textBoxPreview.Size = new System.Drawing.Size(282, 395);
             this.textBoxPreview.TabIndex = 0;
             // 
             // panelAudio
@@ -364,7 +354,7 @@
             this.panelAudio.Location = new System.Drawing.Point(0, 0);
             this.panelAudio.Margin = new System.Windows.Forms.Padding(4);
             this.panelAudio.Name = "panelAudio";
-            this.panelAudio.Size = new System.Drawing.Size(269, 395);
+            this.panelAudio.Size = new System.Drawing.Size(282, 395);
             this.panelAudio.TabIndex = 1;
             // 
             // button1
@@ -387,7 +377,7 @@
             this.panelBlank.Location = new System.Drawing.Point(0, 0);
             this.panelBlank.Margin = new System.Windows.Forms.Padding(4);
             this.panelBlank.Name = "panelBlank";
-            this.panelBlank.Size = new System.Drawing.Size(269, 395);
+            this.panelBlank.Size = new System.Drawing.Size(282, 395);
             this.panelBlank.TabIndex = 0;
             // 
             // pictureBox1
@@ -397,7 +387,7 @@
             this.pictureBox1.Location = new System.Drawing.Point(0, 0);
             this.pictureBox1.Margin = new System.Windows.Forms.Padding(4);
             this.pictureBox1.Name = "pictureBox1";
-            this.pictureBox1.Size = new System.Drawing.Size(269, 395);
+            this.pictureBox1.Size = new System.Drawing.Size(282, 395);
             this.pictureBox1.SizeMode = System.Windows.Forms.PictureBoxSizeMode.CenterImage;
             this.pictureBox1.TabIndex = 0;
             this.pictureBox1.TabStop = false;
@@ -406,7 +396,7 @@
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.ClientSize = new System.Drawing.Size(854, 520);
+            this.ClientSize = new System.Drawing.Size(894, 520);
             this.Controls.Add(this.splitContainer1);
             this.Controls.Add(this.panel1);
             this.Controls.Add(this.richTextBoxLog);
@@ -415,7 +405,6 @@
             this.Name = "formMain";
             this.StartPosition = System.Windows.Forms.FormStartPosition.CenterScreen;
             this.Text = "Thimbleweed Park Explorer";
-            this.Load += new System.EventHandler(this.formMain_Load);
             this.panel1.ResumeLayout(false);
             this.panel1.PerformLayout();
             this.contextMenuView.ResumeLayout(false);

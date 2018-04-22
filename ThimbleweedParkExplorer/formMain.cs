@@ -37,8 +37,8 @@ namespace ThimbleweedParkExplorer
             var list = ThimbleweedParkExplorer.Properties.Resources.ResourceManager.GetResourceSet(new System.Globalization.CultureInfo("en-us"), true, true);
             foreach (System.Collections.DictionaryEntry img in list)
             {
-                //log(img.Key.ToString());
                 //Use img.Value to get the bitmap
+                //log(img.Key.ToString());
                 var value = img.Value as Bitmap; //Only get images
                 if (value != null)
                 {
@@ -49,6 +49,9 @@ namespace ThimbleweedParkExplorer
 
             //Setup image delegates
             InitializeListView();
+
+            //Add info to log box
+            richTextBoxLog.Text = Constants.ProgName + " " + Constants.Version + Environment.NewLine + Constants.URL;
         }
 
         private void InitializeListView()
@@ -57,10 +60,12 @@ namespace ThimbleweedParkExplorer
             {
                 BundleEntry b = (BundleEntry)rowObject;
                 //Song s = (Song)rowObject;
-                if (b.FileExtension == "ogg" || b.FileExtension == "wav")
-                    return "small_audio";
+                if (b.FileType == BundleEntry.FileTypes.Sound)
+                    return Properties.Resources.small_audio;
+                else if (b.FileType == BundleEntry.FileTypes.Text)
+                    return Properties.Resources.small_text;
                 else
-                    return "small_circle_white";
+                    return Properties.Resources.small_circle_white;
             };
         }
 
@@ -69,6 +74,8 @@ namespace ThimbleweedParkExplorer
             if (openFileDialog1.ShowDialog() != DialogResult.OK)
                 return;
 
+            if (Thimble != null) 
+                Thimble.Dispose();
             Thimble = new BundleReader_ggpack(openFileDialog1.FileName);
             objectListView1.Items.Clear();
             objectListView1.SetObjects(Thimble.BundleFiles);
@@ -109,12 +116,11 @@ namespace ThimbleweedParkExplorer
             {
                 if (contextMenuView.Items[i].Text == "ogg" || contextMenuView.Items[i].Text == "wav")
                     contextMenuView.Items[i].Image = Properties.Resources.small_audio;
+                if (contextMenuView.Items[i].Text == "txt")
+                    contextMenuView.Items[i].Image = Properties.Resources.small_text;
             }
         }
 
-        private void formMain_Load(object sender, EventArgs e)
-        {
-        }
 
         private void btnSaveFile_Click(object sender, EventArgs e)
         {
@@ -200,6 +206,26 @@ namespace ThimbleweedParkExplorer
                     }
                     break;
             }
+        }
+
+        /// <summary>
+        /// Clean up any resources being used.
+        /// </summary>
+        /// <param name="disposing">true if managed resources should be disposed; otherwise, false.</param>
+        protected override void Dispose(bool disposing)
+        {
+            if (disposing)
+            {
+                if (components != null)
+                {
+                    components.Dispose();
+                }
+
+                // Dispose stuff here
+                if (Thimble != null)
+                    Thimble.Dispose();
+            }
+            base.Dispose(disposing);
         }
     }
 }
