@@ -1,4 +1,5 @@
 ﻿using BrightIdeasSoftware;
+using Microsoft.WindowsAPICodePack.Dialogs;
 using System;
 using System.Data;
 using System.Drawing;
@@ -8,8 +9,6 @@ using System.Windows.Forms;
 using ThimbleweedLibrary;
 
 //TODO
-//Save all files
-//More icons
 //Integrated text/image/sound
 //Saving of text/image/sound in different formats
 //Icon for the program
@@ -236,6 +235,31 @@ namespace ThimbleweedParkExplorer
                     Thimble.Dispose();
             }
             base.Dispose(disposing);
+        }
+
+        private void btnSaveAllFiles_Click(object sender, EventArgs e)
+        {
+            if (Thimble == null || Thimble.BundleFiles.Count == 0)
+                return;
+
+            using (var openFolder = new CommonOpenFileDialog()) 
+            {
+                openFolder.AllowNonFileSystemItems = true;
+                openFolder.Multiselect = false;
+                openFolder.IsFolderPicker = true;
+                openFolder.Title = "Select a folder";
+
+                if (openFolder.ShowDialog() != CommonFileDialogResult.Ok)
+                    return;
+
+                log("Saving all files...");
+
+                for (int i = 0; i < Thimble.BundleFiles.Count; i++)
+                    Thimble.SaveFile(i, Path.Combine(openFolder.FileName, Thimble.BundleFiles[i].FileName));
+
+                log("...done!");
+            }
+        
         }
     }
 }

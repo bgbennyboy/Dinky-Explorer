@@ -1,12 +1,12 @@
-﻿using System;
+﻿using Syroot.BinaryData;
+using System;
 using System.Collections.Generic;
 using System.IO;
-using Syroot.BinaryData;
 
 namespace ThimbleweedLibrary
 {
     public class BundleEntry
-    { 
+    {
         public enum FileTypes
         {
             None,
@@ -22,7 +22,7 @@ namespace ThimbleweedLibrary
         public FileTypes FileType = FileTypes.None;
     }
 
-    public class BundleReader_ggpack: IDisposable
+    public class BundleReader_ggpack : IDisposable
     {
         public List<BundleEntry> BundleFiles;
         private string BundleFilename;
@@ -77,7 +77,6 @@ namespace ThimbleweedLibrary
             Dispose(false);
         }
 
-
         //Decrypt the file records and see if its a valid bundle
         private bool DetectBundle()
         {
@@ -104,7 +103,6 @@ namespace ThimbleweedLibrary
                 else
                     return false;
             }
-    
         }
 
         /// <summary>
@@ -160,7 +158,6 @@ namespace ThimbleweedLibrary
             return false;
         }
 
-
         public void ParseFiles()
         {
             fileReader.Position = 0;
@@ -201,7 +198,7 @@ namespace ThimbleweedLibrary
                     After we've read everything - correct the sizes and offsets by looking at the difference between current and previous files.
                 */
                 BundleEntry bundleEntry = new BundleEntry();
-                while (true) 
+                while (true)
                 {
                     //Read the offset of the next string, go there, read it and come back.
                     uint NextOffset = decReader.ReadUInt32();
@@ -244,9 +241,9 @@ namespace ThimbleweedLibrary
                     {
                         int TmpInt = -1;
                         if (Int32.TryParse(TmpString, out TmpInt) == false) //No size value
-                        {  
+                        {
                             bundleEntry.Size = 0;
-                            decReader.Seek(- 4, SeekOrigin.Current); //seek back as we are probably looking at a filename now
+                            decReader.Seek(-4, SeekOrigin.Current); //seek back as we are probably looking at a filename now
                         }
                         else
                         {
@@ -258,7 +255,7 @@ namespace ThimbleweedLibrary
                         continue;
                     }
                 }
-                   
+
                 //Now correct missing sizes / offsets
                 for (int i = 0; i < BundleFiles.Count; i++)
                 {
@@ -266,15 +263,15 @@ namespace ThimbleweedLibrary
                     {
                         BundleFiles[i].Offset = BundleFiles[i - 1].Offset + BundleFiles[i - 1].Size; //BundleFiles[i + 1].Offset - BundleFiles[i - 1].Offset;
                     }
-                    if (BundleFiles[i].Size == 0 )
+                    if (BundleFiles[i].Size == 0)
                     {
                         if (i == BundleFiles.Count - 1) //Last entry - look at difference between data offset and its offset
                         {
-                            BundleFiles[i].Size = Convert.ToInt32(DataOffset - BundleFiles[i].Offset); 
+                            BundleFiles[i].Size = Convert.ToInt32(DataOffset - BundleFiles[i].Offset);
                         }
                         else
                             if (BundleFiles[i + 1].Offset > 0) //1 file in ggpack2 has no size and the file after has no offset
-                                BundleFiles[i].Size = Convert.ToInt32(BundleFiles[i+1].Offset - BundleFiles[i].Offset); //Look at difference between this and next offset
+                            BundleFiles[i].Size = Convert.ToInt32(BundleFiles[i + 1].Offset - BundleFiles[i].Offset); //Look at difference between this and next offset
                     }
                 }
             }
@@ -310,7 +307,7 @@ namespace ThimbleweedLibrary
 
         public void SaveFile(int FileNo, string PathAndFileName)
         {
-            if (FileNo <0 || FileNo > BundleFiles.Count)
+            if (FileNo < 0 || FileNo > BundleFiles.Count)
                 throw new ArgumentException(FileNo.ToString() + " Invalid file number! Save cancelled.");
             if (BundleFiles[FileNo].Size == 0)
                 throw new ArgumentException(FileNo.ToString() + " Filesize <=0 Save cancelled.");
@@ -342,7 +339,6 @@ namespace ThimbleweedLibrary
                 }
                 DestStream.Position = 0;
             }
-
         }
 
         public static void CopyStream(Stream input, Stream output, int bytes)
