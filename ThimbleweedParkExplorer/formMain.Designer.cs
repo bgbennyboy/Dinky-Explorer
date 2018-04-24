@@ -39,6 +39,8 @@
             this.columnSize = ((BrightIdeasSoftware.OLVColumn)(new BrightIdeasSoftware.OLVColumn()));
             this.columnOffset = ((BrightIdeasSoftware.OLVColumn)(new BrightIdeasSoftware.OLVColumn()));
             this.imageList1 = new System.Windows.Forms.ImageList(this.components);
+            this.panelImage = new System.Windows.Forms.Panel();
+            this.pictureBoxPreview = new System.Windows.Forms.PictureBox();
             this.panelText = new System.Windows.Forms.Panel();
             this.textBoxPreview = new System.Windows.Forms.TextBox();
             this.panelAudio = new System.Windows.Forms.Panel();
@@ -46,6 +48,8 @@
             this.panelBlank = new System.Windows.Forms.Panel();
             this.pictureBox1 = new System.Windows.Forms.PictureBox();
             this.saveFileDialog1 = new System.Windows.Forms.SaveFileDialog();
+            this.progressBar1 = new System.Windows.Forms.ProgressBar();
+            this.backgroundWorker1 = new System.ComponentModel.BackgroundWorker();
             this.panel1.SuspendLayout();
             this.contextMenuView.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.splitContainer1)).BeginInit();
@@ -53,6 +57,8 @@
             this.splitContainer1.Panel2.SuspendLayout();
             this.splitContainer1.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.objectListView1)).BeginInit();
+            this.panelImage.SuspendLayout();
+            ((System.ComponentModel.ISupportInitialize)(this.pictureBoxPreview)).BeginInit();
             this.panelText.SuspendLayout();
             this.panelAudio.SuspendLayout();
             this.panelBlank.SuspendLayout();
@@ -70,7 +76,7 @@
             this.richTextBoxLog.Dock = System.Windows.Forms.DockStyle.Bottom;
             this.richTextBoxLog.Font = new System.Drawing.Font("Segoe UI", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.richTextBoxLog.HideSelection = false;
-            this.richTextBoxLog.Location = new System.Drawing.Point(0, 452);
+            this.richTextBoxLog.Location = new System.Drawing.Point(0, 433);
             this.richTextBoxLog.Margin = new System.Windows.Forms.Padding(4);
             this.richTextBoxLog.Name = "richTextBoxLog";
             this.richTextBoxLog.ReadOnly = true;
@@ -125,6 +131,7 @@
             this.btnAbout.Text = "About";
             this.btnAbout.TextImageRelation = System.Windows.Forms.TextImageRelation.ImageAboveText;
             this.btnAbout.UseVisualStyleBackColor = true;
+            this.btnAbout.Click += new System.EventHandler(this.btnAbout_Click);
             // 
             // btnSaveAllFiles
             // 
@@ -251,11 +258,12 @@
             // 
             // splitContainer1.Panel2
             // 
+            this.splitContainer1.Panel2.Controls.Add(this.panelImage);
             this.splitContainer1.Panel2.Controls.Add(this.panelText);
             this.splitContainer1.Panel2.Controls.Add(this.panelAudio);
             this.splitContainer1.Panel2.Controls.Add(this.panelBlank);
             this.splitContainer1.Panel2MinSize = 200;
-            this.splitContainer1.Size = new System.Drawing.Size(894, 397);
+            this.splitContainer1.Size = new System.Drawing.Size(894, 378);
             this.splitContainer1.SplitterDistance = 605;
             this.splitContainer1.SplitterWidth = 5;
             this.splitContainer1.TabIndex = 9;
@@ -282,7 +290,7 @@
             this.objectListView1.Margin = new System.Windows.Forms.Padding(4);
             this.objectListView1.Name = "objectListView1";
             this.objectListView1.ShowGroups = false;
-            this.objectListView1.Size = new System.Drawing.Size(603, 395);
+            this.objectListView1.Size = new System.Drawing.Size(603, 376);
             this.objectListView1.SmallImageList = this.imageList1;
             this.objectListView1.TabIndex = 6;
             this.objectListView1.UseCompatibleStateImageBehavior = false;
@@ -328,6 +336,26 @@
             this.imageList1.ImageSize = new System.Drawing.Size(16, 16);
             this.imageList1.TransparentColor = System.Drawing.Color.Transparent;
             // 
+            // panelImage
+            // 
+            this.panelImage.Controls.Add(this.pictureBoxPreview);
+            this.panelImage.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.panelImage.Location = new System.Drawing.Point(0, 0);
+            this.panelImage.Margin = new System.Windows.Forms.Padding(4);
+            this.panelImage.Name = "panelImage";
+            this.panelImage.Size = new System.Drawing.Size(282, 376);
+            this.panelImage.TabIndex = 3;
+            // 
+            // pictureBoxPreview
+            // 
+            this.pictureBoxPreview.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.pictureBoxPreview.Location = new System.Drawing.Point(0, 0);
+            this.pictureBoxPreview.Name = "pictureBoxPreview";
+            this.pictureBoxPreview.Size = new System.Drawing.Size(282, 376);
+            this.pictureBoxPreview.SizeMode = System.Windows.Forms.PictureBoxSizeMode.CenterImage;
+            this.pictureBoxPreview.TabIndex = 0;
+            this.pictureBoxPreview.TabStop = false;
+            // 
             // panelText
             // 
             this.panelText.Controls.Add(this.textBoxPreview);
@@ -335,7 +363,7 @@
             this.panelText.Location = new System.Drawing.Point(0, 0);
             this.panelText.Margin = new System.Windows.Forms.Padding(4);
             this.panelText.Name = "panelText";
-            this.panelText.Size = new System.Drawing.Size(282, 395);
+            this.panelText.Size = new System.Drawing.Size(282, 376);
             this.panelText.TabIndex = 2;
             // 
             // textBoxPreview
@@ -345,7 +373,7 @@
             this.textBoxPreview.Multiline = true;
             this.textBoxPreview.Name = "textBoxPreview";
             this.textBoxPreview.ScrollBars = System.Windows.Forms.ScrollBars.Both;
-            this.textBoxPreview.Size = new System.Drawing.Size(282, 395);
+            this.textBoxPreview.Size = new System.Drawing.Size(282, 376);
             this.textBoxPreview.TabIndex = 0;
             // 
             // panelAudio
@@ -355,7 +383,7 @@
             this.panelAudio.Location = new System.Drawing.Point(0, 0);
             this.panelAudio.Margin = new System.Windows.Forms.Padding(4);
             this.panelAudio.Name = "panelAudio";
-            this.panelAudio.Size = new System.Drawing.Size(282, 395);
+            this.panelAudio.Size = new System.Drawing.Size(282, 376);
             this.panelAudio.TabIndex = 1;
             // 
             // button1
@@ -378,7 +406,7 @@
             this.panelBlank.Location = new System.Drawing.Point(0, 0);
             this.panelBlank.Margin = new System.Windows.Forms.Padding(4);
             this.panelBlank.Name = "panelBlank";
-            this.panelBlank.Size = new System.Drawing.Size(282, 395);
+            this.panelBlank.Size = new System.Drawing.Size(282, 376);
             this.panelBlank.TabIndex = 0;
             // 
             // pictureBox1
@@ -388,10 +416,23 @@
             this.pictureBox1.Location = new System.Drawing.Point(0, 0);
             this.pictureBox1.Margin = new System.Windows.Forms.Padding(4);
             this.pictureBox1.Name = "pictureBox1";
-            this.pictureBox1.Size = new System.Drawing.Size(282, 395);
+            this.pictureBox1.Size = new System.Drawing.Size(282, 376);
             this.pictureBox1.SizeMode = System.Windows.Forms.PictureBoxSizeMode.CenterImage;
             this.pictureBox1.TabIndex = 0;
             this.pictureBox1.TabStop = false;
+            // 
+            // progressBar1
+            // 
+            this.progressBar1.Dock = System.Windows.Forms.DockStyle.Bottom;
+            this.progressBar1.Location = new System.Drawing.Point(0, 501);
+            this.progressBar1.Name = "progressBar1";
+            this.progressBar1.Size = new System.Drawing.Size(894, 19);
+            this.progressBar1.TabIndex = 10;
+            this.progressBar1.Visible = false;
+            // 
+            // backgroundWorker1
+            // 
+            this.backgroundWorker1.WorkerReportsProgress = true;
             // 
             // formMain
             // 
@@ -401,6 +442,7 @@
             this.Controls.Add(this.splitContainer1);
             this.Controls.Add(this.panel1);
             this.Controls.Add(this.richTextBoxLog);
+            this.Controls.Add(this.progressBar1);
             this.Font = new System.Drawing.Font("Microsoft Sans Serif", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.Margin = new System.Windows.Forms.Padding(4);
             this.Name = "formMain";
@@ -414,6 +456,8 @@
             ((System.ComponentModel.ISupportInitialize)(this.splitContainer1)).EndInit();
             this.splitContainer1.ResumeLayout(false);
             ((System.ComponentModel.ISupportInitialize)(this.objectListView1)).EndInit();
+            this.panelImage.ResumeLayout(false);
+            ((System.ComponentModel.ISupportInitialize)(this.pictureBoxPreview)).EndInit();
             this.panelText.ResumeLayout(false);
             this.panelText.PerformLayout();
             this.panelAudio.ResumeLayout(false);
@@ -454,6 +498,10 @@
         private System.Windows.Forms.Button button1;
         private System.Windows.Forms.Panel panelText;
         private System.Windows.Forms.TextBox textBoxPreview;
+        private System.Windows.Forms.ProgressBar progressBar1;
+        private System.ComponentModel.BackgroundWorker backgroundWorker1;
+        private System.Windows.Forms.Panel panelImage;
+        private System.Windows.Forms.PictureBox pictureBoxPreview;
     }
 }
 

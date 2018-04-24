@@ -9,12 +9,11 @@ using System.Windows.Forms;
 using ThimbleweedLibrary;
 
 //TODO
+//Try/except handling on opening bundle and dumping files particularlly all files - ggpack2 will raise exception
 //Integrated text/image/sound
 //Saving of text/image/sound in different formats
 //Icon for the program
 //Default image for the right bar like in DF Explorer
-//Progress bar for saving all files
-//An about form
 //Send to hex editor button as usual
 //Decoding of wimpy files - tree files?
 
@@ -51,6 +50,8 @@ namespace ThimbleweedParkExplorer
 
             //Add info to log box
             richTextBoxLog.Text = Constants.ProgName + " " + Constants.Version + Environment.NewLine + Constants.URL;
+
+            EnableDisableControlsContextDependant();
         }
 
         private void InitializeListView()
@@ -75,16 +76,26 @@ namespace ThimbleweedParkExplorer
             if (openFileDialog1.ShowDialog() != DialogResult.OK)
                 return;
 
-            if (Thimble != null) 
-                Thimble.Dispose();
-            Thimble = new BundleReader_ggpack(openFileDialog1.FileName);
-            richTextBoxLog.Clear();
-            log("Opened " + openFileDialog1.SafeFileName);
-            objectListView1.Items.Clear();
-            objectListView1.SetObjects(Thimble.BundleFiles);
-            objectListView1.AutoResizeColumns();
-            AddFiletypeContextEntries();
 
+            try
+            {
+                EnableDisableControls(false);
+
+                if (Thimble != null)
+                    Thimble.Dispose();
+                Thimble = new BundleReader_ggpack(openFileDialog1.FileName);
+
+                richTextBoxLog.Clear();
+                log("Opened " + openFileDialog1.SafeFileName);
+                objectListView1.Items.Clear();
+                objectListView1.SetObjects(Thimble.BundleFiles);
+                objectListView1.AutoResizeColumns();
+                AddFiletypeContextEntries();
+            }
+            finally
+            {
+                EnableDisableControls(true);
+            }
         }
 
         private void log(string logText)
@@ -122,9 +133,9 @@ namespace ThimbleweedParkExplorer
                     contextMenuView.Items[i].Image = Properties.Resources.small_audio;
                 if (contextMenuView.Items[i].Text == "png")
                     contextMenuView.Items[i].Image = Properties.Resources.small_image;
-                if (contextMenuView.Items[i].Text == "txt" || contextMenuView.Items[i].Text == "tsv" || 
-                    contextMenuView.Items[i].Text == "nut" || contextMenuView.Items[i].Text == "json" || 
-                    contextMenuView.Items[i].Text == "fnt" || contextMenuView.Items[i].Text == "byack" || 
+                if (contextMenuView.Items[i].Text == "txt" || contextMenuView.Items[i].Text == "tsv" ||
+                    contextMenuView.Items[i].Text == "nut" || contextMenuView.Items[i].Text == "json" ||
+                    contextMenuView.Items[i].Text == "fnt" || contextMenuView.Items[i].Text == "byack" ||
                     contextMenuView.Items[i].Text == "lip")
                     contextMenuView.Items[i].Image = Properties.Resources.small_text;
             }
@@ -192,17 +203,38 @@ namespace ThimbleweedParkExplorer
             if (Thimble == null || Thimble.BundleFiles.Count == 0 || objectListView1.SelectedIndex == -1)
                 return;
 
+            EnableDisableControlsContextDependant();
+
             int index = Thimble.BundleFiles.IndexOf((BundleEntry)objectListView1.SelectedObject);
 
             switch (Thimble.BundleFiles[index].FileType)
             {
                 case BundleEntry.FileTypes.Image:
+                    panelImage.BringToFront();
+                    using (MemoryStream ms = new MemoryStream())
+                    {
+                        //Release resources from old image
+                        var oldImage = pictureBoxPreview.Image as Bitmap;
+                        if (oldImage != null)
+                            ((IDisposable)oldImage).Dispose();
+
+                        Thimble.SaveFileToStream(index, ms);
+                        var image = Image.FromStream(ms); 
+                        pictureBoxPreview.Image = image;
+
+                        //Set scaling mode depending on whether image is larger or smaller than the picturebox. From https://stackoverflow.com/questions/41188806/fit-image-to-picturebox-if-picturebox-is-smaller-than-picture
+                        var imageSize = pictureBoxPreview.Image.Size;
+                        var fitSize = pictureBoxPreview.ClientSize;
+                        pictureBoxPreview.SizeMode = imageSize.Width > fitSize.Width || imageSize.Height > fitSize.Height ? PictureBoxSizeMode.Zoom : PictureBoxSizeMode.CenterImage;
+                    }
                     break;
 
                 case BundleEntry.FileTypes.Sound:
+                    panelAudio.BringToFront();
                     break;
 
                 case BundleEntry.FileTypes.Text:
+                    panelText.BringToFront();
                     using (MemoryStream ms = new MemoryStream())
                     {
                         Thimble.SaveFileToStream(index, ms);
@@ -242,7 +274,7 @@ namespace ThimbleweedParkExplorer
             if (Thimble == null || Thimble.BundleFiles.Count == 0)
                 return;
 
-            using (var openFolder = new CommonOpenFileDialog()) 
+            using (var openFolder = new CommonOpenFileDialog())
             {
                 openFolder.AllowNonFileSystemItems = true;
                 openFolder.Multiselect = false;
@@ -252,14 +284,67 @@ namespace ThimbleweedParkExplorer
                 if (openFolder.ShowDialog() != CommonFileDialogResult.Ok)
                     return;
 
-                log("Saving all files...");
+                try
+                {
+                    log("Saving all files...");
+                    EnableDisableControls(false);
 
-                for (int i = 0; i < Thimble.BundleFiles.Count; i++)
-                    Thimble.SaveFile(i, Path.Combine(openFolder.FileName, Thimble.BundleFiles[i].FileName));
+                    progressBar1.Visible = true;
+                    progressBar1.Maximum = Thimble.BundleFiles.Count;
+                    progressBar1.Step = 1;
 
-                log("...done!");
+                    for (int i = 0; i < Thimble.BundleFiles.Count; i++)
+                    {
+                        Thimble.SaveFile(i, Path.Combine(openFolder.FileName, Thimble.BundleFiles[i].FileName));
+                        progressBar1.PerformStep();
+                        Application.DoEvents(); //HACK use backgroundworker or async task in future
+                    }
+
+                    log("...done!");
+                }
+                finally
+                {
+                    EnableDisableControls(true);
+                    progressBar1.Visible = false;
+                }
             }
-        
+
+        }
+
+        private void EnableDisableControls(bool Value)
+        {
+            btnOpen.Enabled = Value;
+            btnView.Enabled = Value;
+            btnSaveFile.Enabled = Value;
+            btnSaveAllFiles.Enabled = Value;
+            btnAbout.Enabled = Value;
+            cueTextBox1.Enabled = Value;
+            objectListView1.Enabled = Value;
+
+            if (Value == true)
+                EnableDisableControlsContextDependant();
+        }
+
+        private void EnableDisableControlsContextDependant()
+        {
+            if (objectListView1.GetItemCount() > 0)
+                btnSaveAllFiles.Enabled = true;
+            else
+                btnSaveAllFiles.Enabled = false;
+
+            btnSaveFile.Enabled = objectListView1.SelectedIndex != -1;
+
+            if (objectListView1.SelectedIndex != -1)
+            {
+                //Different menu items make visible
+            }
+        }
+
+        private void btnAbout_Click(object sender, EventArgs e)
+        {
+            formAbout f = new formAbout();
+            f.ShowDialog(this);
+            f.Dispose();
         }
     }
 }
