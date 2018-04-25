@@ -42,6 +42,8 @@
             this.saveFileDialog1 = new System.Windows.Forms.SaveFileDialog();
             this.progressBar1 = new System.Windows.Forms.ProgressBar();
             this.backgroundWorker1 = new System.ComponentModel.BackgroundWorker();
+            this.panelProgress = new System.Windows.Forms.Panel();
+            this.pictureBoxProgress = new System.Windows.Forms.PictureBox();
             this.pictureBox1 = new System.Windows.Forms.PictureBox();
             this.pictureBoxPreview = new System.Windows.Forms.PictureBox();
             this.button1 = new System.Windows.Forms.Button();
@@ -62,6 +64,8 @@
             this.panelImage.SuspendLayout();
             this.panelText.SuspendLayout();
             this.panelAudio.SuspendLayout();
+            this.panelProgress.SuspendLayout();
+            ((System.ComponentModel.ISupportInitialize)(this.pictureBoxProgress)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.pictureBox1)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.pictureBoxPreview)).BeginInit();
             this.SuspendLayout();
@@ -81,6 +85,7 @@
             this.richTextBoxLog.Margin = new System.Windows.Forms.Padding(4);
             this.richTextBoxLog.Name = "richTextBoxLog";
             this.richTextBoxLog.ReadOnly = true;
+            this.richTextBoxLog.ScrollBars = System.Windows.Forms.RichTextBoxScrollBars.Vertical;
             this.richTextBoxLog.ShowSelectionMargin = true;
             this.richTextBoxLog.Size = new System.Drawing.Size(894, 68);
             this.richTextBoxLog.TabIndex = 4;
@@ -155,6 +160,7 @@
             // splitContainer1.Panel2
             // 
             this.splitContainer1.Panel2.Controls.Add(this.panelBlank);
+            this.splitContainer1.Panel2.Controls.Add(this.panelProgress);
             this.splitContainer1.Panel2.Controls.Add(this.panelImage);
             this.splitContainer1.Panel2.Controls.Add(this.panelText);
             this.splitContainer1.Panel2.Controls.Add(this.panelAudio);
@@ -295,6 +301,28 @@
             // backgroundWorker1
             // 
             this.backgroundWorker1.WorkerReportsProgress = true;
+            // 
+            // panelProgress
+            // 
+            this.panelProgress.Controls.Add(this.pictureBoxProgress);
+            this.panelProgress.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.panelProgress.Location = new System.Drawing.Point(0, 0);
+            this.panelProgress.Margin = new System.Windows.Forms.Padding(4);
+            this.panelProgress.Name = "panelProgress";
+            this.panelProgress.Size = new System.Drawing.Size(282, 376);
+            this.panelProgress.TabIndex = 4;
+            // 
+            // pictureBoxProgress
+            // 
+            this.pictureBoxProgress.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.pictureBoxProgress.Image = ((System.Drawing.Image)(resources.GetObject("pictureBoxProgress.Image")));
+            this.pictureBoxProgress.Location = new System.Drawing.Point(0, 0);
+            this.pictureBoxProgress.Margin = new System.Windows.Forms.Padding(4);
+            this.pictureBoxProgress.Name = "pictureBoxProgress";
+            this.pictureBoxProgress.Size = new System.Drawing.Size(282, 376);
+            this.pictureBoxProgress.SizeMode = System.Windows.Forms.PictureBoxSizeMode.CenterImage;
+            this.pictureBoxProgress.TabIndex = 0;
+            this.pictureBoxProgress.TabStop = false;
             // 
             // pictureBox1
             // 
@@ -464,6 +492,8 @@
             this.panelText.PerformLayout();
             this.panelAudio.ResumeLayout(false);
             this.panelAudio.PerformLayout();
+            this.panelProgress.ResumeLayout(false);
+            ((System.ComponentModel.ISupportInitialize)(this.pictureBoxProgress)).EndInit();
             ((System.ComponentModel.ISupportInitialize)(this.pictureBox1)).EndInit();
             ((System.ComponentModel.ISupportInitialize)(this.pictureBoxPreview)).EndInit();
             this.ResumeLayout(false);
@@ -504,6 +534,8 @@
         private System.ComponentModel.BackgroundWorker backgroundWorker1;
         private System.Windows.Forms.Panel panelImage;
         private System.Windows.Forms.PictureBox pictureBoxPreview;
+        private System.Windows.Forms.Panel panelProgress;
+        private System.Windows.Forms.PictureBox pictureBoxProgress;
     }
 }
 

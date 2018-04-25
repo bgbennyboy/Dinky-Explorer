@@ -10,9 +10,8 @@ using ThimbleweedLibrary;
 
 //TODO
 //Try/except handling on opening bundle and dumping files particularlly all files - ggpack2 will raise exception
-//Integrated text/image/sound
+//Integrated sound
 //Saving of text/image/sound in different formats
-//Default image for the right bar like in DF Explorer
 //Send to hex editor button as usual
 //Decoding of wimpy files - tree files?
 //Please wait working while dumping and lock controls
@@ -51,9 +50,12 @@ namespace ThimbleweedParkExplorer
             //Add info to log box
             richTextBoxLog.Text = Constants.ProgName + " " + Constants.Version + Environment.NewLine + Constants.URL;
             
+            //Set listview background
             objectListView1.SetNativeBackgroundTiledImage(Properties.Resources.listViewBackground);
 
             EnableDisableControlsContextDependant();
+
+            panelBlank.BringToFront();
         }
 
         private void InitializeListView()
@@ -92,6 +94,7 @@ namespace ThimbleweedParkExplorer
                 objectListView1.Items.Clear();
                 objectListView1.SetObjects(Thimble.BundleFiles);
                 objectListView1.AutoResizeColumns();
+                panelBlank.BringToFront();
                 AddFiletypeContextEntries();
             }
             finally
@@ -157,8 +160,16 @@ namespace ThimbleweedParkExplorer
 
             int index = Thimble.BundleFiles.IndexOf((BundleEntry)objectListView1.SelectedObject);
 
-            log("Saving file " + saveFileDialog1.FileName);
-            Thimble.SaveFile(index, saveFileDialog1.FileName);
+            try
+            {
+                log("Saving file " + saveFileDialog1.FileName);
+                EnableDisableControls(false);
+                Thimble.SaveFile(index, saveFileDialog1.FileName);
+            }
+            finally
+            {
+                EnableDisableControls(true);
+            }
         }
 
         private void cueTextBox1_TextChanged(object sender, EventArgs e)
@@ -294,6 +305,8 @@ namespace ThimbleweedParkExplorer
                 {
                     log("Saving all files...");
                     EnableDisableControls(false);
+                    panelProgress.Visible = true;
+                    panelProgress.BringToFront();
 
                     progressBar1.Visible = true;
                     progressBar1.Maximum = Thimble.BundleFiles.Count;
@@ -312,6 +325,7 @@ namespace ThimbleweedParkExplorer
                 {
                     EnableDisableControls(true);
                     progressBar1.Visible = false;
+                    panelProgress.Visible = false;
                 }
             }
 
@@ -342,7 +356,7 @@ namespace ThimbleweedParkExplorer
 
             if (objectListView1.SelectedIndex != -1)
             {
-                //Different menu items make visible
+                //Different save context menu items make visible eg save as image etc
             }
         }
 

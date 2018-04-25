@@ -164,8 +164,6 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="Resources\TPExp_FullBackground.png" />
-  </ItemGroup>
-  <ItemGroup>
     <Content Include="TP Explorer Icon.ico" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
