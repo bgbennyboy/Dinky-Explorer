@@ -12,10 +12,10 @@ using ThimbleweedLibrary;
 //Try/except handling on opening bundle and dumping files particularlly all files - ggpack2 will raise exception
 //Integrated text/image/sound
 //Saving of text/image/sound in different formats
-//Icon for the program
 //Default image for the right bar like in DF Explorer
 //Send to hex editor button as usual
 //Decoding of wimpy files - tree files?
+//Please wait working while dumping and lock controls
 
 namespace ThimbleweedParkExplorer
 {
@@ -50,6 +50,8 @@ namespace ThimbleweedParkExplorer
 
             //Add info to log box
             richTextBoxLog.Text = Constants.ProgName + " " + Constants.Version + Environment.NewLine + Constants.URL;
+            
+            objectListView1.SetNativeBackgroundTiledImage(Properties.Resources.listViewBackground);
 
             EnableDisableControlsContextDependant();
         }
@@ -245,6 +247,10 @@ namespace ThimbleweedParkExplorer
                             textBoxPreview.Lines = tempArray;
                         }
                     }
+                    break;
+
+                default:
+                    panelBlank.BringToFront();
                     break;
             }
         }

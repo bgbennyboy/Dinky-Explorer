@@ -83,6 +83,16 @@ namespace ThimbleweedParkExplorer.Properties {
         /// <summary>
         ///   Looks up a localized resource of type System.Drawing.Bitmap.
         /// </summary>
+        internal static System.Drawing.Bitmap listViewBackground {
+            get {
+                object obj = ResourceManager.GetObject("listViewBackground", resourceCulture);
+                return ((System.Drawing.Bitmap)(obj));
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized resource of type System.Drawing.Bitmap.
+        /// </summary>
         internal static System.Drawing.Bitmap Open_32 {
             get {
                 object obj = ResourceManager.GetObject("Open_32", resourceCulture);
