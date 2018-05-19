@@ -440,6 +440,8 @@ namespace ThimbleweedParkExplorer
                 audioDataStream.Dispose();
                 audioDataStream = null;
             }
+
+            labelSoundProgress.Text = "";
         }
 
         private void btnSoundPause_Click(object sender, EventArgs e)
@@ -474,7 +476,9 @@ namespace ThimbleweedParkExplorer
         {
             if (outputDevice != null && audioReader != null)
             {
-                audioReader.CurrentTime = TimeSpan.FromSeconds(audioReader.TotalTime.TotalSeconds * trackBarSound.Value / 100.0);
+                TimeSpan temp = TimeSpan.FromSeconds(audioReader.TotalTime.TotalSeconds * trackBarSound.Value / 100.0);
+                if (temp != null && temp < audioReader.TotalTime)
+                    audioReader.CurrentTime = temp;
             }
         }
     

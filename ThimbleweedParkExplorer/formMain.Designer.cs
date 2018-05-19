@@ -22,7 +22,6 @@
             this.openFileDialog1 = new System.Windows.Forms.OpenFileDialog();
             this.richTextBoxLog = new System.Windows.Forms.RichTextBox();
             this.panel1 = new System.Windows.Forms.Panel();
-            this.cueTextBox1 = new CueTextBox();
             this.btnAbout = new System.Windows.Forms.Button();
             this.btnSaveAllFiles = new System.Windows.Forms.Button();
             this.btnSaveFile = new System.Windows.Forms.Button();
@@ -57,6 +56,7 @@
             this.saveFileDialog1 = new System.Windows.Forms.SaveFileDialog();
             this.progressBar1 = new System.Windows.Forms.ProgressBar();
             this.timer1 = new System.Windows.Forms.Timer(this.components);
+            this.cueTextBox1 = new CueTextBox();
             this.panel1.SuspendLayout();
             this.contextMenuView.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.splitContainer1)).BeginInit();
@@ -86,7 +86,7 @@
             this.richTextBoxLog.Dock = System.Windows.Forms.DockStyle.Bottom;
             this.richTextBoxLog.Font = new System.Drawing.Font("Segoe UI", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.richTextBoxLog.HideSelection = false;
-            this.richTextBoxLog.Location = new System.Drawing.Point(0, 433);
+            this.richTextBoxLog.Location = new System.Drawing.Point(0, 436);
             this.richTextBoxLog.Margin = new System.Windows.Forms.Padding(4);
             this.richTextBoxLog.Name = "richTextBoxLog";
             this.richTextBoxLog.ReadOnly = true;
@@ -112,19 +112,6 @@
             this.panel1.Name = "panel1";
             this.panel1.Size = new System.Drawing.Size(894, 55);
             this.panel1.TabIndex = 0;
-            // 
-            // cueTextBox1
-            // 
-            this.cueTextBox1.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle;
-            this.cueTextBox1.Cue = "Search";
-            this.cueTextBox1.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.cueTextBox1.Font = new System.Drawing.Font("Segoe UI", 20.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.cueTextBox1.Location = new System.Drawing.Point(434, 0);
-            this.cueTextBox1.Margin = new System.Windows.Forms.Padding(4, 4, 4, 2);
-            this.cueTextBox1.Name = "cueTextBox1";
-            this.cueTextBox1.Size = new System.Drawing.Size(460, 43);
-            this.cueTextBox1.TabIndex = 13;
-            this.cueTextBox1.TextChanged += new System.EventHandler(this.cueTextBox1_TextChanged);
             // 
             // btnAbout
             // 
@@ -275,7 +262,7 @@
             this.splitContainer1.Panel2.Controls.Add(this.panelImage);
             this.splitContainer1.Panel2.Controls.Add(this.panelText);
             this.splitContainer1.Panel2MinSize = 200;
-            this.splitContainer1.Size = new System.Drawing.Size(894, 378);
+            this.splitContainer1.Size = new System.Drawing.Size(894, 381);
             this.splitContainer1.SplitterDistance = 605;
             this.splitContainer1.SplitterWidth = 5;
             this.splitContainer1.TabIndex = 9;
@@ -303,7 +290,7 @@
             this.objectListView1.Name = "objectListView1";
             this.objectListView1.OverlayImage.Transparency = 180;
             this.objectListView1.ShowGroups = false;
-            this.objectListView1.Size = new System.Drawing.Size(603, 376);
+            this.objectListView1.Size = new System.Drawing.Size(603, 379);
             this.objectListView1.SmallImageList = this.imageList1;
             this.objectListView1.TabIndex = 6;
             this.objectListView1.UseCompatibleStateImageBehavior = false;
@@ -361,36 +348,40 @@
             this.panelAudio.Location = new System.Drawing.Point(0, 0);
             this.panelAudio.Margin = new System.Windows.Forms.Padding(4);
             this.panelAudio.Name = "panelAudio";
-            this.panelAudio.Size = new System.Drawing.Size(282, 376);
+            this.panelAudio.Size = new System.Drawing.Size(282, 379);
             this.panelAudio.TabIndex = 1;
             // 
             // labelSoundProgress
             // 
-            this.labelSoundProgress.AutoSize = true;
-            this.labelSoundProgress.Location = new System.Drawing.Point(116, 95);
+            this.labelSoundProgress.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Left | System.Windows.Forms.AnchorStyles.Right)));
+            this.labelSoundProgress.Font = new System.Drawing.Font("Microsoft Sans Serif", 12F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.labelSoundProgress.Location = new System.Drawing.Point(0, 112);
             this.labelSoundProgress.Name = "labelSoundProgress";
-            this.labelSoundProgress.Size = new System.Drawing.Size(35, 13);
+            this.labelSoundProgress.Size = new System.Drawing.Size(279, 31);
             this.labelSoundProgress.TabIndex = 14;
-            this.labelSoundProgress.Text = "label1";
+            this.labelSoundProgress.TextAlign = System.Drawing.ContentAlignment.MiddleCenter;
             // 
             // trackBarSound
             // 
-            this.trackBarSound.Location = new System.Drawing.Point(26, 129);
+            this.trackBarSound.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Left | System.Windows.Forms.AnchorStyles.Right)));
+            this.trackBarSound.AutoSize = false;
+            this.trackBarSound.Location = new System.Drawing.Point(6, 151);
             this.trackBarSound.Maximum = 100;
             this.trackBarSound.Name = "trackBarSound";
-            this.trackBarSound.Size = new System.Drawing.Size(228, 45);
+            this.trackBarSound.Size = new System.Drawing.Size(276, 33);
             this.trackBarSound.TabIndex = 13;
             this.trackBarSound.TickStyle = System.Windows.Forms.TickStyle.None;
             this.trackBarSound.Scroll += new System.EventHandler(this.trackBarSound_Scroll);
             // 
             // btnSoundStop
             // 
+            this.btnSoundStop.Anchor = System.Windows.Forms.AnchorStyles.Left;
             this.btnSoundStop.AutoSize = true;
             this.btnSoundStop.AutoSizeMode = System.Windows.Forms.AutoSizeMode.GrowAndShrink;
             this.btnSoundStop.FlatAppearance.BorderSize = 0;
             this.btnSoundStop.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
             this.btnSoundStop.Image = global::ThimbleweedParkExplorer.Properties.Resources.stop;
-            this.btnSoundStop.Location = new System.Drawing.Point(171, 180);
+            this.btnSoundStop.Location = new System.Drawing.Point(171, 181);
             this.btnSoundStop.Name = "btnSoundStop";
             this.btnSoundStop.Size = new System.Drawing.Size(30, 30);
             this.btnSoundStop.TabIndex = 12;
@@ -399,12 +390,13 @@
             // 
             // btnSoundPause
             // 
+            this.btnSoundPause.Anchor = System.Windows.Forms.AnchorStyles.Left;
             this.btnSoundPause.AutoSize = true;
             this.btnSoundPause.AutoSizeMode = System.Windows.Forms.AutoSizeMode.GrowAndShrink;
             this.btnSoundPause.FlatAppearance.BorderSize = 0;
             this.btnSoundPause.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
             this.btnSoundPause.Image = global::ThimbleweedParkExplorer.Properties.Resources.pause;
-            this.btnSoundPause.Location = new System.Drawing.Point(119, 180);
+            this.btnSoundPause.Location = new System.Drawing.Point(119, 181);
             this.btnSoundPause.Name = "btnSoundPause";
             this.btnSoundPause.Size = new System.Drawing.Size(30, 30);
             this.btnSoundPause.TabIndex = 11;
@@ -413,12 +405,13 @@
             // 
             // btnSoundPlay
             // 
+            this.btnSoundPlay.Anchor = System.Windows.Forms.AnchorStyles.Left;
             this.btnSoundPlay.AutoSize = true;
             this.btnSoundPlay.AutoSizeMode = System.Windows.Forms.AutoSizeMode.GrowAndShrink;
             this.btnSoundPlay.FlatAppearance.BorderSize = 0;
             this.btnSoundPlay.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
             this.btnSoundPlay.Image = global::ThimbleweedParkExplorer.Properties.Resources.Play_24x24;
-            this.btnSoundPlay.Location = new System.Drawing.Point(69, 180);
+            this.btnSoundPlay.Location = new System.Drawing.Point(69, 181);
             this.btnSoundPlay.Name = "btnSoundPlay";
             this.btnSoundPlay.Size = new System.Drawing.Size(30, 30);
             this.btnSoundPlay.TabIndex = 0;
@@ -432,7 +425,7 @@
             this.panelBlank.Location = new System.Drawing.Point(0, 0);
             this.panelBlank.Margin = new System.Windows.Forms.Padding(4);
             this.panelBlank.Name = "panelBlank";
-            this.panelBlank.Size = new System.Drawing.Size(282, 376);
+            this.panelBlank.Size = new System.Drawing.Size(282, 379);
             this.panelBlank.TabIndex = 0;
             // 
             // pictureBox1
@@ -442,7 +435,7 @@
             this.pictureBox1.Location = new System.Drawing.Point(0, 0);
             this.pictureBox1.Margin = new System.Windows.Forms.Padding(4);
             this.pictureBox1.Name = "pictureBox1";
-            this.pictureBox1.Size = new System.Drawing.Size(282, 376);
+            this.pictureBox1.Size = new System.Drawing.Size(282, 379);
             this.pictureBox1.SizeMode = System.Windows.Forms.PictureBoxSizeMode.CenterImage;
             this.pictureBox1.TabIndex = 0;
             this.pictureBox1.TabStop = false;
@@ -454,7 +447,7 @@
             this.panelProgress.Location = new System.Drawing.Point(0, 0);
             this.panelProgress.Margin = new System.Windows.Forms.Padding(4);
             this.panelProgress.Name = "panelProgress";
-            this.panelProgress.Size = new System.Drawing.Size(282, 376);
+            this.panelProgress.Size = new System.Drawing.Size(282, 379);
             this.panelProgress.TabIndex = 4;
             // 
             // pictureBoxProgress
@@ -464,7 +457,7 @@
             this.pictureBoxProgress.Location = new System.Drawing.Point(0, 0);
             this.pictureBoxProgress.Margin = new System.Windows.Forms.Padding(4);
             this.pictureBoxProgress.Name = "pictureBoxProgress";
-            this.pictureBoxProgress.Size = new System.Drawing.Size(282, 376);
+            this.pictureBoxProgress.Size = new System.Drawing.Size(282, 379);
             this.pictureBoxProgress.SizeMode = System.Windows.Forms.PictureBoxSizeMode.CenterImage;
             this.pictureBoxProgress.TabIndex = 0;
             this.pictureBoxProgress.TabStop = false;
@@ -476,7 +469,7 @@
             this.panelImage.Location = new System.Drawing.Point(0, 0);
             this.panelImage.Margin = new System.Windows.Forms.Padding(4);
             this.panelImage.Name = "panelImage";
-            this.panelImage.Size = new System.Drawing.Size(282, 376);
+            this.panelImage.Size = new System.Drawing.Size(282, 379);
             this.panelImage.TabIndex = 3;
             // 
             // pictureBoxPreview
@@ -484,7 +477,7 @@
             this.pictureBoxPreview.Dock = System.Windows.Forms.DockStyle.Fill;
             this.pictureBoxPreview.Location = new System.Drawing.Point(0, 0);
             this.pictureBoxPreview.Name = "pictureBoxPreview";
-            this.pictureBoxPreview.Size = new System.Drawing.Size(282, 376);
+            this.pictureBoxPreview.Size = new System.Drawing.Size(282, 379);
             this.pictureBoxPreview.SizeMode = System.Windows.Forms.PictureBoxSizeMode.CenterImage;
             this.pictureBoxPreview.TabIndex = 0;
             this.pictureBoxPreview.TabStop = false;
@@ -496,7 +489,7 @@
             this.panelText.Location = new System.Drawing.Point(0, 0);
             this.panelText.Margin = new System.Windows.Forms.Padding(4);
             this.panelText.Name = "panelText";
-            this.panelText.Size = new System.Drawing.Size(282, 376);
+            this.panelText.Size = new System.Drawing.Size(282, 379);
             this.panelText.TabIndex = 2;
             // 
             // textBoxPreview
@@ -506,13 +499,13 @@
             this.textBoxPreview.Multiline = true;
             this.textBoxPreview.Name = "textBoxPreview";
             this.textBoxPreview.ScrollBars = System.Windows.Forms.ScrollBars.Both;
-            this.textBoxPreview.Size = new System.Drawing.Size(282, 376);
+            this.textBoxPreview.Size = new System.Drawing.Size(282, 379);
             this.textBoxPreview.TabIndex = 0;
             // 
             // progressBar1
             // 
             this.progressBar1.Dock = System.Windows.Forms.DockStyle.Bottom;
-            this.progressBar1.Location = new System.Drawing.Point(0, 501);
+            this.progressBar1.Location = new System.Drawing.Point(0, 504);
             this.progressBar1.Name = "progressBar1";
             this.progressBar1.Size = new System.Drawing.Size(894, 19);
             this.progressBar1.TabIndex = 10;
@@ -524,17 +517,31 @@
             this.timer1.Interval = 500;
             this.timer1.Tick += new System.EventHandler(this.timer1_Tick);
             // 
+            // cueTextBox1
+            // 
+            this.cueTextBox1.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle;
+            this.cueTextBox1.Cue = "Search";
+            this.cueTextBox1.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.cueTextBox1.Font = new System.Drawing.Font("Segoe UI", 20.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.cueTextBox1.Location = new System.Drawing.Point(434, 0);
+            this.cueTextBox1.Margin = new System.Windows.Forms.Padding(4, 4, 4, 2);
+            this.cueTextBox1.Name = "cueTextBox1";
+            this.cueTextBox1.Size = new System.Drawing.Size(460, 43);
+            this.cueTextBox1.TabIndex = 13;
+            this.cueTextBox1.TextChanged += new System.EventHandler(this.cueTextBox1_TextChanged);
+            // 
             // formMain
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.ClientSize = new System.Drawing.Size(894, 520);
+            this.ClientSize = new System.Drawing.Size(894, 523);
             this.Controls.Add(this.splitContainer1);
             this.Controls.Add(this.panel1);
             this.Controls.Add(this.richTextBoxLog);
             this.Controls.Add(this.progressBar1);
             this.Font = new System.Drawing.Font("Microsoft Sans Serif", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.Margin = new System.Windows.Forms.Padding(4);
+            this.MinimumSize = new System.Drawing.Size(470, 400);
             this.Name = "formMain";
             this.StartPosition = System.Windows.Forms.FormStartPosition.CenterScreen;
             this.Text = "Thimbleweed Park Explorer";
