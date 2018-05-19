@@ -22,6 +22,7 @@
             this.openFileDialog1 = new System.Windows.Forms.OpenFileDialog();
             this.richTextBoxLog = new System.Windows.Forms.RichTextBox();
             this.panel1 = new System.Windows.Forms.Panel();
+            this.cueTextBox1 = new CueTextBox();
             this.btnAbout = new System.Windows.Forms.Button();
             this.btnSaveAllFiles = new System.Windows.Forms.Button();
             this.btnSaveFile = new System.Windows.Forms.Button();
@@ -56,7 +57,17 @@
             this.saveFileDialog1 = new System.Windows.Forms.SaveFileDialog();
             this.progressBar1 = new System.Windows.Forms.ProgressBar();
             this.timer1 = new System.Windows.Forms.Timer(this.components);
-            this.cueTextBox1 = new CueTextBox();
+            this.contextMenuSaveAll = new System.Windows.Forms.ContextMenuStrip(this.components);
+            this.toolStripSaveAllRaw = new System.Windows.Forms.ToolStripMenuItem();
+            this.toolStripSaveAllVisible = new System.Windows.Forms.ToolStripMenuItem();
+            this.toolStripSaveAllAudio = new System.Windows.Forms.ToolStripMenuItem();
+            this.toolStripSaveAllImages = new System.Windows.Forms.ToolStripMenuItem();
+            this.toolStripSaveAllText = new System.Windows.Forms.ToolStripMenuItem();
+            this.contextMenuSaveFile = new System.Windows.Forms.ContextMenuStrip(this.components);
+            this.toolStripSaveFileRaw = new System.Windows.Forms.ToolStripMenuItem();
+            this.toolStripSaveFileAsText = new System.Windows.Forms.ToolStripMenuItem();
+            this.toolStripSaveFileAsImage = new System.Windows.Forms.ToolStripMenuItem();
+            this.toolStripSaveFileAsAudio = new System.Windows.Forms.ToolStripMenuItem();
             this.panel1.SuspendLayout();
             this.contextMenuView.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.splitContainer1)).BeginInit();
@@ -73,6 +84,8 @@
             this.panelImage.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.pictureBoxPreview)).BeginInit();
             this.panelText.SuspendLayout();
+            this.contextMenuSaveAll.SuspendLayout();
+            this.contextMenuSaveFile.SuspendLayout();
             this.SuspendLayout();
             // 
             // openFileDialog1
@@ -113,11 +126,27 @@
             this.panel1.Size = new System.Drawing.Size(894, 55);
             this.panel1.TabIndex = 0;
             // 
+            // cueTextBox1
+            // 
+            this.cueTextBox1.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle;
+            this.cueTextBox1.Cue = "Search";
+            this.cueTextBox1.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.cueTextBox1.Font = new System.Drawing.Font("Segoe UI", 20.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.cueTextBox1.Location = new System.Drawing.Point(434, 0);
+            this.cueTextBox1.Margin = new System.Windows.Forms.Padding(4, 4, 4, 2);
+            this.cueTextBox1.Name = "cueTextBox1";
+            this.cueTextBox1.Size = new System.Drawing.Size(460, 43);
+            this.cueTextBox1.TabIndex = 13;
+            this.cueTextBox1.TextChanged += new System.EventHandler(this.cueTextBox1_TextChanged);
+            // 
             // btnAbout
             // 
             this.btnAbout.AutoSize = true;
             this.btnAbout.Dock = System.Windows.Forms.DockStyle.Left;
+            this.btnAbout.FlatAppearance.BorderColor = System.Drawing.Color.FromArgb(((int)(((byte)(226)))), ((int)(((byte)(227)))), ((int)(((byte)(228)))));
             this.btnAbout.FlatAppearance.BorderSize = 0;
+            this.btnAbout.FlatAppearance.MouseDownBackColor = System.Drawing.Color.FromArgb(((int)(((byte)(201)))), ((int)(((byte)(224)))), ((int)(((byte)(247)))));
+            this.btnAbout.FlatAppearance.MouseOverBackColor = System.Drawing.Color.FromArgb(((int)(((byte)(232)))), ((int)(((byte)(239)))), ((int)(((byte)(247)))));
             this.btnAbout.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
             this.btnAbout.Font = new System.Drawing.Font("Segoe UI", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.btnAbout.Image = global::ThimbleweedParkExplorer.Properties.Resources.info;
@@ -135,7 +164,10 @@
             // 
             this.btnSaveAllFiles.AutoSize = true;
             this.btnSaveAllFiles.Dock = System.Windows.Forms.DockStyle.Left;
+            this.btnSaveAllFiles.FlatAppearance.BorderColor = System.Drawing.Color.FromArgb(((int)(((byte)(226)))), ((int)(((byte)(227)))), ((int)(((byte)(228)))));
             this.btnSaveAllFiles.FlatAppearance.BorderSize = 0;
+            this.btnSaveAllFiles.FlatAppearance.MouseDownBackColor = System.Drawing.Color.FromArgb(((int)(((byte)(201)))), ((int)(((byte)(224)))), ((int)(((byte)(247)))));
+            this.btnSaveAllFiles.FlatAppearance.MouseOverBackColor = System.Drawing.Color.FromArgb(((int)(((byte)(232)))), ((int)(((byte)(239)))), ((int)(((byte)(247)))));
             this.btnSaveAllFiles.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
             this.btnSaveAllFiles.Font = new System.Drawing.Font("Segoe UI", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.btnSaveAllFiles.Image = global::ThimbleweedParkExplorer.Properties.Resources.save_red_32;
@@ -153,7 +185,10 @@
             // 
             this.btnSaveFile.AutoSize = true;
             this.btnSaveFile.Dock = System.Windows.Forms.DockStyle.Left;
+            this.btnSaveFile.FlatAppearance.BorderColor = System.Drawing.Color.FromArgb(((int)(((byte)(226)))), ((int)(((byte)(227)))), ((int)(((byte)(228)))));
             this.btnSaveFile.FlatAppearance.BorderSize = 0;
+            this.btnSaveFile.FlatAppearance.MouseDownBackColor = System.Drawing.Color.FromArgb(((int)(((byte)(201)))), ((int)(((byte)(224)))), ((int)(((byte)(247)))));
+            this.btnSaveFile.FlatAppearance.MouseOverBackColor = System.Drawing.Color.FromArgb(((int)(((byte)(232)))), ((int)(((byte)(239)))), ((int)(((byte)(247)))));
             this.btnSaveFile.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
             this.btnSaveFile.Font = new System.Drawing.Font("Segoe UI", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.btnSaveFile.Image = global::ThimbleweedParkExplorer.Properties.Resources.save_32;
@@ -171,7 +206,11 @@
             // 
             this.btnView.AutoSize = true;
             this.btnView.Dock = System.Windows.Forms.DockStyle.Left;
+            this.btnView.Enabled = false;
+            this.btnView.FlatAppearance.BorderColor = System.Drawing.Color.FromArgb(((int)(((byte)(226)))), ((int)(((byte)(227)))), ((int)(((byte)(228)))));
             this.btnView.FlatAppearance.BorderSize = 0;
+            this.btnView.FlatAppearance.MouseDownBackColor = System.Drawing.Color.FromArgb(((int)(((byte)(201)))), ((int)(((byte)(224)))), ((int)(((byte)(247)))));
+            this.btnView.FlatAppearance.MouseOverBackColor = System.Drawing.Color.FromArgb(((int)(((byte)(232)))), ((int)(((byte)(239)))), ((int)(((byte)(247)))));
             this.btnView.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
             this.btnView.Font = new System.Drawing.Font("Segoe UI", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.btnView.Image = global::ThimbleweedParkExplorer.Properties.Resources.views_32;
@@ -189,8 +228,9 @@
             // 
             this.btnOpen.AutoSize = true;
             this.btnOpen.Dock = System.Windows.Forms.DockStyle.Left;
-            this.btnOpen.FlatAppearance.BorderColor = System.Drawing.Color.FromArgb(((int)(((byte)(164)))), ((int)(((byte)(206)))), ((int)(((byte)(249)))));
+            this.btnOpen.FlatAppearance.BorderColor = System.Drawing.Color.FromArgb(((int)(((byte)(226)))), ((int)(((byte)(227)))), ((int)(((byte)(228)))));
             this.btnOpen.FlatAppearance.BorderSize = 0;
+            this.btnOpen.FlatAppearance.MouseDownBackColor = System.Drawing.Color.FromArgb(((int)(((byte)(201)))), ((int)(((byte)(224)))), ((int)(((byte)(247)))));
             this.btnOpen.FlatAppearance.MouseOverBackColor = System.Drawing.Color.FromArgb(((int)(((byte)(232)))), ((int)(((byte)(239)))), ((int)(((byte)(247)))));
             this.btnOpen.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
             this.btnOpen.Font = new System.Drawing.Font("Segoe UI", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
@@ -517,18 +557,101 @@
             this.timer1.Interval = 500;
             this.timer1.Tick += new System.EventHandler(this.timer1_Tick);
             // 
-            // cueTextBox1
+            // contextMenuSaveAll
             // 
-            this.cueTextBox1.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle;
-            this.cueTextBox1.Cue = "Search";
-            this.cueTextBox1.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.cueTextBox1.Font = new System.Drawing.Font("Segoe UI", 20.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.cueTextBox1.Location = new System.Drawing.Point(434, 0);
-            this.cueTextBox1.Margin = new System.Windows.Forms.Padding(4, 4, 4, 2);
-            this.cueTextBox1.Name = "cueTextBox1";
-            this.cueTextBox1.Size = new System.Drawing.Size(460, 43);
-            this.cueTextBox1.TabIndex = 13;
-            this.cueTextBox1.TextChanged += new System.EventHandler(this.cueTextBox1_TextChanged);
+            this.contextMenuSaveAll.Font = new System.Drawing.Font("Segoe UI", 9F);
+            this.contextMenuSaveAll.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {
+            this.toolStripSaveAllRaw,
+            this.toolStripSaveAllVisible,
+            this.toolStripSaveAllAudio,
+            this.toolStripSaveAllImages,
+            this.toolStripSaveAllText});
+            this.contextMenuSaveAll.Name = "contextMenuView";
+            this.contextMenuSaveAll.Size = new System.Drawing.Size(239, 114);
+            // 
+            // toolStripSaveAllRaw
+            // 
+            this.toolStripSaveAllRaw.Image = global::ThimbleweedParkExplorer.Properties.Resources.small_savefile;
+            this.toolStripSaveAllRaw.Name = "toolStripSaveAllRaw";
+            this.toolStripSaveAllRaw.Size = new System.Drawing.Size(238, 22);
+            this.toolStripSaveAllRaw.Text = "Save all files (raw dump)";
+            this.toolStripSaveAllRaw.Click += new System.EventHandler(this.toolStripSaveAllRaw_Click);
+            // 
+            // toolStripSaveAllVisible
+            // 
+            this.toolStripSaveAllVisible.Image = global::ThimbleweedParkExplorer.Properties.Resources.small_savefile;
+            this.toolStripSaveAllVisible.Name = "toolStripSaveAllVisible";
+            this.toolStripSaveAllVisible.Size = new System.Drawing.Size(238, 22);
+            this.toolStripSaveAllVisible.Text = "Save all visible files (raw dump)";
+            this.toolStripSaveAllVisible.Click += new System.EventHandler(this.toolStripSaveAllVisible_Click);
+            // 
+            // toolStripSaveAllAudio
+            // 
+            this.toolStripSaveAllAudio.Image = global::ThimbleweedParkExplorer.Properties.Resources.small_audio;
+            this.toolStripSaveAllAudio.Name = "toolStripSaveAllAudio";
+            this.toolStripSaveAllAudio.Size = new System.Drawing.Size(238, 22);
+            this.toolStripSaveAllAudio.Text = "Save all audio";
+            this.toolStripSaveAllAudio.Click += new System.EventHandler(this.toolStripSaveAllAudio_Click);
+            // 
+            // toolStripSaveAllImages
+            // 
+            this.toolStripSaveAllImages.Image = global::ThimbleweedParkExplorer.Properties.Resources.small_image;
+            this.toolStripSaveAllImages.Name = "toolStripSaveAllImages";
+            this.toolStripSaveAllImages.Size = new System.Drawing.Size(238, 22);
+            this.toolStripSaveAllImages.Text = "Save all images";
+            this.toolStripSaveAllImages.Click += new System.EventHandler(this.toolStripSaveAllImages_Click);
+            // 
+            // toolStripSaveAllText
+            // 
+            this.toolStripSaveAllText.Image = global::ThimbleweedParkExplorer.Properties.Resources.small_text;
+            this.toolStripSaveAllText.Name = "toolStripSaveAllText";
+            this.toolStripSaveAllText.Size = new System.Drawing.Size(238, 22);
+            this.toolStripSaveAllText.Tag = "";
+            this.toolStripSaveAllText.Text = "Save all text";
+            this.toolStripSaveAllText.Click += new System.EventHandler(this.toolStripSaveAllText_Click);
+            // 
+            // contextMenuSaveFile
+            // 
+            this.contextMenuSaveFile.Font = new System.Drawing.Font("Segoe UI", 9F);
+            this.contextMenuSaveFile.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {
+            this.toolStripSaveFileRaw,
+            this.toolStripSaveFileAsText,
+            this.toolStripSaveFileAsImage,
+            this.toolStripSaveFileAsAudio});
+            this.contextMenuSaveFile.Name = "contextMenuView";
+            this.contextMenuSaveFile.Size = new System.Drawing.Size(164, 92);
+            // 
+            // toolStripSaveFileRaw
+            // 
+            this.toolStripSaveFileRaw.Image = global::ThimbleweedParkExplorer.Properties.Resources.small_savefile;
+            this.toolStripSaveFileRaw.Name = "toolStripSaveFileRaw";
+            this.toolStripSaveFileRaw.Size = new System.Drawing.Size(163, 22);
+            this.toolStripSaveFileRaw.Text = "As is (raw dump)";
+            this.toolStripSaveFileRaw.Click += new System.EventHandler(this.toolStripSaveFileRaw_Click);
+            // 
+            // toolStripSaveFileAsText
+            // 
+            this.toolStripSaveFileAsText.Image = global::ThimbleweedParkExplorer.Properties.Resources.small_text;
+            this.toolStripSaveFileAsText.Name = "toolStripSaveFileAsText";
+            this.toolStripSaveFileAsText.Size = new System.Drawing.Size(163, 22);
+            this.toolStripSaveFileAsText.Text = "As text";
+            this.toolStripSaveFileAsText.Click += new System.EventHandler(this.toolStripSaveFileAsText_Click);
+            // 
+            // toolStripSaveFileAsImage
+            // 
+            this.toolStripSaveFileAsImage.Image = global::ThimbleweedParkExplorer.Properties.Resources.small_image;
+            this.toolStripSaveFileAsImage.Name = "toolStripSaveFileAsImage";
+            this.toolStripSaveFileAsImage.Size = new System.Drawing.Size(163, 22);
+            this.toolStripSaveFileAsImage.Text = "As Image";
+            this.toolStripSaveFileAsImage.Click += new System.EventHandler(this.toolStripSaveFileAsImage_Click);
+            // 
+            // toolStripSaveFileAsAudio
+            // 
+            this.toolStripSaveFileAsAudio.Image = global::ThimbleweedParkExplorer.Properties.Resources.small_audio;
+            this.toolStripSaveFileAsAudio.Name = "toolStripSaveFileAsAudio";
+            this.toolStripSaveFileAsAudio.Size = new System.Drawing.Size(163, 22);
+            this.toolStripSaveFileAsAudio.Text = "As audio";
+            this.toolStripSaveFileAsAudio.Click += new System.EventHandler(this.toolStripSaveFileAsAudio_Click);
             // 
             // formMain
             // 
@@ -565,6 +688,8 @@
             ((System.ComponentModel.ISupportInitialize)(this.pictureBoxPreview)).EndInit();
             this.panelText.ResumeLayout(false);
             this.panelText.PerformLayout();
+            this.contextMenuSaveAll.ResumeLayout(false);
+            this.contextMenuSaveFile.ResumeLayout(false);
             this.ResumeLayout(false);
             this.PerformLayout();
 
@@ -609,6 +734,17 @@
         private System.Windows.Forms.Button btnSoundStop;
         private System.Windows.Forms.Label labelSoundProgress;
         private System.Windows.Forms.Timer timer1;
+        private System.Windows.Forms.ContextMenuStrip contextMenuSaveAll;
+        private System.Windows.Forms.ToolStripMenuItem toolStripSaveAllRaw;
+        private System.Windows.Forms.ToolStripMenuItem toolStripSaveAllVisible;
+        private System.Windows.Forms.ToolStripMenuItem toolStripSaveAllText;
+        private System.Windows.Forms.ToolStripMenuItem toolStripSaveAllImages;
+        private System.Windows.Forms.ToolStripMenuItem toolStripSaveAllAudio;
+        private System.Windows.Forms.ContextMenuStrip contextMenuSaveFile;
+        private System.Windows.Forms.ToolStripMenuItem toolStripSaveFileRaw;
+        private System.Windows.Forms.ToolStripMenuItem toolStripSaveFileAsText;
+        private System.Windows.Forms.ToolStripMenuItem toolStripSaveFileAsImage;
+        private System.Windows.Forms.ToolStripMenuItem toolStripSaveFileAsAudio;
     }
 }
 

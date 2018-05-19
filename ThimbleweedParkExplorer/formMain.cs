@@ -12,11 +12,8 @@ using NAudio.Vorbis;
 
 //TODO
 //Try/except handling on opening bundle and dumping files particularly all files - ggpack2 will raise exception
-//Integrated sound
-//Saving of text/image/sound in different formats
-//Send to hex editor button as usual
 //Decoding of wimpy files - tree files?
-//Please wait working while dumping and lock controls
+
 
 namespace ThimbleweedParkExplorer
 {
@@ -31,6 +28,9 @@ namespace ThimbleweedParkExplorer
         public formMain()
         {
             InitializeComponent();
+
+            //Get icon from exe and use for form icon
+            Icon = Icon.ExtractAssociatedIcon(System.Reflection.Assembly.GetExecutingAssembly().Location);
 
             //Set search box height
             cueTextBox1.AutoSize = false;
@@ -102,6 +102,7 @@ namespace ThimbleweedParkExplorer
                 objectListView1.AutoResizeColumns();
                 panelBlank.BringToFront();
                 AddFiletypeContextEntries();
+                UpdateSaveAllMenu();
             }
             finally
             {
@@ -152,30 +153,34 @@ namespace ThimbleweedParkExplorer
             }
         }
 
+        //Parse through all files and enable the appropriate menu if it finds a matching filetype
+        private void UpdateSaveAllMenu()
+        {
+            if (Thimble == null || Thimble.BundleFiles.Count == 0)
+            {
+                btnSaveAllFiles.Enabled = false;
+                return;
+            }
+
+            toolStripSaveAllAudio.Visible = false;
+            toolStripSaveAllImages.Visible = false;
+            toolStripSaveAllText.Visible = false;
+
+            for (int i = 0; i < Thimble.BundleFiles.Count; i++)
+            {
+                if (Thimble.BundleFiles[i].FileType == BundleEntry.FileTypes.Sound)
+                    toolStripSaveAllAudio.Visible = true;
+                if (Thimble.BundleFiles[i].FileType == BundleEntry.FileTypes.Image)
+                    toolStripSaveAllImages.Visible = true;
+                if (Thimble.BundleFiles[i].FileType == BundleEntry.FileTypes.Text)
+                    toolStripSaveAllText.Visible = true;
+            }
+
+        }
 
         private void btnSaveFile_Click(object sender, EventArgs e)
         {
-            if (Thimble == null || Thimble.BundleFiles.Count == 0 || objectListView1.SelectedIndex == -1)
-                return;
-
-            saveFileDialog1.Filter = "All Files|*.*";
-            saveFileDialog1.FileName = ((BundleEntry)objectListView1.SelectedObject).FileName;
-
-            if (saveFileDialog1.ShowDialog() != DialogResult.OK)
-                return;
-
-            int index = Thimble.BundleFiles.IndexOf((BundleEntry)objectListView1.SelectedObject);
-
-            try
-            {
-                log("Saving file " + saveFileDialog1.FileName);
-                EnableDisableControls(false);
-                Thimble.SaveFile(index, saveFileDialog1.FileName);
-            }
-            finally
-            {
-                EnableDisableControls(true);
-            }
+            contextMenuSaveFile.Show(btnSaveFile, new Point(0, btnSaveFile.Height));
         }
 
         private void cueTextBox1_TextChanged(object sender, EventArgs e)
@@ -294,47 +299,7 @@ namespace ThimbleweedParkExplorer
 
         private void btnSaveAllFiles_Click(object sender, EventArgs e)
         {
-            if (Thimble == null || Thimble.BundleFiles.Count == 0)
-                return;
-
-            using (var openFolder = new CommonOpenFileDialog())
-            {
-                openFolder.AllowNonFileSystemItems = true;
-                openFolder.Multiselect = false;
-                openFolder.IsFolderPicker = true;
-                openFolder.Title = "Select a folder";
-
-                if (openFolder.ShowDialog() != CommonFileDialogResult.Ok)
-                    return;
-
-                try
-                {
-                    log("Saving all files...");
-                    EnableDisableControls(false);
-                    panelProgress.Visible = true;
-                    panelProgress.BringToFront();
-
-                    progressBar1.Visible = true;
-                    progressBar1.Maximum = Thimble.BundleFiles.Count;
-                    progressBar1.Step = 1;
-
-                    for (int i = 0; i < Thimble.BundleFiles.Count; i++)
-                    {
-                        Thimble.SaveFile(i, Path.Combine(openFolder.FileName, Thimble.BundleFiles[i].FileName));
-                        progressBar1.PerformStep();
-                        Application.DoEvents(); //HACK use backgroundworker or async task in future
-                    }
-
-                    log("...done!");
-                }
-                finally
-                {
-                    EnableDisableControls(true);
-                    progressBar1.Visible = false;
-                    panelProgress.Visible = false;
-                }
-            }
-
+            contextMenuSaveAll.Show(btnSaveAllFiles, new Point(0, btnSaveAllFiles.Height));
         }
 
         private void EnableDisableControls(bool Value)
@@ -362,7 +327,10 @@ namespace ThimbleweedParkExplorer
 
             if (objectListView1.SelectedIndex != -1)
             {
-                //Different save context menu items make visible eg save as image etc
+                //Different save context menu items make visible
+                toolStripSaveFileAsAudio.Visible = ((BundleEntry)objectListView1.SelectedObject).FileType == BundleEntry.FileTypes.Sound;
+                toolStripSaveFileAsImage.Visible = ((BundleEntry)objectListView1.SelectedObject).FileType == BundleEntry.FileTypes.Image;
+                toolStripSaveFileAsText.Visible = ((BundleEntry)objectListView1.SelectedObject).FileType == BundleEntry.FileTypes.Text;
             }
         }
 
@@ -481,7 +449,335 @@ namespace ThimbleweedParkExplorer
                     audioReader.CurrentTime = temp;
             }
         }
-    
+
+        private void toolStripSaveAllRaw_Click(object sender, EventArgs e)
+        {
+            if (Thimble == null || Thimble.BundleFiles.Count == 0)
+                return;
+
+            using (var openFolder = new CommonOpenFileDialog())
+            {
+                openFolder.AllowNonFileSystemItems = true;
+                openFolder.Multiselect = false;
+                openFolder.IsFolderPicker = true;
+                openFolder.Title = "Select a folder";
+
+                if (openFolder.ShowDialog() != CommonFileDialogResult.Ok)
+                    return;
+
+                try
+                {
+                    log("Saving all files...");
+                    EnableDisableControls(false);
+                    panelProgress.Visible = true;
+                    panelProgress.BringToFront();
+
+                    progressBar1.Visible = true;
+                    progressBar1.Maximum = Thimble.BundleFiles.Count;
+                    progressBar1.Step = 1;
+
+                    for (int i = 0; i < Thimble.BundleFiles.Count; i++)
+                    {
+                        Thimble.SaveFile(i, Path.Combine(openFolder.FileName, Thimble.BundleFiles[i].FileName));
+                        progressBar1.PerformStep();
+                        Application.DoEvents(); //HACK use backgroundworker or async task in future
+                    }
+
+                    log("...done!");
+                }
+                finally
+                {
+                    EnableDisableControls(true);
+                    progressBar1.Visible = false;
+                    panelProgress.Visible = false;
+                }
+            }
+        }
+
+        private void toolStripSaveAllVisible_Click(object sender, EventArgs e)
+        {
+            if (Thimble == null || Thimble.BundleFiles.Count == 0 || objectListView1.GetItemCount() == 0)
+                return;
+
+            using (var openFolder = new CommonOpenFileDialog())
+            {
+                openFolder.AllowNonFileSystemItems = true;
+                openFolder.Multiselect = false;
+                openFolder.IsFolderPicker = true;
+                openFolder.Title = "Select a folder";
+
+                if (openFolder.ShowDialog() != CommonFileDialogResult.Ok)
+                    return;
+                  
+                try
+                {
+                    log("Saving all visible files...");
+                    EnableDisableControls(false);
+                    panelProgress.Visible = true;
+                    panelProgress.BringToFront();
+
+                    progressBar1.Visible = true;
+                    progressBar1.Maximum = Thimble.BundleFiles.Count;
+                    progressBar1.Step = 1;
+                    
+
+                    foreach (var item in objectListView1.FilteredObjects)
+                    {
+                        int index = Thimble.BundleFiles.IndexOf((BundleEntry)item);
+                        Thimble.SaveFile(index, Path.Combine(openFolder.FileName, Thimble.BundleFiles[index].FileName));
+                        progressBar1.PerformStep();
+                        Application.DoEvents(); //HACK use backgroundworker or async task in future
+                    }
+
+                    log("...done!");
+                }
+                finally
+                {
+                    EnableDisableControls(true);
+                    progressBar1.Visible = false;
+                    panelProgress.Visible = false;
+                }
+            }
+        }
+
+        private void toolStripSaveAllText_Click(object sender, EventArgs e)
+        {
+            if (Thimble == null || Thimble.BundleFiles.Count == 0)
+                return;
+
+            using (var openFolder = new CommonOpenFileDialog())
+            {
+                openFolder.AllowNonFileSystemItems = true;
+                openFolder.Multiselect = false;
+                openFolder.IsFolderPicker = true;
+                openFolder.Title = "Select a folder";
+
+                if (openFolder.ShowDialog() != CommonFileDialogResult.Ok)
+                    return;
+
+                try
+                {
+                    log("Saving all text files...");
+                    EnableDisableControls(false);
+                    panelProgress.Visible = true;
+                    panelProgress.BringToFront();
+
+                    progressBar1.Visible = true;
+                    progressBar1.Maximum = Thimble.BundleFiles.Count;
+                    progressBar1.Step = 1;
+
+                    for (int i = 0; i < Thimble.BundleFiles.Count; i++)
+                    {
+                        if (Thimble.BundleFiles[i].FileType == BundleEntry.FileTypes.Text)
+                            Thimble.SaveFile(i, Path.Combine(openFolder.FileName, Thimble.BundleFiles[i].FileName + ".txt"));
+
+                        progressBar1.PerformStep();
+                        Application.DoEvents(); //HACK use backgroundworker or async task in future
+                    }
+
+                    log("...done!");
+                }
+                finally
+                {
+                    EnableDisableControls(true);
+                    progressBar1.Visible = false;
+                    panelProgress.Visible = false;
+                }
+            }
+        }
+
+        private void toolStripSaveAllImages_Click(object sender, EventArgs e)
+        {
+            if (Thimble == null || Thimble.BundleFiles.Count == 0)
+                return;
+
+            using (var openFolder = new CommonOpenFileDialog())
+            {
+                openFolder.AllowNonFileSystemItems = true;
+                openFolder.Multiselect = false;
+                openFolder.IsFolderPicker = true;
+                openFolder.Title = "Select a folder";
+
+                if (openFolder.ShowDialog() != CommonFileDialogResult.Ok)
+                    return;
+
+                try
+                {
+                    log("Saving all images...");
+                    EnableDisableControls(false);
+                    panelProgress.Visible = true;
+                    panelProgress.BringToFront();
+
+                    progressBar1.Visible = true;
+                    progressBar1.Maximum = Thimble.BundleFiles.Count;
+                    progressBar1.Step = 1;
+
+                    for (int i = 0; i < Thimble.BundleFiles.Count; i++)
+                    {
+                        if (Thimble.BundleFiles[i].FileType == BundleEntry.FileTypes.Image)
+                            Thimble.SaveFile(i, Path.Combine(openFolder.FileName, Thimble.BundleFiles[i].FileName));
+
+                        progressBar1.PerformStep();
+                        Application.DoEvents(); //HACK use backgroundworker or async task in future
+                    }
+
+                    log("...done!");
+                }
+                finally
+                {
+                    EnableDisableControls(true);
+                    progressBar1.Visible = false;
+                    panelProgress.Visible = false;
+                }
+            }
+        }
+
+        private void toolStripSaveAllAudio_Click(object sender, EventArgs e)
+        {
+            if (Thimble == null || Thimble.BundleFiles.Count == 0)
+                return;
+
+            using (var openFolder = new CommonOpenFileDialog())
+            {
+                openFolder.AllowNonFileSystemItems = true;
+                openFolder.Multiselect = false;
+                openFolder.IsFolderPicker = true;
+                openFolder.Title = "Select a folder";
+
+                if (openFolder.ShowDialog() != CommonFileDialogResult.Ok)
+                    return;
+
+                try
+                {
+                    log("Saving all audio files...");
+                    EnableDisableControls(false);
+                    panelProgress.Visible = true;
+                    panelProgress.BringToFront();
+
+                    progressBar1.Visible = true;
+                    progressBar1.Maximum = Thimble.BundleFiles.Count;
+                    progressBar1.Step = 1;
+
+                    for (int i = 0; i < Thimble.BundleFiles.Count; i++)
+                    {
+                        if (Thimble.BundleFiles[i].FileType == BundleEntry.FileTypes.Sound)
+                            Thimble.SaveFile(i, Path.Combine(openFolder.FileName, Thimble.BundleFiles[i].FileName));
+
+                        progressBar1.PerformStep();
+                        Application.DoEvents(); //HACK use backgroundworker or async task in future
+                    }
+
+                    log("...done!");
+                }
+                finally
+                {
+                    EnableDisableControls(true);
+                    progressBar1.Visible = false;
+                    panelProgress.Visible = false;
+                }
+            }
+        }
+
+        private void toolStripSaveFileRaw_Click(object sender, EventArgs e)
+        {
+            if (Thimble == null || Thimble.BundleFiles.Count == 0 || objectListView1.SelectedIndex == -1)
+                return;
+
+            saveFileDialog1.Filter = "All Files|*.*";
+            saveFileDialog1.FileName = ((BundleEntry)objectListView1.SelectedObject).FileName;
+
+            if (saveFileDialog1.ShowDialog() != DialogResult.OK)
+                return;
+
+            int index = Thimble.BundleFiles.IndexOf((BundleEntry)objectListView1.SelectedObject);
+
+            try
+            {
+                log("Saving file " + saveFileDialog1.FileName);
+                EnableDisableControls(false);
+                Thimble.SaveFile(index, saveFileDialog1.FileName);
+            }
+            finally
+            {
+                EnableDisableControls(true);
+            }
+        }
+
+        private void toolStripSaveFileAsText_Click(object sender, EventArgs e)
+        {
+            if (Thimble == null || Thimble.BundleFiles.Count == 0 || objectListView1.SelectedIndex == -1)
+                return;
+
+            saveFileDialog1.Filter = "Text Files|*.txt*";
+            saveFileDialog1.FileName = ((BundleEntry)objectListView1.SelectedObject).FileName + ".txt";
+
+            if (saveFileDialog1.ShowDialog() != DialogResult.OK)
+                return;
+
+            int index = Thimble.BundleFiles.IndexOf((BundleEntry)objectListView1.SelectedObject);
+
+            try
+            {
+                log("Saving file " + saveFileDialog1.FileName);
+                EnableDisableControls(false);
+                Thimble.SaveFile(index, saveFileDialog1.FileName);
+            }
+            finally
+            {
+                EnableDisableControls(true);
+            }
+        }
+
+        private void toolStripSaveFileAsImage_Click(object sender, EventArgs e)
+        {
+            if (Thimble == null || Thimble.BundleFiles.Count == 0 || objectListView1.SelectedIndex == -1)
+                return;
+
+            saveFileDialog1.Filter = "Image Files|*.png*";
+            saveFileDialog1.FileName = ((BundleEntry)objectListView1.SelectedObject).FileName;
+
+            if (saveFileDialog1.ShowDialog() != DialogResult.OK)
+                return;
+
+            int index = Thimble.BundleFiles.IndexOf((BundleEntry)objectListView1.SelectedObject);
+
+            try
+            {
+                log("Saving file " + saveFileDialog1.FileName);
+                EnableDisableControls(false);
+                Thimble.SaveFile(index, saveFileDialog1.FileName);
+            }
+            finally
+            {
+                EnableDisableControls(true);
+            }
+        }
+
+        private void toolStripSaveFileAsAudio_Click(object sender, EventArgs e)
+        {
+            if (Thimble == null || Thimble.BundleFiles.Count == 0 || objectListView1.SelectedIndex == -1)
+                return;
+
+            saveFileDialog1.Filter = "Audio Files|*.ogg*";
+            saveFileDialog1.FileName = ((BundleEntry)objectListView1.SelectedObject).FileName;
+
+            if (saveFileDialog1.ShowDialog() != DialogResult.OK)
+                return;
+
+            int index = Thimble.BundleFiles.IndexOf((BundleEntry)objectListView1.SelectedObject);
+
+            try
+            {
+                log("Saving file " + saveFileDialog1.FileName);
+                EnableDisableControls(false);
+                Thimble.SaveFile(index, saveFileDialog1.FileName);
+            }
+            finally
+            {
+                EnableDisableControls(true);
+            }
+        }
+
         //private void btnSoundPlay_Click(object sender, EventArgs e)
         //{
         //    if (outputDevice != null && outputDevice.PlaybackState == PlaybackState.Playing)
