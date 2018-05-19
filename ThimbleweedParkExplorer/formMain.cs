@@ -7,9 +7,11 @@ using System.IO;
 using System.Linq;
 using System.Windows.Forms;
 using ThimbleweedLibrary;
+using NAudio.Wave;
+using NAudio.Vorbis;
 
 //TODO
-//Try/except handling on opening bundle and dumping files particularlly all files - ggpack2 will raise exception
+//Try/except handling on opening bundle and dumping files particularly all files - ggpack2 will raise exception
 //Integrated sound
 //Saving of text/image/sound in different formats
 //Send to hex editor button as usual
@@ -20,6 +22,10 @@ namespace ThimbleweedParkExplorer
 {
     public partial class formMain : Form
     {
+        private WaveOutEvent outputDevice;
+        private WaveStream audioReader;
+        private MemoryStream audioDataStream;
+
         public BundleReader_ggpack Thimble;
 
         public formMain()
@@ -366,5 +372,169 @@ namespace ThimbleweedParkExplorer
             f.ShowDialog(this);
             f.Dispose();
         }
+
+        private void objectListView1_DoubleClick(object sender, EventArgs e)
+        {
+            if (Thimble == null || Thimble.BundleFiles.Count == 0 || objectListView1.SelectedIndex == -1)
+                return;
+
+            int index = Thimble.BundleFiles.IndexOf((BundleEntry)objectListView1.SelectedObject);
+
+            if (Thimble.BundleFiles[index].FileType == BundleEntry.FileTypes.Sound)
+            {
+                btnSoundPlay.PerformClick();
+            }
+        }
+
+        private void btnSoundPlay_Click(object sender, EventArgs e)
+        {
+            if (Thimble == null || Thimble.BundleFiles.Count == 0 || objectListView1.SelectedIndex == -1)
+                return;
+
+             int index = Thimble.BundleFiles.IndexOf((BundleEntry)objectListView1.SelectedObject);
+
+            if (Thimble.BundleFiles[index].FileType != BundleEntry.FileTypes.Sound)
+                return;
+
+            DisposeAudio();
+
+            audioDataStream = new MemoryStream();
+            Thimble.SaveFileToStream(index, audioDataStream);
+            outputDevice = new WaveOutEvent();
+
+            if (Thimble.BundleFiles[index].FileExtension == "ogg") 
+            {
+                audioReader = new VorbisWaveReader(audioDataStream);
+            }
+            else if (Thimble.BundleFiles[index].FileExtension == "wav")
+            {
+                audioReader = new WaveFileReader(audioDataStream);
+            }
+            else throw new InvalidOperationException("Not a correct audio file type.");
+
+            outputDevice.Init(audioReader);
+            labelSoundProgress.Text = String.Format("{0:00}:{1:00} / {2:00}:{3:00}", 0, 0, (int)audioReader.TotalTime.TotalMinutes, audioReader.TotalTime.Seconds);
+            outputDevice.Play();
+        }
+
+        private void btnSoundStop_Click(object sender, EventArgs e)
+        {
+            DisposeAudio();
+        }
+
+        private void DisposeAudio()
+        {
+            if (outputDevice != null)
+            {
+                if (outputDevice.PlaybackState == PlaybackState.Playing) outputDevice.Stop();
+                outputDevice.Dispose();
+                outputDevice = null;
+            }
+            if (audioReader != null)
+            {
+                audioReader.Dispose();
+                audioReader = null;
+            }
+            if (audioDataStream != null)
+            {
+                audioDataStream.Dispose();
+                audioDataStream = null;
+            }
+        }
+
+        private void btnSoundPause_Click(object sender, EventArgs e)
+        {
+            if (outputDevice != null)
+            {
+                if (outputDevice.PlaybackState == PlaybackState.Playing) outputDevice.Pause();
+                else if (outputDevice.PlaybackState == PlaybackState.Paused) outputDevice.Play();
+            }
+        }
+
+        private void formMain_FormClosing(object sender, FormClosingEventArgs e)
+        {
+            DisposeAudio();
+        }
+
+        private void timer1_Tick(object sender, EventArgs e)
+        {
+            if (outputDevice != null && audioReader != null)
+            {
+                TimeSpan currentTime = (outputDevice.PlaybackState == PlaybackState.Stopped) ? TimeSpan.Zero : audioReader.CurrentTime;
+                trackBarSound.Value = Math.Min(trackBarSound.Maximum, (int)(100 * currentTime.TotalSeconds / audioReader.TotalTime.TotalSeconds));
+                labelSoundProgress.Text = String.Format("{0:00}:{1:00} / {2:00}:{3:00}", (int)currentTime.TotalMinutes, currentTime.Seconds, (int)audioReader.TotalTime.TotalMinutes, audioReader.TotalTime.Seconds);
+            }
+            else
+            {
+                trackBarSound.Value = 0;
+            }
+        }
+
+        private void trackBarSound_Scroll(object sender, EventArgs e)
+        {
+            if (outputDevice != null && audioReader != null)
+            {
+                audioReader.CurrentTime = TimeSpan.FromSeconds(audioReader.TotalTime.TotalSeconds * trackBarSound.Value / 100.0);
+            }
+        }
+    
+        //private void btnSoundPlay_Click(object sender, EventArgs e)
+        //{
+        //    if (outputDevice != null && outputDevice.PlaybackState == PlaybackState.Playing)
+        //    {
+        //        outputDevice?.Stop();
+        //        //while (PlayBackStopped == false)
+        //        //{
+        //        //    System.Threading.Thread.Sleep(500);
+        //        //}
+        //        //while (outputDevice != null)
+        //        //{
+        //        //    System.Threading.Thread.Sleep(500);
+        //        //}
+        //    }
+
+        //    if (Thimble == null || Thimble.BundleFiles.Count == 0 || objectListView1.SelectedIndex == -1)
+        //        return;
+
+        //    int index = Thimble.BundleFiles.IndexOf((BundleEntry)objectListView1.SelectedObject);
+
+        //    if (Thimble.BundleFiles[index].FileType != BundleEntry.FileTypes.Sound)
+        //        return;
+
+
+        //    using (MemoryStream ms = new MemoryStream())
+        //    {
+        //        Thimble.SaveFileToStream(index, ms);
+
+        //        if (outputDevice == null)
+        //        {
+        //            outputDevice = new WaveOutEvent();
+        //            outputDevice.PlaybackStopped += OnPlaybackStopped;
+        //        }
+
+        //        if (vorbisStream == null)
+        //        {
+        //            vorbisStream = new VorbisWaveReader(ms);
+        //            outputDevice.Init(vorbisStream);
+        //            outputDevice.Play();
+        //        }
+
+        //    }
+        //}
+
+        //private void OnPlaybackStopped(object sender, StoppedEventArgs args)
+        //{
+        //    outputDevice.Dispose();
+        //    outputDevice = null;
+        //    vorbisStream.Dispose();
+        //    vorbisStream = null;
+        //}
+
+        //private void btnSoundStop_Click(object sender, EventArgs e)
+        //{
+        //    outputDevice?.Stop();
+        //}
+
+
     }
 }
