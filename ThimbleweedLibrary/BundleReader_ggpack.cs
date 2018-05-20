@@ -22,9 +22,22 @@ namespace ThimbleweedLibrary
         public FileTypes FileType = FileTypes.None;
     }
 
+    //For the logging event
+    public class StringEventArgs : EventArgs
+    {
+        public string Message { get; private set; }
+
+        public StringEventArgs(string message)
+        {
+            this.Message = message;
+        }
+
+    }
+
     public class BundleReader_ggpack : IDisposable
     {
         public List<BundleEntry> BundleFiles;
+        public event EventHandler<StringEventArgs> LogEvent;
         private string BundleFilename;
         private BinaryStream fileReader;
 
@@ -309,8 +322,6 @@ namespace ThimbleweedLibrary
         {
             if (FileNo < 0 || FileNo > BundleFiles.Count)
                 throw new ArgumentException(FileNo.ToString() + " Invalid file number! Save cancelled.");
-            if (BundleFiles[FileNo].Size == 0)
-                throw new ArgumentException(FileNo.ToString() + " Filesize <=0 Save cancelled.");
 
             using (Stream file = File.Create(PathAndFileName))
             {
@@ -323,7 +334,9 @@ namespace ThimbleweedLibrary
             if (FileNo < 0 || FileNo > BundleFiles.Count)
                 throw new ArgumentException(FileNo.ToString() + " Invalid file number! Save cancelled.");
             if (BundleFiles[FileNo].Size == 0)
-                throw new ArgumentException(FileNo.ToString() + " Filesize <=0 Save cancelled.");
+                //throw new ArgumentException(BundleFiles[FileNo].FileName + " File num " + FileNo.ToString() + " Filesize = 0 Skipping this file.");
+                Log( BundleFiles[FileNo].FileName + " File num " + FileNo.ToString() + " Filesize = 0 Skipping this file.");
+
 
             using (MemoryStream ms = new MemoryStream())
             {
@@ -351,6 +364,11 @@ namespace ThimbleweedLibrary
                 output.Write(buffer, 0, read);
                 bytes -= read;
             }
+        }
+
+        protected virtual void Log(string e)
+        {
+            this.LogEvent?.Invoke(this, new StringEventArgs(e));
         }
     }
 }

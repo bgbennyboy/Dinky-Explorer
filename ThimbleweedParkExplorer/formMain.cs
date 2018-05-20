@@ -11,7 +11,6 @@ using NAudio.Wave;
 using NAudio.Vorbis;
 
 //TODO
-//Try/except handling on opening bundle and dumping files particularly all files - ggpack2 will raise exception
 //Decoding of wimpy files - tree files?
 
 
@@ -91,23 +90,42 @@ namespace ThimbleweedParkExplorer
             {
                 EnableDisableControls(false);
 
+                //objectListView1.Items.Clear();
+
                 if (Thimble != null)
+                {
+                    objectListView1.RemoveObjects(Thimble.BundleFiles);
                     Thimble.Dispose();
+                }
+
+                //Clear any existing filters
+                objectListView1.ModelFilter = null;
+
                 Thimble = new BundleReader_ggpack(openFileDialog1.FileName);
+                Thimble.LogEvent += this.HandleLogEvent;
 
                 richTextBoxLog.Clear();
                 log("Opened " + openFileDialog1.SafeFileName);
-                objectListView1.Items.Clear();
                 objectListView1.SetObjects(Thimble.BundleFiles);
                 objectListView1.AutoResizeColumns();
                 panelBlank.BringToFront();
                 AddFiletypeContextEntries();
                 UpdateSaveAllMenu();
             }
+            catch (ArgumentException ex)
+            {
+                log(ex.Message);
+                contextMenuView.Items.Clear();
+            }
             finally
             {
                 EnableDisableControls(true);
             }
+        }
+
+        private void HandleLogEvent(object sender, StringEventArgs e)
+        {
+            log(e.Message);
         }
 
         private void log(string logText)
@@ -293,6 +311,15 @@ namespace ThimbleweedParkExplorer
                 // Dispose stuff here
                 if (Thimble != null)
                     Thimble.Dispose();
+
+                if (outputDevice != null)
+                    outputDevice.Dispose();
+
+                if (audioReader != null)
+                    audioReader.Dispose();
+
+                if (audioDataStream != null)
+                    audioDataStream.Dispose();
             }
             base.Dispose(disposing);
         }
@@ -475,6 +502,7 @@ namespace ThimbleweedParkExplorer
                     progressBar1.Visible = true;
                     progressBar1.Maximum = Thimble.BundleFiles.Count;
                     progressBar1.Step = 1;
+                    progressBar1.Value = 0;
 
                     for (int i = 0; i < Thimble.BundleFiles.Count; i++)
                     {
@@ -484,6 +512,10 @@ namespace ThimbleweedParkExplorer
                     }
 
                     log("...done!");
+                }
+                catch (ArgumentException ex)
+                {
+                    log(ex.Message);
                 }
                 finally
                 {
@@ -519,7 +551,8 @@ namespace ThimbleweedParkExplorer
                     progressBar1.Visible = true;
                     progressBar1.Maximum = Thimble.BundleFiles.Count;
                     progressBar1.Step = 1;
-                    
+                    progressBar1.Value = 0;
+
 
                     foreach (var item in objectListView1.FilteredObjects)
                     {
@@ -565,6 +598,7 @@ namespace ThimbleweedParkExplorer
                     progressBar1.Visible = true;
                     progressBar1.Maximum = Thimble.BundleFiles.Count;
                     progressBar1.Step = 1;
+                    progressBar1.Value = 0;
 
                     for (int i = 0; i < Thimble.BundleFiles.Count; i++)
                     {
@@ -611,6 +645,7 @@ namespace ThimbleweedParkExplorer
                     progressBar1.Visible = true;
                     progressBar1.Maximum = Thimble.BundleFiles.Count;
                     progressBar1.Step = 1;
+                    progressBar1.Value = 0;
 
                     for (int i = 0; i < Thimble.BundleFiles.Count; i++)
                     {
@@ -657,6 +692,7 @@ namespace ThimbleweedParkExplorer
                     progressBar1.Visible = true;
                     progressBar1.Maximum = Thimble.BundleFiles.Count;
                     progressBar1.Step = 1;
+                    progressBar1.Value = 0;
 
                     for (int i = 0; i < Thimble.BundleFiles.Count; i++)
                     {
