@@ -1,5 +1,7 @@
 ﻿using BrightIdeasSoftware;
 using Microsoft.WindowsAPICodePack.Dialogs;
+using NAudio.Vorbis;
+using NAudio.Wave;
 using System;
 using System.Data;
 using System.Drawing;
@@ -7,12 +9,9 @@ using System.IO;
 using System.Linq;
 using System.Windows.Forms;
 using ThimbleweedLibrary;
-using NAudio.Wave;
-using NAudio.Vorbis;
 
 //TODO
 //Decoding of wimpy files - tree files?
-
 
 namespace ThimbleweedParkExplorer
 {
@@ -54,7 +53,7 @@ namespace ThimbleweedParkExplorer
 
             //Add info to log box
             richTextBoxLog.Text = Constants.ProgName + " " + Constants.Version + Environment.NewLine + Constants.URL;
-            
+
             //Set listview background
             objectListView1.SetNativeBackgroundTiledImage(Properties.Resources.listViewBackground);
 
@@ -84,7 +83,6 @@ namespace ThimbleweedParkExplorer
         {
             if (openFileDialog1.ShowDialog() != DialogResult.OK)
                 return;
-
 
             try
             {
@@ -193,7 +191,6 @@ namespace ThimbleweedParkExplorer
                 if (Thimble.BundleFiles[i].FileType == BundleEntry.FileTypes.Text)
                     toolStripSaveAllText.Visible = true;
             }
-
         }
 
         private void btnSaveFile_Click(object sender, EventArgs e)
@@ -261,7 +258,7 @@ namespace ThimbleweedParkExplorer
                             ((IDisposable)oldImage).Dispose();
 
                         Thimble.SaveFileToStream(index, ms);
-                        var image = Image.FromStream(ms); 
+                        var image = Image.FromStream(ms);
                         pictureBoxPreview.Image = image;
 
                         //Set scaling mode depending on whether image is larger or smaller than the picturebox. From https://stackoverflow.com/questions/41188806/fit-image-to-picturebox-if-picturebox-is-smaller-than-picture
@@ -386,7 +383,7 @@ namespace ThimbleweedParkExplorer
             if (Thimble == null || Thimble.BundleFiles.Count == 0 || objectListView1.SelectedIndex == -1)
                 return;
 
-             int index = Thimble.BundleFiles.IndexOf((BundleEntry)objectListView1.SelectedObject);
+            int index = Thimble.BundleFiles.IndexOf((BundleEntry)objectListView1.SelectedObject);
 
             if (Thimble.BundleFiles[index].FileType != BundleEntry.FileTypes.Sound)
                 return;
@@ -397,7 +394,7 @@ namespace ThimbleweedParkExplorer
             Thimble.SaveFileToStream(index, audioDataStream);
             outputDevice = new WaveOutEvent();
 
-            if (Thimble.BundleFiles[index].FileExtension == "ogg") 
+            if (Thimble.BundleFiles[index].FileExtension == "ogg")
             {
                 audioReader = new VorbisWaveReader(audioDataStream);
             }
@@ -540,7 +537,7 @@ namespace ThimbleweedParkExplorer
 
                 if (openFolder.ShowDialog() != CommonFileDialogResult.Ok)
                     return;
-                  
+
                 try
                 {
                     log("Saving all visible files...");
@@ -552,7 +549,6 @@ namespace ThimbleweedParkExplorer
                     progressBar1.Maximum = Thimble.BundleFiles.Count;
                     progressBar1.Step = 1;
                     progressBar1.Value = 0;
-
 
                     foreach (var item in objectListView1.FilteredObjects)
                     {
@@ -714,17 +710,36 @@ namespace ThimbleweedParkExplorer
             }
         }
 
-        private void toolStripSaveFileRaw_Click(object sender, EventArgs e)
+        private void SaveFileAsHandler(object sender, EventArgs e)
         {
             if (Thimble == null || Thimble.BundleFiles.Count == 0 || objectListView1.SelectedIndex == -1)
                 return;
 
-            saveFileDialog1.Filter = "All Files|*.*";
-            saveFileDialog1.FileName = ((BundleEntry)objectListView1.SelectedObject).FileName;
+            if (sender.Equals(toolStripSaveFileAsAudio))
+            {
+                saveFileDialog1.Filter = "Audio Files|*.ogg*";
+                saveFileDialog1.FileName = ((BundleEntry)objectListView1.SelectedObject).FileName;
+            }
+            else if (sender.Equals(toolStripSaveFileAsImage))
+            {
+                saveFileDialog1.Filter = "Image Files|*.png*";
+                saveFileDialog1.FileName = ((BundleEntry)objectListView1.SelectedObject).FileName;
+            }
+            else if (sender.Equals(toolStripSaveFileAsText))
+            {
+                saveFileDialog1.Filter = "Text Files|*.txt*";
+                saveFileDialog1.FileName = ((BundleEntry)objectListView1.SelectedObject).FileName + ".txt";
+            }
+            else if (sender.Equals(toolStripSaveFileRaw))
+            {
+                saveFileDialog1.Filter = "All Files|*.**";
+                saveFileDialog1.FileName = ((BundleEntry)objectListView1.SelectedObject).FileName;
+            }
+            else
+                log("Unknown sender in SaveFileAs !");
 
             if (saveFileDialog1.ShowDialog() != DialogResult.OK)
                 return;
-
             int index = Thimble.BundleFiles.IndexOf((BundleEntry)objectListView1.SelectedObject);
 
             try
@@ -737,140 +752,7 @@ namespace ThimbleweedParkExplorer
             {
                 EnableDisableControls(true);
             }
+
         }
-
-        private void toolStripSaveFileAsText_Click(object sender, EventArgs e)
-        {
-            if (Thimble == null || Thimble.BundleFiles.Count == 0 || objectListView1.SelectedIndex == -1)
-                return;
-
-            saveFileDialog1.Filter = "Text Files|*.txt*";
-            saveFileDialog1.FileName = ((BundleEntry)objectListView1.SelectedObject).FileName + ".txt";
-
-            if (saveFileDialog1.ShowDialog() != DialogResult.OK)
-                return;
-
-            int index = Thimble.BundleFiles.IndexOf((BundleEntry)objectListView1.SelectedObject);
-
-            try
-            {
-                log("Saving file " + saveFileDialog1.FileName);
-                EnableDisableControls(false);
-                Thimble.SaveFile(index, saveFileDialog1.FileName);
-            }
-            finally
-            {
-                EnableDisableControls(true);
-            }
-        }
-
-        private void toolStripSaveFileAsImage_Click(object sender, EventArgs e)
-        {
-            if (Thimble == null || Thimble.BundleFiles.Count == 0 || objectListView1.SelectedIndex == -1)
-                return;
-
-            saveFileDialog1.Filter = "Image Files|*.png*";
-            saveFileDialog1.FileName = ((BundleEntry)objectListView1.SelectedObject).FileName;
-
-            if (saveFileDialog1.ShowDialog() != DialogResult.OK)
-                return;
-
-            int index = Thimble.BundleFiles.IndexOf((BundleEntry)objectListView1.SelectedObject);
-
-            try
-            {
-                log("Saving file " + saveFileDialog1.FileName);
-                EnableDisableControls(false);
-                Thimble.SaveFile(index, saveFileDialog1.FileName);
-            }
-            finally
-            {
-                EnableDisableControls(true);
-            }
-        }
-
-        private void toolStripSaveFileAsAudio_Click(object sender, EventArgs e)
-        {
-            if (Thimble == null || Thimble.BundleFiles.Count == 0 || objectListView1.SelectedIndex == -1)
-                return;
-
-            saveFileDialog1.Filter = "Audio Files|*.ogg*";
-            saveFileDialog1.FileName = ((BundleEntry)objectListView1.SelectedObject).FileName;
-
-            if (saveFileDialog1.ShowDialog() != DialogResult.OK)
-                return;
-
-            int index = Thimble.BundleFiles.IndexOf((BundleEntry)objectListView1.SelectedObject);
-
-            try
-            {
-                log("Saving file " + saveFileDialog1.FileName);
-                EnableDisableControls(false);
-                Thimble.SaveFile(index, saveFileDialog1.FileName);
-            }
-            finally
-            {
-                EnableDisableControls(true);
-            }
-        }
-
-        //private void btnSoundPlay_Click(object sender, EventArgs e)
-        //{
-        //    if (outputDevice != null && outputDevice.PlaybackState == PlaybackState.Playing)
-        //    {
-        //        outputDevice?.Stop();
-        //        //while (PlayBackStopped == false)
-        //        //{
-        //        //    System.Threading.Thread.Sleep(500);
-        //        //}
-        //        //while (outputDevice != null)
-        //        //{
-        //        //    System.Threading.Thread.Sleep(500);
-        //        //}
-        //    }
-
-        //    if (Thimble == null || Thimble.BundleFiles.Count == 0 || objectListView1.SelectedIndex == -1)
-        //        return;
-
-        //    int index = Thimble.BundleFiles.IndexOf((BundleEntry)objectListView1.SelectedObject);
-
-        //    if (Thimble.BundleFiles[index].FileType != BundleEntry.FileTypes.Sound)
-        //        return;
-
-
-        //    using (MemoryStream ms = new MemoryStream())
-        //    {
-        //        Thimble.SaveFileToStream(index, ms);
-
-        //        if (outputDevice == null)
-        //        {
-        //            outputDevice = new WaveOutEvent();
-        //            outputDevice.PlaybackStopped += OnPlaybackStopped;
-        //        }
-
-        //        if (vorbisStream == null)
-        //        {
-        //            vorbisStream = new VorbisWaveReader(ms);
-        //            outputDevice.Init(vorbisStream);
-        //            outputDevice.Play();
-        //        }
-
-        //    }
-        //}
-
-        //private void OnPlaybackStopped(object sender, StoppedEventArgs args)
-        //{
-        //    outputDevice.Dispose();
-        //    outputDevice = null;
-        //    vorbisStream.Dispose();
-        //    vorbisStream = null;
-        //}
-
-        //private void btnSoundStop_Click(object sender, EventArgs e)
-        //{
-        //    outputDevice?.Stop();
-        //}
-
-
     }
 }

@@ -627,7 +627,7 @@
             this.toolStripSaveFileRaw.Name = "toolStripSaveFileRaw";
             this.toolStripSaveFileRaw.Size = new System.Drawing.Size(163, 22);
             this.toolStripSaveFileRaw.Text = "As is (raw dump)";
-            this.toolStripSaveFileRaw.Click += new System.EventHandler(this.toolStripSaveFileRaw_Click);
+            this.toolStripSaveFileRaw.Click += new System.EventHandler(this.SaveFileAsHandler);
             // 
             // toolStripSaveFileAsText
             // 
@@ -635,7 +635,7 @@
             this.toolStripSaveFileAsText.Name = "toolStripSaveFileAsText";
             this.toolStripSaveFileAsText.Size = new System.Drawing.Size(163, 22);
             this.toolStripSaveFileAsText.Text = "As text";
-            this.toolStripSaveFileAsText.Click += new System.EventHandler(this.toolStripSaveFileAsText_Click);
+            this.toolStripSaveFileAsText.Click += new System.EventHandler(this.SaveFileAsHandler);
             // 
             // toolStripSaveFileAsImage
             // 
@@ -643,7 +643,7 @@
             this.toolStripSaveFileAsImage.Name = "toolStripSaveFileAsImage";
             this.toolStripSaveFileAsImage.Size = new System.Drawing.Size(163, 22);
             this.toolStripSaveFileAsImage.Text = "As Image";
-            this.toolStripSaveFileAsImage.Click += new System.EventHandler(this.toolStripSaveFileAsImage_Click);
+            this.toolStripSaveFileAsImage.Click += new System.EventHandler(this.SaveFileAsHandler);
             // 
             // toolStripSaveFileAsAudio
             // 
@@ -651,7 +651,7 @@
             this.toolStripSaveFileAsAudio.Name = "toolStripSaveFileAsAudio";
             this.toolStripSaveFileAsAudio.Size = new System.Drawing.Size(163, 22);
             this.toolStripSaveFileAsAudio.Text = "As audio";
-            this.toolStripSaveFileAsAudio.Click += new System.EventHandler(this.toolStripSaveFileAsAudio_Click);
+            this.toolStripSaveFileAsAudio.Click += new System.EventHandler(this.SaveFileAsHandler);
             // 
             // formMain
             // 
