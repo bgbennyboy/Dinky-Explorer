@@ -29,10 +29,6 @@
             this.btnView = new System.Windows.Forms.Button();
             this.btnOpen = new System.Windows.Forms.Button();
             this.contextMenuView = new System.Windows.Forms.ContextMenuStrip(this.components);
-            this.testToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
-            this.testToolStripMenuItem1 = new System.Windows.Forms.ToolStripMenuItem();
-            this.testToolStripMenuItem2 = new System.Windows.Forms.ToolStripMenuItem();
-            this.toolStripMenuItem1 = new System.Windows.Forms.ToolStripSeparator();
             this.splitContainer1 = new System.Windows.Forms.SplitContainer();
             this.objectListView1 = new BrightIdeasSoftware.ObjectListView();
             this.columnFilename = ((BrightIdeasSoftware.OLVColumn)(new BrightIdeasSoftware.OLVColumn()));
@@ -55,7 +51,7 @@
             this.panelText = new System.Windows.Forms.Panel();
             this.textBoxPreview = new System.Windows.Forms.TextBox();
             this.saveFileDialog1 = new System.Windows.Forms.SaveFileDialog();
-            this.progressBar1 = new System.Windows.Forms.ProgressBar();
+            this.progressBar1 = new ThimbleweedParkExplorer.CustomProgressBar();
             this.timer1 = new System.Windows.Forms.Timer(this.components);
             this.contextMenuSaveAll = new System.Windows.Forms.ContextMenuStrip(this.components);
             this.toolStripSaveAllRaw = new System.Windows.Forms.ToolStripMenuItem();
@@ -69,7 +65,6 @@
             this.toolStripSaveFileAsImage = new System.Windows.Forms.ToolStripMenuItem();
             this.toolStripSaveFileAsAudio = new System.Windows.Forms.ToolStripMenuItem();
             this.panel1.SuspendLayout();
-            this.contextMenuView.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.splitContainer1)).BeginInit();
             this.splitContainer1.Panel1.SuspendLayout();
             this.splitContainer1.Panel2.SuspendLayout();
@@ -248,38 +243,9 @@
             // contextMenuView
             // 
             this.contextMenuView.Font = new System.Drawing.Font("Segoe UI", 9F);
-            this.contextMenuView.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {
-            this.testToolStripMenuItem,
-            this.testToolStripMenuItem1,
-            this.testToolStripMenuItem2,
-            this.toolStripMenuItem1});
             this.contextMenuView.Name = "contextMenuView";
-            this.contextMenuView.Size = new System.Drawing.Size(96, 76);
+            this.contextMenuView.Size = new System.Drawing.Size(181, 26);
             this.contextMenuView.ItemClicked += new System.Windows.Forms.ToolStripItemClickedEventHandler(this.contextMenuView_ItemClicked);
-            // 
-            // testToolStripMenuItem
-            // 
-            this.testToolStripMenuItem.Name = "testToolStripMenuItem";
-            this.testToolStripMenuItem.Size = new System.Drawing.Size(95, 22);
-            this.testToolStripMenuItem.Tag = "";
-            this.testToolStripMenuItem.Text = "Test";
-            // 
-            // testToolStripMenuItem1
-            // 
-            this.testToolStripMenuItem1.Name = "testToolStripMenuItem1";
-            this.testToolStripMenuItem1.Size = new System.Drawing.Size(95, 22);
-            this.testToolStripMenuItem1.Text = "test";
-            // 
-            // testToolStripMenuItem2
-            // 
-            this.testToolStripMenuItem2.Name = "testToolStripMenuItem2";
-            this.testToolStripMenuItem2.Size = new System.Drawing.Size(95, 22);
-            this.testToolStripMenuItem2.Text = "test";
-            // 
-            // toolStripMenuItem1
-            // 
-            this.toolStripMenuItem1.Name = "toolStripMenuItem1";
-            this.toolStripMenuItem1.Size = new System.Drawing.Size(92, 6);
             // 
             // splitContainer1
             // 
@@ -545,6 +511,7 @@
             // progressBar1
             // 
             this.progressBar1.Dock = System.Windows.Forms.DockStyle.Bottom;
+            this.progressBar1.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(255)))), ((int)(((byte)(184)))), ((int)(((byte)(39)))));
             this.progressBar1.Location = new System.Drawing.Point(0, 504);
             this.progressBar1.Name = "progressBar1";
             this.progressBar1.Size = new System.Drawing.Size(894, 19);
@@ -575,7 +542,7 @@
             this.toolStripSaveAllRaw.Name = "toolStripSaveAllRaw";
             this.toolStripSaveAllRaw.Size = new System.Drawing.Size(238, 22);
             this.toolStripSaveAllRaw.Text = "Save all files (raw dump)";
-            this.toolStripSaveAllRaw.Click += new System.EventHandler(this.toolStripSaveAllRaw_Click);
+            this.toolStripSaveAllRaw.Click += new System.EventHandler(this.SaveAllHandler);
             // 
             // toolStripSaveAllVisible
             // 
@@ -583,7 +550,7 @@
             this.toolStripSaveAllVisible.Name = "toolStripSaveAllVisible";
             this.toolStripSaveAllVisible.Size = new System.Drawing.Size(238, 22);
             this.toolStripSaveAllVisible.Text = "Save all visible files (raw dump)";
-            this.toolStripSaveAllVisible.Click += new System.EventHandler(this.toolStripSaveAllVisible_Click);
+            this.toolStripSaveAllVisible.Click += new System.EventHandler(this.SaveAllHandler);
             // 
             // toolStripSaveAllAudio
             // 
@@ -591,7 +558,7 @@
             this.toolStripSaveAllAudio.Name = "toolStripSaveAllAudio";
             this.toolStripSaveAllAudio.Size = new System.Drawing.Size(238, 22);
             this.toolStripSaveAllAudio.Text = "Save all audio";
-            this.toolStripSaveAllAudio.Click += new System.EventHandler(this.toolStripSaveAllAudio_Click);
+            this.toolStripSaveAllAudio.Click += new System.EventHandler(this.SaveAllHandler);
             // 
             // toolStripSaveAllImages
             // 
@@ -599,7 +566,7 @@
             this.toolStripSaveAllImages.Name = "toolStripSaveAllImages";
             this.toolStripSaveAllImages.Size = new System.Drawing.Size(238, 22);
             this.toolStripSaveAllImages.Text = "Save all images";
-            this.toolStripSaveAllImages.Click += new System.EventHandler(this.toolStripSaveAllImages_Click);
+            this.toolStripSaveAllImages.Click += new System.EventHandler(this.SaveAllHandler);
             // 
             // toolStripSaveAllText
             // 
@@ -608,7 +575,7 @@
             this.toolStripSaveAllText.Size = new System.Drawing.Size(238, 22);
             this.toolStripSaveAllText.Tag = "";
             this.toolStripSaveAllText.Text = "Save all text";
-            this.toolStripSaveAllText.Click += new System.EventHandler(this.toolStripSaveAllText_Click);
+            this.toolStripSaveAllText.Click += new System.EventHandler(this.SaveAllHandler);
             // 
             // contextMenuSaveFile
             // 
@@ -671,7 +638,6 @@
             this.FormClosing += new System.Windows.Forms.FormClosingEventHandler(this.formMain_FormClosing);
             this.panel1.ResumeLayout(false);
             this.panel1.PerformLayout();
-            this.contextMenuView.ResumeLayout(false);
             this.splitContainer1.Panel1.ResumeLayout(false);
             this.splitContainer1.Panel2.ResumeLayout(false);
             ((System.ComponentModel.ISupportInitialize)(this.splitContainer1)).EndInit();
@@ -702,10 +668,6 @@
         private System.Windows.Forms.Button btnOpen;
         private System.Windows.Forms.Button btnView;
         private System.Windows.Forms.ContextMenuStrip contextMenuView;
-        private System.Windows.Forms.ToolStripMenuItem testToolStripMenuItem;
-        private System.Windows.Forms.ToolStripMenuItem testToolStripMenuItem1;
-        private System.Windows.Forms.ToolStripMenuItem testToolStripMenuItem2;
-        private System.Windows.Forms.ToolStripSeparator toolStripMenuItem1;
         private System.Windows.Forms.SplitContainer splitContainer1;
         private BrightIdeasSoftware.ObjectListView objectListView1;
         private BrightIdeasSoftware.OLVColumn columnFilename;
@@ -724,7 +686,7 @@
         private System.Windows.Forms.Button btnSoundPlay;
         private System.Windows.Forms.Panel panelText;
         private System.Windows.Forms.TextBox textBoxPreview;
-        private System.Windows.Forms.ProgressBar progressBar1;
+        private CustomProgressBar progressBar1;
         private System.Windows.Forms.Panel panelImage;
         private System.Windows.Forms.PictureBox pictureBoxPreview;
         private System.Windows.Forms.Panel panelProgress;

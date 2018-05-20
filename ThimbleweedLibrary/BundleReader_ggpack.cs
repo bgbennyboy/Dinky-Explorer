@@ -5,6 +5,17 @@ using System.IO;
 
 namespace ThimbleweedLibrary
 {
+    //For the logging event
+    public class StringEventArgs : EventArgs
+    {
+        public string Message { get; private set; }
+
+        public StringEventArgs(string message)
+        {
+            this.Message = message;
+        }
+    }
+
     public class BundleEntry
     {
         public enum FileTypes
@@ -22,25 +33,14 @@ namespace ThimbleweedLibrary
         public FileTypes FileType = FileTypes.None;
     }
 
-    //For the logging event
-    public class StringEventArgs : EventArgs
-    {
-        public string Message { get; private set; }
-
-        public StringEventArgs(string message)
-        {
-            this.Message = message;
-        }
-
-    }
-
     public class BundleReader_ggpack : IDisposable
     {
         public List<BundleEntry> BundleFiles;
         public event EventHandler<StringEventArgs> LogEvent;
         private string BundleFilename;
         private BinaryStream fileReader;
-
+        private bool _disposed = false;
+        
         //Constructor
         public BundleReader_ggpack(string ResourceFile)
         {
@@ -58,7 +58,11 @@ namespace ThimbleweedLibrary
             UpdateFileTypes();
         }
 
-        private bool _disposed = false;
+        //Destructor
+        ~BundleReader_ggpack()
+        {
+            Dispose(false);
+        }
 
         protected virtual void Dispose(bool disposing)
         {
@@ -84,11 +88,6 @@ namespace ThimbleweedLibrary
             GC.SuppressFinalize(this);
         }
 
-        //Destructor
-        ~BundleReader_ggpack()
-        {
-            Dispose(false);
-        }
 
         //Decrypt the file records and see if its a valid bundle
         private bool DetectBundle()
@@ -171,6 +170,7 @@ namespace ThimbleweedLibrary
             return false;
         }
 
+        //Parse the bundle, extracting information about the files and adding BundleEntry objects for each
         public void ParseFiles()
         {
             fileReader.Position = 0;
@@ -290,6 +290,7 @@ namespace ThimbleweedLibrary
             }
         }
 
+        //Assign filetypes to particular file extensions
         public void UpdateFileTypes()
         {
             for (int i = 0; i < BundleFiles.Count; i++)
@@ -318,6 +319,7 @@ namespace ThimbleweedLibrary
             }
         }
 
+        //Save a single file
         public void SaveFile(int FileNo, string PathAndFileName)
         {
             if (FileNo < 0 || FileNo > BundleFiles.Count)
@@ -329,6 +331,7 @@ namespace ThimbleweedLibrary
             }
         }
 
+        //Save a file to a stream
         public void SaveFileToStream(int FileNo, Stream DestStream)
         {
             if (FileNo < 0 || FileNo > BundleFiles.Count)
@@ -354,6 +357,7 @@ namespace ThimbleweedLibrary
             }
         }
 
+        //Copy between streams
         public static void CopyStream(Stream input, Stream output, int bytes)
         {
             byte[] buffer = new byte[32768];
@@ -366,6 +370,7 @@ namespace ThimbleweedLibrary
             }
         }
 
+        //Used for the log event
         protected virtual void Log(string e)
         {
             this.LogEvent?.Invoke(this, new StringEventArgs(e));
