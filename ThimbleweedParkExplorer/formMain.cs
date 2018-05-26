@@ -12,7 +12,7 @@ using ThimbleweedLibrary;
 
 //TODO
 //Decoding of wimpy files - seem to be 'room' or directories of files + other stuff like walkboxes. Json animation files look like the same format too.
-//Investigate .bnut - presumably 'binary nut' compiled scripts? Doesnt look like other squirrel compiled nut scripts I've seen. Encrypted? Or is it the raw bytecode?
+//Investigate .bnut - presumably 'binary nut' compiled scripts? Doesnt look like other squirrel compiled nut scripts I've seen. Encrypted? Or is it the raw bytecode? Defines.nut and defines.bnut are both present in the first packfile so comparing these should help.
 
 namespace ThimbleweedParkExplorer
 {
