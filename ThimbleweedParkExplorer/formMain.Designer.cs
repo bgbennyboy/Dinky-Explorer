@@ -51,7 +51,6 @@
             this.panelText = new System.Windows.Forms.Panel();
             this.textBoxPreview = new System.Windows.Forms.TextBox();
             this.saveFileDialog1 = new System.Windows.Forms.SaveFileDialog();
-            this.progressBar1 = new ThimbleweedParkExplorer.CustomProgressBar();
             this.timer1 = new System.Windows.Forms.Timer(this.components);
             this.contextMenuSaveAll = new System.Windows.Forms.ContextMenuStrip(this.components);
             this.toolStripSaveAllRaw = new System.Windows.Forms.ToolStripMenuItem();
@@ -64,6 +63,7 @@
             this.toolStripSaveFileAsText = new System.Windows.Forms.ToolStripMenuItem();
             this.toolStripSaveFileAsImage = new System.Windows.Forms.ToolStripMenuItem();
             this.toolStripSaveFileAsAudio = new System.Windows.Forms.ToolStripMenuItem();
+            this.progressBar1 = new ThimbleweedParkExplorer.CustomProgressBar();
             this.panel1.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.splitContainer1)).BeginInit();
             this.splitContainer1.Panel1.SuspendLayout();
@@ -244,7 +244,7 @@
             // 
             this.contextMenuView.Font = new System.Drawing.Font("Segoe UI", 9F);
             this.contextMenuView.Name = "contextMenuView";
-            this.contextMenuView.Size = new System.Drawing.Size(181, 26);
+            this.contextMenuView.Size = new System.Drawing.Size(61, 4);
             this.contextMenuView.ItemClicked += new System.Windows.Forms.ToolStripItemClickedEventHandler(this.contextMenuView_ItemClicked);
             // 
             // splitContainer1
@@ -508,16 +508,6 @@
             this.textBoxPreview.Size = new System.Drawing.Size(282, 379);
             this.textBoxPreview.TabIndex = 0;
             // 
-            // progressBar1
-            // 
-            this.progressBar1.Dock = System.Windows.Forms.DockStyle.Bottom;
-            this.progressBar1.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(255)))), ((int)(((byte)(184)))), ((int)(((byte)(39)))));
-            this.progressBar1.Location = new System.Drawing.Point(0, 504);
-            this.progressBar1.Name = "progressBar1";
-            this.progressBar1.Size = new System.Drawing.Size(894, 19);
-            this.progressBar1.TabIndex = 10;
-            this.progressBar1.Visible = false;
-            // 
             // timer1
             // 
             this.timer1.Enabled = true;
@@ -619,6 +609,16 @@
             this.toolStripSaveFileAsAudio.Size = new System.Drawing.Size(163, 22);
             this.toolStripSaveFileAsAudio.Text = "As audio";
             this.toolStripSaveFileAsAudio.Click += new System.EventHandler(this.SaveFileAsHandler);
+            // 
+            // progressBar1
+            // 
+            this.progressBar1.Dock = System.Windows.Forms.DockStyle.Bottom;
+            this.progressBar1.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(255)))), ((int)(((byte)(184)))), ((int)(((byte)(39)))));
+            this.progressBar1.Location = new System.Drawing.Point(0, 504);
+            this.progressBar1.Name = "progressBar1";
+            this.progressBar1.Size = new System.Drawing.Size(894, 19);
+            this.progressBar1.TabIndex = 10;
+            this.progressBar1.Visible = false;
             // 
             // formMain
             // 

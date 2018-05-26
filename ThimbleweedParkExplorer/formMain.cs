@@ -11,7 +11,8 @@ using System.Windows.Forms;
 using ThimbleweedLibrary;
 
 //TODO
-//Decoding of wimpy files - tree files?
+//Decoding of wimpy files - seem to be 'room' or directories of files + other stuff like walkboxes. Json animation files look like the same format too.
+//Investigate .bnut - presumably 'binary nut' compiled scripts? Doesnt look like other squirrel compiled nut scripts I've seen. Encrypted? Or is it the raw bytecode?
 
 namespace ThimbleweedParkExplorer
 {
@@ -346,6 +347,7 @@ namespace ThimbleweedParkExplorer
 
 
         //************************************************Audio stuff*********************************************************************
+
         //Button sound play clicked
         private void btnSoundPlay_Click(object sender, EventArgs e)
         {
@@ -663,6 +665,7 @@ namespace ThimbleweedParkExplorer
             {
                 btnSoundPlay.PerformClick();
             }
-        }       
+        }
+        
     }
 }

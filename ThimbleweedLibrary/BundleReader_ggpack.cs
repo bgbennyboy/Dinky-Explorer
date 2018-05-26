@@ -119,6 +119,7 @@ namespace ThimbleweedLibrary
 
         /// <summary>
         /// Takes a stream and decodes it, overwriting the contents. Doesnt actually check if valid data produced.
+        /// Converted from code mstr- https://github.com/mstr-/twp-ggdump 
         /// </summary>
         /// <param name="DecodeStream"></param>
         /// <returns></returns>
@@ -319,7 +320,7 @@ namespace ThimbleweedLibrary
             }
         }
 
-        //Save a single file
+       
         public void SaveFile(int FileNo, string PathAndFileName)
         {
             if (FileNo < 0 || FileNo > BundleFiles.Count)
@@ -331,7 +332,6 @@ namespace ThimbleweedLibrary
             }
         }
 
-        //Save a file to a stream
         public void SaveFileToStream(int FileNo, Stream DestStream)
         {
             if (FileNo < 0 || FileNo > BundleFiles.Count)
