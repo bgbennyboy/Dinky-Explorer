@@ -22,6 +22,7 @@
             this.openFileDialog1 = new System.Windows.Forms.OpenFileDialog();
             this.richTextBoxLog = new System.Windows.Forms.RichTextBox();
             this.panel1 = new System.Windows.Forms.Panel();
+            this.cueTextBox1 = new CueTextBox();
             this.btnAbout = new System.Windows.Forms.Button();
             this.btnSaveAllFiles = new System.Windows.Forms.Button();
             this.btnSaveFile = new System.Windows.Forms.Button();
@@ -32,8 +33,8 @@
             this.objectListView1 = new BrightIdeasSoftware.ObjectListView();
             this.columnFilename = ((BrightIdeasSoftware.OLVColumn)(new BrightIdeasSoftware.OLVColumn()));
             this.columnFileextension = ((BrightIdeasSoftware.OLVColumn)(new BrightIdeasSoftware.OLVColumn()));
-            this.columnSize = ((BrightIdeasSoftware.OLVColumn)(new BrightIdeasSoftware.OLVColumn()));
             this.columnOffset = ((BrightIdeasSoftware.OLVColumn)(new BrightIdeasSoftware.OLVColumn()));
+            this.columnSize = ((BrightIdeasSoftware.OLVColumn)(new BrightIdeasSoftware.OLVColumn()));
             this.imageList1 = new System.Windows.Forms.ImageList(this.components);
             this.panelAudio = new System.Windows.Forms.Panel();
             this.labelSoundProgress = new System.Windows.Forms.Label();
@@ -62,7 +63,6 @@
             this.toolStripSaveFileAsText = new System.Windows.Forms.ToolStripMenuItem();
             this.toolStripSaveFileAsImage = new System.Windows.Forms.ToolStripMenuItem();
             this.toolStripSaveFileAsAudio = new System.Windows.Forms.ToolStripMenuItem();
-            this.cueTextBox1 = new CueTextBox();
             this.progressBar1 = new ThimbleweedParkExplorer.CustomProgressBar();
             this.panel1.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.splitContainer1)).BeginInit();
@@ -120,6 +120,19 @@
             this.panel1.Name = "panel1";
             this.panel1.Size = new System.Drawing.Size(894, 55);
             this.panel1.TabIndex = 0;
+            // 
+            // cueTextBox1
+            // 
+            this.cueTextBox1.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle;
+            this.cueTextBox1.Cue = "Search";
+            this.cueTextBox1.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.cueTextBox1.Font = new System.Drawing.Font("Segoe UI", 20.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.cueTextBox1.Location = new System.Drawing.Point(434, 0);
+            this.cueTextBox1.Margin = new System.Windows.Forms.Padding(4, 4, 4, 2);
+            this.cueTextBox1.Name = "cueTextBox1";
+            this.cueTextBox1.Size = new System.Drawing.Size(460, 43);
+            this.cueTextBox1.TabIndex = 13;
+            this.cueTextBox1.TextChanged += new System.EventHandler(this.cueTextBox1_TextChanged);
             // 
             // btnAbout
             // 
@@ -307,6 +320,13 @@
             this.columnFileextension.Text = "Type";
             this.columnFileextension.Width = 120;
             // 
+            // columnOffset
+            // 
+            this.columnOffset.AspectName = "Offset";
+            this.columnOffset.MinimumWidth = 50;
+            this.columnOffset.Text = "Offset";
+            this.columnOffset.Width = 80;
+            // 
             // columnSize
             // 
             this.columnSize.AspectName = "Size";
@@ -314,13 +334,6 @@
             this.columnSize.MinimumWidth = 50;
             this.columnSize.Text = "Size";
             this.columnSize.Width = 80;
-            // 
-            // columnOffset
-            // 
-            this.columnOffset.AspectName = "Offset";
-            this.columnOffset.MinimumWidth = 50;
-            this.columnOffset.Text = "Offset";
-            this.columnOffset.Width = 80;
             // 
             // imageList1
             // 
@@ -594,19 +607,6 @@
             this.toolStripSaveFileAsAudio.Size = new System.Drawing.Size(163, 22);
             this.toolStripSaveFileAsAudio.Text = "As audio";
             this.toolStripSaveFileAsAudio.Click += new System.EventHandler(this.SaveFileAsHandler);
-            // 
-            // cueTextBox1
-            // 
-            this.cueTextBox1.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle;
-            this.cueTextBox1.Cue = "Search";
-            this.cueTextBox1.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.cueTextBox1.Font = new System.Drawing.Font("Segoe UI", 20.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.cueTextBox1.Location = new System.Drawing.Point(434, 0);
-            this.cueTextBox1.Margin = new System.Windows.Forms.Padding(4, 4, 4, 2);
-            this.cueTextBox1.Name = "cueTextBox1";
-            this.cueTextBox1.Size = new System.Drawing.Size(460, 43);
-            this.cueTextBox1.TabIndex = 13;
-            this.cueTextBox1.TextChanged += new System.EventHandler(this.cueTextBox1_TextChanged);
             // 
             // progressBar1
             // 
