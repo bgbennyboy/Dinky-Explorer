@@ -2,9 +2,20 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 
 namespace ThimbleweedLibrary
 {
+    public enum BundleFileVersion
+    {
+        Unknown,
+
+        Before_Version_881,
+        Version_881_or_later,
+
+        Latest = Version_881_or_later,
+    }
+
     //For the logging event
     public class StringEventArgs : EventArgs
     {
@@ -35,6 +46,9 @@ namespace ThimbleweedLibrary
 
     public class BundleReader_ggpack : IDisposable
     {
+        private static readonly byte[] magic_bytes = new byte[] { 0x4F, 0xD0, 0xA0, 0xAC, 0x4A, 0x5B, 0xB9, 0xE5, 0x93, 0x79, 0x45, 0xA5, 0xC1, 0xCB, 0x31, 0x93 };
+        private BundleFileVersion fileVersion = BundleFileVersion.Unknown;
+
         public List<BundleEntry> BundleFiles;
         public event EventHandler<StringEventArgs> LogEvent;
         private string BundleFilename;
@@ -104,29 +118,40 @@ namespace ThimbleweedLibrary
         //Decrypt the file records and see if its a valid bundle
         private bool DetectBundle()
         {
+            bool isValid = false;
+
             uint DataOffset = fileReader.ReadUInt32();
             uint DataSize = fileReader.ReadUInt32();
-            fileReader.BaseStream.Position = DataOffset;
 
             using (BinaryStream decReader = new BinaryStream(new MemoryStream())) //Frees when done + underlying stream
             {
-                CopyStream(fileReader.BaseStream, decReader.BaseStream, Convert.ToInt32(DataSize));
-                decReader.Position = 0;
+                //Try all versions, starting with latest
+                var fileVersions = new[] { BundleFileVersion.Latest }
+                    .Union(Enum.GetValues(typeof(BundleFileVersion)).Cast<BundleFileVersion>().Where(v => v != BundleFileVersion.Unknown && v != BundleFileVersion.Latest));
+                foreach (var currentFileVersion in fileVersions)
+                {
+                    fileVersion = currentFileVersion;
 
-                //Decode data records
-                if (DecodeUnbreakableXor((MemoryStream)decReader.BaseStream) == false)
-                    return false;
+                    fileReader.BaseStream.Position = DataOffset;
+                    decReader.Position = 0;
+                    CopyStream(fileReader.BaseStream, decReader.BaseStream, Convert.ToInt32(DataSize));
+                    decReader.Position = 0;
 
-                //using (FileStream file = new FileStream("c:/users/ben/desktop/file.bin", FileMode.Create, System.IO.FileAccess.Write))
-                //    fileReader.CopyTo(file);
-                //    fileReader.Position = 0;
+                    //Decode data records
+                    if (isValid = DecodeUnbreakableXor((MemoryStream)decReader.BaseStream))
+                    {
+                        //Check header is valid. First dword is 01,02,03,04
+                        int header = decReader.ReadInt32();
+                        isValid = header == 0x04030201;
+                    }
 
-                //Check header is valid. First dword is 01,02,03,04
-                if (decReader.ReadInt32() == 67305985)
-                    return true;
-                else
-                    return false;
+                    if (isValid)
+                        //Valid bundle found
+                        break;
+                }
             }
+
+            return isValid;
         }
 
         /// <summary>
@@ -137,7 +162,6 @@ namespace ThimbleweedLibrary
         /// <returns></returns>
         private bool DecodeUnbreakableXor(MemoryStream DecodeStream)
         {
-            var magic_bytes = new byte[] { 0x4F, 0xD0, 0xA0, 0xAC, 0x4A, 0x5B, 0xB9, 0xE5, 0x93, 0x79, 0x45, 0xA5, 0xC1, 0xCB, 0x31, 0x93 };  //0x5B - possibly 0x56?
             var buffer = DecodeStream.ToArray();
 
             //alt way to get data from generic stream to array buffer
@@ -148,10 +172,11 @@ namespace ThimbleweedLibrary
             var eax = buf_len;
             var var4 = buf_len & 255;
             var ebx = 0;
+            int f = fileVersion == BundleFileVersion.Before_Version_881 ? 109 : -83;
             while (ebx < buf_len)
             {
                 eax = ebx & 255;
-                eax = eax * -83; // 109;
+                eax = eax * f;
                 var ecx = ebx & 15;
                 eax = (eax ^ magic_bytes[ecx]) & 255;
                 ecx = var4;
@@ -162,13 +187,16 @@ namespace ThimbleweedLibrary
                 var4 = ecx;
             }
 
-            //Loop through in blocks of 16 and xor the 6th and 7th bytes
-            int i = 5;
-            while (i + 1 < buf_len)
+            if (fileVersion != BundleFileVersion.Before_Version_881)
             {
-                buffer[i] = Convert.ToByte(buffer[i] ^ 0x0D);
-                buffer[i + 1] = Convert.ToByte(buffer[i + 1] ^ 0x0D);
-                i += 16;
+                //Loop through in blocks of 16 and xor the 6th and 7th bytes
+                int i = 5;
+                while (i + 1 < buf_len)
+                {
+                    buffer[i] = Convert.ToByte(buffer[i] ^ 0x0D);
+                    buffer[i + 1] = Convert.ToByte(buffer[i + 1] ^ 0x0D);
+                    i += 16;
+                }
             }
 
             //Check everything has decoded
@@ -201,11 +229,12 @@ namespace ThimbleweedLibrary
                     throw new ArgumentException("Error parsing the packfile. Decode failed!");
 
                 //Check header is valid. First dword is 01,02,03,04
-                if (decReader.ReadInt32() != 67305985)
+                int header = decReader.ReadInt32();
+                if (header != 0x04030201)
                     throw new ArgumentException("Error parsing the packfile. Header invalid!");
 
-                //Seek past 4 unknown bytes = 01000000
-                decReader.Seek(4, SeekOrigin.Current);
+                //Seek past 4 unknown bytes = 0x00000001
+                int unknown = decReader.ReadInt32();
 
                 //Read and go to the start of records offset
                 int RecordsStartOffset = decReader.ReadInt32() + 1;
@@ -228,7 +257,7 @@ namespace ThimbleweedLibrary
                 {
                     //Read the offset of the next string, go there, read it and come back.
                     uint NextOffset = decReader.ReadUInt32();
-                    if (NextOffset == 4294967295) //0xFFFFFFFF - marker for end of all offset entries
+                    if (NextOffset == 0xFFFFFFFF) //0xFFFFFFFF - marker for end of all offset entries
                         break;
 
                     long OldPos = decReader.Position;
