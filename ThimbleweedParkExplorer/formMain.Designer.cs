@@ -85,7 +85,7 @@
             // 
             // openFileDialog1
             // 
-            this.openFileDialog1.Filter = "Ggpack files|*.ggpack1;*.ggpack2";
+            this.openFileDialog1.Filter = "Ggpack files|*.ggpack?";
             // 
             // richTextBoxLog
             // 
@@ -102,7 +102,7 @@
             this.richTextBoxLog.ShowSelectionMargin = true;
             this.richTextBoxLog.Size = new System.Drawing.Size(894, 68);
             this.richTextBoxLog.TabIndex = 4;
-            this.richTextBoxLog.Text = "Thimbleweed Park Explorer\nhttp://quickandeasysoftware.net";
+            this.richTextBoxLog.Text = "Thimbleweed Park Explorer\nhttp://quickandeasysoftware.net\n";
             // 
             // panel1
             // 

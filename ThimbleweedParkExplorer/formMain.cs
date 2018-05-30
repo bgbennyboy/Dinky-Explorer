@@ -52,7 +52,7 @@ namespace ThimbleweedParkExplorer
             InitializeListView();
 
             //Add info to log box
-            richTextBoxLog.Text = Constants.ProgName + " " + Constants.Version + Environment.NewLine + Constants.URL;
+            richTextBoxLog.Text = Constants.ProgName + " " + Constants.Version + Environment.NewLine + Constants.URL + Environment.NewLine;
 
             //Set listview background
             objectListView1.SetNativeBackgroundTiledImage(Properties.Resources.listViewBackground);
