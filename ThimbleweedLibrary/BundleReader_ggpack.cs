@@ -43,6 +43,11 @@ namespace ThimbleweedLibrary
         public Int64 Offset = -1;
         public int Size = -1;
         public FileTypes FileType = FileTypes.None;
+
+        public override string ToString()
+        {
+            return $"Offset: 0x{Offset:X8} Size: {Size,8} Name: {FileName}";
+        }
     }
 
     public class BundleReader_ggpack : IDisposable
@@ -314,6 +319,9 @@ namespace ThimbleweedLibrary
                         continue;
                     }
                 }
+                //Add last entry (if any)
+                if (bundleEntry != null && bundleEntry.FileName != null)
+                    BundleFiles.Add(bundleEntry);
 
                 //Now correct missing sizes / offsets
                 for (int i = 0; i < BundleFiles.Count; i++)
@@ -322,7 +330,7 @@ namespace ThimbleweedLibrary
                     {
                         BundleFiles[i].Offset = BundleFiles[i - 1].Offset + BundleFiles[i - 1].Size; //BundleFiles[i + 1].Offset - BundleFiles[i - 1].Offset;
                     }
-                    if (BundleFiles[i].Size == 0)
+                    if (BundleFiles[i].Size <= 0)
                     {
                         if (i == BundleFiles.Count - 1) //Last entry - look at difference between data offset and its offset
                         {
