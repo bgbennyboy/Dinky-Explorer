@@ -10,10 +10,11 @@ namespace ThimbleweedLibrary
     {
         Unknown,
 
-        Before_Version_881,
-        Version_881_or_later,
+        Version_849,
+        Version_918,
+        Version_957,
 
-        Latest = Version_881_or_later,
+        Preferred = Version_957,
     }
 
     //For the logging event
@@ -47,8 +48,8 @@ namespace ThimbleweedLibrary
     public class BundleReader_ggpack : IDisposable
     {
         private static readonly byte[] magic_bytes = new byte[] { 0x4F, 0xD0, 0xA0, 0xAC, 0x4A, 0x5B, 0xB9, 0xE5, 0x93, 0x79, 0x45, 0xA5, 0xC1, 0xCB, 0x31, 0x93 };
-        private BundleFileVersion fileVersion = BundleFileVersion.Unknown;
 
+        public BundleFileVersion FileVersion { get; private set; }
         public List<BundleEntry> BundleFiles;
         public event EventHandler<StringEventArgs> LogEvent;
         private string BundleFilename;
@@ -125,12 +126,12 @@ namespace ThimbleweedLibrary
 
             using (BinaryStream decReader = new BinaryStream(new MemoryStream())) //Frees when done + underlying stream
             {
-                //Try all versions, starting with latest
-                var fileVersions = new[] { BundleFileVersion.Latest }
-                    .Union(Enum.GetValues(typeof(BundleFileVersion)).Cast<BundleFileVersion>().Where(v => v != BundleFileVersion.Unknown && v != BundleFileVersion.Latest));
+                //Try all versions, starting with Preferred
+                var fileVersions = new[] { BundleFileVersion.Preferred }
+                    .Union(Enum.GetValues(typeof(BundleFileVersion)).Cast<BundleFileVersion>().Where(v => v != BundleFileVersion.Unknown && v != BundleFileVersion.Preferred));
                 foreach (var currentFileVersion in fileVersions)
                 {
-                    fileVersion = currentFileVersion;
+                    FileVersion = currentFileVersion;
 
                     fileReader.BaseStream.Position = DataOffset;
                     decReader.Position = 0;
@@ -142,7 +143,9 @@ namespace ThimbleweedLibrary
                     {
                         //Check header is valid. First dword is 01,02,03,04
                         int header = decReader.ReadInt32();
-                        isValid = header == 0x04030201;
+                        //Seek past 4 unknown bytes = 0x00000001
+                        int unknown = decReader.ReadInt32();
+                        isValid = header == 0x04030201 && unknown == 0x00000001;
                     }
 
                     if (isValid)
@@ -151,6 +154,8 @@ namespace ThimbleweedLibrary
                 }
             }
 
+            if (!isValid)
+                FileVersion = BundleFileVersion.Unknown;
             return isValid;
         }
 
@@ -172,7 +177,7 @@ namespace ThimbleweedLibrary
             var eax = buf_len;
             var var4 = buf_len & 255;
             var ebx = 0;
-            int f = fileVersion == BundleFileVersion.Before_Version_881 ? 109 : -83;
+            int f = FileVersion == BundleFileVersion.Version_849 || FileVersion == BundleFileVersion.Version_918 ? 109 : -83;
             while (ebx < buf_len)
             {
                 eax = ebx & 255;
@@ -187,7 +192,7 @@ namespace ThimbleweedLibrary
                 var4 = ecx;
             }
 
-            if (fileVersion != BundleFileVersion.Before_Version_881)
+            if (FileVersion != BundleFileVersion.Version_849)
             {
                 //Loop through in blocks of 16 and xor the 6th and 7th bytes
                 int i = 5;
@@ -230,11 +235,10 @@ namespace ThimbleweedLibrary
 
                 //Check header is valid. First dword is 01,02,03,04
                 int header = decReader.ReadInt32();
-                if (header != 0x04030201)
-                    throw new ArgumentException("Error parsing the packfile. Header invalid!");
-
                 //Seek past 4 unknown bytes = 0x00000001
                 int unknown = decReader.ReadInt32();
+                if (header != 0x04030201 || unknown != 0x00000001)
+                    throw new ArgumentException("Error parsing the packfile. Header invalid!");
 
                 //Read and go to the start of records offset
                 int RecordsStartOffset = decReader.ReadInt32() + 1;
