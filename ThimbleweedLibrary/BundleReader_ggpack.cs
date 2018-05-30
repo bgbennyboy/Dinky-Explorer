@@ -44,18 +44,30 @@ namespace ThimbleweedLibrary
         //Constructor
         public BundleReader_ggpack(string ResourceFile)
         {
-            BundleFilename = ResourceFile;
-
-            fileReader = new BinaryStream(File.Open(BundleFilename, FileMode.Open));
-
-            if (DetectBundle() == false)
+            try
             {
-                throw new ArgumentException("Invalid ggpack file!");
-            }
+                BundleFilename = ResourceFile;
 
-            BundleFiles = new List<BundleEntry>();
-            ParseFiles();
-            UpdateFileTypes();
+                fileReader = new BinaryStream(File.Open(BundleFilename, FileMode.Open));
+
+                if (DetectBundle() == false)
+                {
+                    throw new ArgumentException("Invalid ggpack file!");
+                }
+
+                BundleFiles = new List<BundleEntry>();
+                ParseFiles();
+                UpdateFileTypes();
+            }
+            catch
+            {
+                try
+                {
+                    Dispose();
+                }
+                catch { }
+                throw;
+            }
         }
 
         //Destructor
