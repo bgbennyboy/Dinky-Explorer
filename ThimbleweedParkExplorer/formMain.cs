@@ -12,7 +12,7 @@ using ThimbleweedLibrary;
 
 //TODO
 //Decoding of wimpy files - seem to be 'room' or directories of files + other stuff like walkboxes. Json animation files look like the same format too.
-//Investigate .bnut - presumably 'binary nut' compiled scripts? Doesnt look like other squirrel compiled nut scripts I've seen. Encrypted? Or is it the raw bytecode? Defines.nut and defines.bnut are both present in the first packfile so comparing these should help.
+
 
 namespace ThimbleweedParkExplorer
 {
@@ -110,6 +110,8 @@ namespace ThimbleweedParkExplorer
                     return Properties.Resources.small_text;
                 else if (b.FileType == BundleEntry.FileTypes.Image)
                     return Properties.Resources.small_image;
+                else if (b.FileType == BundleEntry.FileTypes.Bnut)
+                    return Properties.Resources.small_code;
                 else
                     return Properties.Resources.small_circle_white;
             };
@@ -230,6 +232,11 @@ namespace ThimbleweedParkExplorer
             {
                 TargetFileType = BundleEntry.FileTypes.Text;
                 SavingMessage = "Saving all text files...";
+            }
+            else if (sender.Equals(toolStripSaveAllBnut))
+            {
+                TargetFileType = BundleEntry.FileTypes.Bnut;
+                SavingMessage = "Saving all bnut script files...";
             }
             else
             {
@@ -494,7 +501,7 @@ namespace ThimbleweedParkExplorer
                 //Different save context menu items make visible
                 toolStripSaveFileAsAudio.Visible = ((BundleEntry)objectListView1.SelectedObject).FileType == BundleEntry.FileTypes.Sound;
                 toolStripSaveFileAsImage.Visible = ((BundleEntry)objectListView1.SelectedObject).FileType == BundleEntry.FileTypes.Image;
-                toolStripSaveFileAsText.Visible = ((BundleEntry)objectListView1.SelectedObject).FileType == BundleEntry.FileTypes.Text;
+                toolStripSaveFileAsText.Visible = ((BundleEntry)objectListView1.SelectedObject).FileType == BundleEntry.FileTypes.Text || ((BundleEntry)objectListView1.SelectedObject).FileType == BundleEntry.FileTypes.Bnut;
             }
         }
 
@@ -524,6 +531,8 @@ namespace ThimbleweedParkExplorer
                     contextMenuView.Items[i].Image = Properties.Resources.small_audio;
                 if (contextMenuView.Items[i].Text == "png")
                     contextMenuView.Items[i].Image = Properties.Resources.small_image;
+                if (contextMenuView.Items[i].Text == "bnut")
+                    contextMenuView.Items[i].Image = Properties.Resources.small_code;
                 if (contextMenuView.Items[i].Text == "txt" || contextMenuView.Items[i].Text == "tsv" ||
                     contextMenuView.Items[i].Text == "nut" || contextMenuView.Items[i].Text == "json" ||
                     contextMenuView.Items[i].Text == "fnt" || contextMenuView.Items[i].Text == "byack" ||
@@ -544,6 +553,7 @@ namespace ThimbleweedParkExplorer
             toolStripSaveAllAudio.Visible = false;
             toolStripSaveAllImages.Visible = false;
             toolStripSaveAllText.Visible = false;
+            toolStripSaveAllBnut.Visible = false;
 
             for (int i = 0; i < Thimble.BundleFiles.Count; i++)
             {
@@ -553,6 +563,8 @@ namespace ThimbleweedParkExplorer
                     toolStripSaveAllImages.Visible = true;
                 if (Thimble.BundleFiles[i].FileType == BundleEntry.FileTypes.Text)
                     toolStripSaveAllText.Visible = true;
+                if (Thimble.BundleFiles[i].FileType == BundleEntry.FileTypes.Bnut)
+                    toolStripSaveAllBnut.Visible = true;
             }
         }
 
@@ -638,6 +650,21 @@ namespace ThimbleweedParkExplorer
                     using (MemoryStream ms = new MemoryStream())
                     {
                         Thimble.SaveFileToStream(index, ms);
+
+                        string[] tempArray = new string[] { }; //initialise an empty array of strings
+                        if (Decoders.ExtractText(ms, out tempArray) == true)
+                        {
+                            textBoxPreview.Lines = tempArray;
+                        }
+                    }
+                    break;
+
+                case BundleEntry.FileTypes.Bnut:
+                    panelText.BringToFront();
+                    using (MemoryStream ms = new MemoryStream())
+                    {
+                        Thimble.SaveFileToStream(index, ms);
+                        //Decoders.DecodeBnut(ms);
 
                         string[] tempArray = new string[] { }; //initialise an empty array of strings
                         if (Decoders.ExtractText(ms, out tempArray) == true)

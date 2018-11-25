@@ -35,7 +35,8 @@ namespace ThimbleweedLibrary
             None,
             Image,
             Sound,
-            Text
+            Text,
+            Bnut
         };
 
         public string FileName;
@@ -360,6 +361,10 @@ namespace ThimbleweedLibrary
                         BundleFiles[i].FileType = BundleEntry.FileTypes.Image;
                         break;
 
+                    case "bnut":
+                        BundleFiles[i].FileType = BundleEntry.FileTypes.Bnut;
+                        break;
+
                     case "txt":
                     case "tsv":
                     case "nut":
@@ -374,18 +379,18 @@ namespace ThimbleweedLibrary
         }
 
        
-        public void SaveFile(int FileNo, string PathAndFileName)
+        public void SaveFile(int FileNo, string PathAndFileName, Boolean Autodecode = true)
         {
             if (FileNo < 0 || FileNo > BundleFiles.Count)
                 throw new ArgumentException(FileNo.ToString() + " Invalid file number! Save cancelled.");
 
             using (Stream file = File.Create(PathAndFileName))
             {
-                SaveFileToStream(FileNo, file);
+                SaveFileToStream(FileNo, file, Autodecode);
             }
         }
 
-        public void SaveFileToStream(int FileNo, Stream DestStream)
+        public void SaveFileToStream(int FileNo, Stream DestStream, Boolean Autodecode = true)
         {
             if (FileNo < 0 || FileNo > BundleFiles.Count)
                 throw new ArgumentException(FileNo.ToString() + " Invalid file number! Save cancelled.");
@@ -393,7 +398,7 @@ namespace ThimbleweedLibrary
                 //throw new ArgumentException(BundleFiles[FileNo].FileName + " File num " + FileNo.ToString() + " Filesize = 0 Skipping this file.");
                 Log( BundleFiles[FileNo].FileName + " File num " + FileNo.ToString() + " Filesize = 0 Skipping this file.");
 
-
+            
             using (MemoryStream ms = new MemoryStream())
             {
                 fileReader.Position = BundleFiles[FileNo].Offset;
@@ -404,6 +409,12 @@ namespace ThimbleweedLibrary
                 if (DecodeUnbreakableXor(ms) == true)
                 {
                     ms.Position = 0;
+
+                    if ((Autodecode == true) && (BundleFiles[FileNo].FileType == BundleEntry.FileTypes.Bnut))
+                    {
+                        Decoders.DecodeBnut(ms);
+                    }
+
                     ms.CopyTo(DestStream);
                 }
                 DestStream.Position = 0;
