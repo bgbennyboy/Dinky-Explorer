@@ -523,21 +523,29 @@ namespace ThimbleweedParkExplorer
             {
                 contextMenuView.Items.Add(entries[i], Properties.Resources.small_circle_white);
             }
-
+            
             //Now do the images
             for (int i = 0; i < contextMenuView.Items.Count; i++)
             {
-                if (contextMenuView.Items[i].Text == "ogg" || contextMenuView.Items[i].Text == "wav")
-                    contextMenuView.Items[i].Image = Properties.Resources.small_audio;
-                if (contextMenuView.Items[i].Text == "png")
-                    contextMenuView.Items[i].Image = Properties.Resources.small_image;
-                if (contextMenuView.Items[i].Text == "bnut")
-                    contextMenuView.Items[i].Image = Properties.Resources.small_code;
-                if (contextMenuView.Items[i].Text == "txt" || contextMenuView.Items[i].Text == "tsv" ||
-                    contextMenuView.Items[i].Text == "nut" || contextMenuView.Items[i].Text == "json" ||
-                    contextMenuView.Items[i].Text == "fnt" || contextMenuView.Items[i].Text == "byack" ||
-                    contextMenuView.Items[i].Text == "lip")
-                    contextMenuView.Items[i].Image = Properties.Resources.small_text;
+                var temp = Thimble.BundleFiles.FirstOrDefault(x => x.FileExtension == contextMenuView.Items[i].Text); //get first item that has the same file extension so we can look at its filetype
+                if (temp != null)
+                {
+                    switch (temp.FileType)
+                    {
+                        case BundleEntry.FileTypes.Bnut:
+                            contextMenuView.Items[i].Image = Properties.Resources.small_code;
+                            break;
+                        case BundleEntry.FileTypes.Image:
+                            contextMenuView.Items[i].Image = Properties.Resources.small_image;
+                            break;
+                        case BundleEntry.FileTypes.Sound:
+                            contextMenuView.Items[i].Image = Properties.Resources.small_audio;
+                            break;
+                        case BundleEntry.FileTypes.Text:
+                            contextMenuView.Items[i].Image = Properties.Resources.small_text;
+                            break;
+                    }
+                }
             }
         }
 

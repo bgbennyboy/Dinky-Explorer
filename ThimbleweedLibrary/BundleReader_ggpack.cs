@@ -13,8 +13,9 @@ namespace ThimbleweedLibrary
         Version_849,
         Version_918,
         Version_957,
+        Version_Delores,
 
-        Preferred = Version_957,
+        //Preferred = Version_957,
     }
 
     //For the logging event
@@ -53,7 +54,8 @@ namespace ThimbleweedLibrary
 
     public class BundleReader_ggpack : IDisposable
     {
-        private static readonly byte[] magic_bytes = new byte[] { 0x4F, 0xD0, 0xA0, 0xAC, 0x4A, 0x5B, 0xB9, 0xE5, 0x93, 0x79, 0x45, 0xA5, 0xC1, 0xCB, 0x31, 0x93 };
+        private static readonly byte[] magic_bytes_thimbleweed = new byte[] { 0x4F, 0xD0, 0xA0, 0xAC, 0x4A, 0x5B, 0xB9, 0xE5, 0x93, 0x79, 0x45, 0xA5, 0xC1, 0xCB, 0x31, 0x93 };
+        private static readonly byte[] magic_bytes_delores = new byte[] { 0x3F, 0x41, 0x41, 0x60, 0x95, 0x87, 0x4A, 0xE6, 0x34, 0xC6, 0x3A, 0x86, 0x29, 0x27, 0x77, 0x8D, 0x38, 0xB4, 0x96, 0xC9, 0x38, 0xB4, 0x96, 0xC9, 0x00, 0xE0, 0x0A, 0xC6, 0x00, 0xE0, 0x0A, 0xC6, 0x00, 0x3C, 0x1C, 0xC6, 0x00, 0x3C, 0x1C, 0xC6, 0x00, 0xE4, 0x40, 0xC6, 0x00, 0xE4, 0x40, 0xC6 };
 
         public BundleFileVersion FileVersion { get; private set; }
         public List<BundleEntry> BundleFiles;
@@ -132,9 +134,8 @@ namespace ThimbleweedLibrary
 
             using (BinaryStream decReader = new BinaryStream(new MemoryStream())) //Frees when done + underlying stream
             {
-                //Try all versions, starting with Preferred
-                var fileVersions = new[] { BundleFileVersion.Preferred }
-                    .Union(Enum.GetValues(typeof(BundleFileVersion)).Cast<BundleFileVersion>().Where(v => v != BundleFileVersion.Unknown && v != BundleFileVersion.Preferred));
+                //Try to decode all versions
+               var fileVersions = Enum.GetValues(typeof(BundleFileVersion)).Cast<BundleFileVersion>().Where(v => v != BundleFileVersion.Unknown); //Build an array of enums but exclude the unknown enum
                 foreach (var currentFileVersion in fileVersions)
                 {
                     FileVersion = currentFileVersion;
@@ -167,23 +168,27 @@ namespace ThimbleweedLibrary
 
         /// <summary>
         /// Takes a stream and decodes it, overwriting the contents. Doesnt actually check if valid data produced.
-        /// Converted from code mstr- https://github.com/mstr-/twp-ggdump 
+        /// Originally converted from code by mstr- https://github.com/mstr-/twp-ggdump 
         /// </summary>
         /// <param name="DecodeStream"></param>
         /// <returns></returns>
         private bool DecodeUnbreakableXor(MemoryStream DecodeStream)
         {
-            var buffer = DecodeStream.ToArray();
+            //Quick hack for Delores
+            byte[] magic_bytes;
+            if (FileVersion == BundleFileVersion.Version_Delores)
+                magic_bytes = magic_bytes_delores;
+            else
+                magic_bytes = magic_bytes_thimbleweed;
 
-            //alt way to get data from generic stream to array buffer
-            //byte[] buffer = new byte[DecodeStream.Length];
-            //DecodeStream.Read(buffer, 0, (int)DecodeStream.Length);
+
+            var buffer = DecodeStream.ToArray(); //Put the stream data into a buffer
 
             var buf_len = buffer.Length;
             var eax = buf_len;
             var var4 = buf_len & 255;
             var ebx = 0;
-            int f = FileVersion == BundleFileVersion.Version_849 || FileVersion == BundleFileVersion.Version_918 ? 109 : -83;
+            int f = FileVersion == BundleFileVersion.Version_957 ? -83 : 109; //Latest version of TP uses -83 here. All the others use 109
             while (ebx < buf_len)
             {
                 eax = ebx & 255;
@@ -198,7 +203,7 @@ namespace ThimbleweedLibrary
                 var4 = ecx;
             }
 
-            if (FileVersion != BundleFileVersion.Version_849)
+            if (FileVersion != BundleFileVersion.Version_849 && FileVersion != BundleFileVersion.Version_Delores)
             {
                 //Loop through in blocks of 16 and xor the 6th and 7th bytes
                 int i = 5;
@@ -372,6 +377,8 @@ namespace ThimbleweedLibrary
                     case "fnt":
                     case "byack":
                     case "lip":
+                    case "yack":
+                    case "dinky":
                         BundleFiles[i].FileType = BundleEntry.FileTypes.Text;
                         break;
                 }

@@ -22,6 +22,7 @@
             this.openFileDialog1 = new System.Windows.Forms.OpenFileDialog();
             this.richTextBoxLog = new System.Windows.Forms.RichTextBox();
             this.panel1 = new System.Windows.Forms.Panel();
+            this.cueTextBox1 = new CueTextBox();
             this.btnAbout = new System.Windows.Forms.Button();
             this.btnSaveAllFiles = new System.Windows.Forms.Button();
             this.btnSaveFile = new System.Windows.Forms.Button();
@@ -57,13 +58,12 @@
             this.toolStripSaveAllAudio = new System.Windows.Forms.ToolStripMenuItem();
             this.toolStripSaveAllImages = new System.Windows.Forms.ToolStripMenuItem();
             this.toolStripSaveAllText = new System.Windows.Forms.ToolStripMenuItem();
+            this.toolStripSaveAllBnut = new System.Windows.Forms.ToolStripMenuItem();
             this.contextMenuSaveFile = new System.Windows.Forms.ContextMenuStrip(this.components);
             this.toolStripSaveFileRaw = new System.Windows.Forms.ToolStripMenuItem();
             this.toolStripSaveFileAsText = new System.Windows.Forms.ToolStripMenuItem();
             this.toolStripSaveFileAsImage = new System.Windows.Forms.ToolStripMenuItem();
             this.toolStripSaveFileAsAudio = new System.Windows.Forms.ToolStripMenuItem();
-            this.toolStripSaveAllBnut = new System.Windows.Forms.ToolStripMenuItem();
-            this.cueTextBox1 = new CueTextBox();
             this.progressBar1 = new ThimbleweedParkExplorer.CustomProgressBar();
             this.panel1.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.splitContainer1)).BeginInit();
@@ -121,6 +121,19 @@
             this.panel1.Name = "panel1";
             this.panel1.Size = new System.Drawing.Size(894, 55);
             this.panel1.TabIndex = 0;
+            // 
+            // cueTextBox1
+            // 
+            this.cueTextBox1.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle;
+            this.cueTextBox1.Cue = "Search";
+            this.cueTextBox1.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.cueTextBox1.Font = new System.Drawing.Font("Segoe UI", 20.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.cueTextBox1.Location = new System.Drawing.Point(434, 0);
+            this.cueTextBox1.Margin = new System.Windows.Forms.Padding(4, 4, 4, 2);
+            this.cueTextBox1.Name = "cueTextBox1";
+            this.cueTextBox1.Size = new System.Drawing.Size(460, 43);
+            this.cueTextBox1.TabIndex = 13;
+            this.cueTextBox1.TextChanged += new System.EventHandler(this.cueTextBox1_TextChanged);
             // 
             // btnAbout
             // 
@@ -511,7 +524,7 @@
             this.toolStripSaveAllText,
             this.toolStripSaveAllBnut});
             this.contextMenuSaveAll.Name = "contextMenuView";
-            this.contextMenuSaveAll.Size = new System.Drawing.Size(239, 158);
+            this.contextMenuSaveAll.Size = new System.Drawing.Size(239, 136);
             // 
             // toolStripSaveAllRaw
             // 
@@ -553,6 +566,15 @@
             this.toolStripSaveAllText.Tag = "";
             this.toolStripSaveAllText.Text = "Save all text";
             this.toolStripSaveAllText.Click += new System.EventHandler(this.SaveAllHandler);
+            // 
+            // toolStripSaveAllBnut
+            // 
+            this.toolStripSaveAllBnut.Image = global::ThimbleweedParkExplorer.Properties.Resources.small_code;
+            this.toolStripSaveAllBnut.Name = "toolStripSaveAllBnut";
+            this.toolStripSaveAllBnut.Size = new System.Drawing.Size(238, 22);
+            this.toolStripSaveAllBnut.Tag = "";
+            this.toolStripSaveAllBnut.Text = "Save all bnut scripts";
+            this.toolStripSaveAllBnut.Click += new System.EventHandler(this.SaveAllHandler);
             // 
             // contextMenuSaveFile
             // 
@@ -596,28 +618,6 @@
             this.toolStripSaveFileAsAudio.Size = new System.Drawing.Size(163, 22);
             this.toolStripSaveFileAsAudio.Text = "As audio";
             this.toolStripSaveFileAsAudio.Click += new System.EventHandler(this.SaveFileAsHandler);
-            // 
-            // toolStripSaveAllBnut
-            // 
-            this.toolStripSaveAllBnut.Image = global::ThimbleweedParkExplorer.Properties.Resources.small_code;
-            this.toolStripSaveAllBnut.Name = "toolStripSaveAllBnut";
-            this.toolStripSaveAllBnut.Size = new System.Drawing.Size(238, 22);
-            this.toolStripSaveAllBnut.Tag = "";
-            this.toolStripSaveAllBnut.Text = "Save all bnut scripts";
-            this.toolStripSaveAllBnut.Click += new System.EventHandler(this.SaveAllHandler);
-            // 
-            // cueTextBox1
-            // 
-            this.cueTextBox1.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle;
-            this.cueTextBox1.Cue = "Search";
-            this.cueTextBox1.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.cueTextBox1.Font = new System.Drawing.Font("Segoe UI", 20.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.cueTextBox1.Location = new System.Drawing.Point(434, 0);
-            this.cueTextBox1.Margin = new System.Windows.Forms.Padding(4, 4, 4, 2);
-            this.cueTextBox1.Name = "cueTextBox1";
-            this.cueTextBox1.Size = new System.Drawing.Size(460, 43);
-            this.cueTextBox1.TabIndex = 13;
-            this.cueTextBox1.TextChanged += new System.EventHandler(this.cueTextBox1_TextChanged);
             // 
             // progressBar1
             // 
