@@ -14,8 +14,6 @@ namespace ThimbleweedLibrary
         Version_918,
         Version_957,
         Version_Delores,
-
-        //Preferred = Version_957,
     }
 
     //For the logging event

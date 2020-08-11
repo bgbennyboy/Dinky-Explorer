@@ -519,30 +519,28 @@ namespace ThimbleweedParkExplorer
             entries.Insert(0, "-"); //Add the separator
 
             //Loop through and add the strings from the list
-            for (int i = 0; i < entries.Count; i++)
-            {
-                contextMenuView.Items.Add(entries[i], Properties.Resources.small_circle_white);
-            }
-            
+            foreach (string entry in entries)
+                contextMenuView.Items.Add(entry, Properties.Resources.small_circle_white);
+
             //Now do the images
-            for (int i = 0; i < contextMenuView.Items.Count; i++)
+            foreach (ToolStripItem item in contextMenuView.Items)
             {
-                var temp = Thimble.BundleFiles.FirstOrDefault(x => x.FileExtension == contextMenuView.Items[i].Text); //get first item that has the same file extension so we can look at its filetype
+                var temp = Thimble.BundleFiles.FirstOrDefault(x => x.FileExtension == item.Text); //get first item that has the same file extension so we can look at its filetype]
                 if (temp != null)
                 {
                     switch (temp.FileType)
                     {
                         case BundleEntry.FileTypes.Bnut:
-                            contextMenuView.Items[i].Image = Properties.Resources.small_code;
+                            item.Image = Properties.Resources.small_code;
                             break;
                         case BundleEntry.FileTypes.Image:
-                            contextMenuView.Items[i].Image = Properties.Resources.small_image;
+                            item.Image = Properties.Resources.small_image;
                             break;
                         case BundleEntry.FileTypes.Sound:
-                            contextMenuView.Items[i].Image = Properties.Resources.small_audio;
+                            item.Image = Properties.Resources.small_audio;
                             break;
                         case BundleEntry.FileTypes.Text:
-                            contextMenuView.Items[i].Image = Properties.Resources.small_text;
+                            item.Image = Properties.Resources.small_text;
                             break;
                     }
                 }
