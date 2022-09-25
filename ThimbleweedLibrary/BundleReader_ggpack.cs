@@ -83,12 +83,12 @@ namespace ThimbleweedLibrary
             }
             catch (Exception ex)
             {
-                //try
-                //{
-                //    Dispose();
-                //}
-                //catch { }
-                //throw;
+                try
+                {
+                    Dispose();
+                }
+                catch { }
+                throw;
             }
         }
 
@@ -241,6 +241,60 @@ namespace ThimbleweedLibrary
             }
         }
 
+
+        class GGFileInfo
+        {
+            public struct GGKeyValuePair
+            {
+                public ushort idxKey;  // index of the key-string in the string table
+                public byte dataType; // ??? maybe
+                public ushort idxValue; // index of the value-string in the string table
+            }
+
+            public List<GGKeyValuePair> KeyValueData = new List<GGKeyValuePair>();
+
+            public void PrintInfo(List<string> StringTable)
+            {
+                foreach (var kv in KeyValueData)
+                {
+                    string valueString = StringTable[kv.idxValue];
+                    switch (kv.dataType)
+                    {
+                        case 4:
+                            Console.WriteLine($"String: {StringTable[kv.idxKey]} = {valueString}");
+                            break;
+                        case 5:
+                            Console.WriteLine($"Integer: {StringTable[kv.idxKey]} = {valueString}");
+                            break;
+                        default:
+                            Console.WriteLine($"Unknown??? ({kv.dataType}): {kv.idxKey} = {kv.idxValue}");
+                            break;
+                    }
+                }
+            }
+
+            public string GetString(string key, List<string> StringTable)
+            {
+                foreach (var kvp in KeyValueData)
+                {
+                    if (SafeGetString(kvp.idxKey, StringTable) == key) return SafeGetString(kvp.idxValue, StringTable);
+                }
+                return "";
+            }
+
+            public int GetInteger(string key, List<string> StringTable)
+            {
+                if (int.TryParse(GetString(key, StringTable), out int res)) return res;
+                return 0;
+            }
+
+            private string SafeGetString(ushort index, List<string> StringTable)
+            {
+                if (index >= StringTable.Count) return "";
+                return StringTable[index];
+            }
+        }
+
         //Parse the bundle, extracting information about the files and adding BundleEntry objects for each
         public void ParseFiles()
         {
@@ -269,96 +323,169 @@ namespace ThimbleweedLibrary
                 int RecordsStartOffset = decReader.ReadInt32() + 1;
                 decReader.Position = RecordsStartOffset;
 
-                /*
-                File records offsets section contains a series of offsets to the different information.
-                Normal entries are 'Filename offset', 'DataOffset offset' and 'Size offset' - Seek to each offset and the value is stored as a string.
-                However some filesize entries are missing and for 1 file in .ggpack2 the offset entry is missing.
-                So you dont know until you seek to the offset if it is what you expect or if you're looking at a filename rather than the size/offset value you were expecting.
-                This code works on the following basis:
-                    Filename entry is always there so just get that.
-                    If you read the offset value and it cant be converted to an integer - its a filename and there isnt an offset value. So add the file record you've got, seek back and start a new record.
-                    If you read the size value and it cant be converted to an integer - its a filename and there isnt an size value. So add the file record you've got, seek back and start a new record.
-                    If everything is fine and you've got a filename, offset and size then add the record and start a new one.
-                    After we've read everything - correct the sizes and offsets by looking at the difference between current and previous files.
-                */
-                BundleEntry bundleEntry = new BundleEntry();
-                while (true)
+                if (FileVersion == BundleFileVersion.Version_RtMI)
                 {
-                    //Read the offset of the next string, go there, read it and come back.
-                    uint NextOffset = decReader.ReadUInt32();
-                    if (NextOffset == 0xFFFFFFFF) //0xFFFFFFFF - marker for end of all offset entries
-                        break;
+                    // I think this is the proper way of doing it
+                    // I have not verified whether this works with TWP's files, so at the moment these use the old method.
 
-                    long OldPos = decReader.Position;
-                    decReader.Position = NextOffset;
-                    string TmpString = decReader.ReadString(StringCoding.ZeroTerminated); //.ReadStringASCIINullTerminated();
-                    decReader.Position = OldPos;
-
-                    //Swallow these string markers
-                    if (TmpString == "files" || TmpString == "filename" || TmpString == "offset" || TmpString == "size")
-                        continue;
-
-                    //Check which one we are up to by seeing which is 'empty' file/offset/size
-                    if (bundleEntry.FileName == null)
+                    List<uint> StringOffsets = new List<uint>();
+                    List<string> StringTable = new List<string>();
+                    uint currentOffset = 0;
+                    do
                     {
-                        bundleEntry.FileName = TmpString;
-                        bundleEntry.FileExtension = Path.GetExtension(TmpString).TrimStart('.');
+                        currentOffset = decReader.ReadUInt32();
+                        if (currentOffset < 0xffffffff) StringOffsets.Add(currentOffset);
+                    } while (currentOffset != 0xffffffff);
+
+                    foreach (var offset in StringOffsets)
+                    {
+                        decReader.Position = (long)offset;
+                        StringTable.Add(decReader.ReadString(StringCoding.ZeroTerminated));
                     }
-                    else if (bundleEntry.Offset == -1)
+
+                    decReader.Position = 12;
+                    uint unknown2 = decReader.ReadUInt32(); // often 202?
+                    uint unknown3 = decReader.ReadUInt32(); // 0x03000000?
+                    uint numberOfFiles = decReader.ReadUInt32(); // number of Files in the Pack
+
+                    List<GGFileInfo> PreliminaryFileInfos = new List<GGFileInfo>();
+                    for (uint iFile = 0; iFile < numberOfFiles; ++iFile)
                     {
-                        int TmpInt = -1;
-                        if (Int32.TryParse(TmpString, out TmpInt) == false) //No offset value
+                        GGFileInfo fi = new GGFileInfo();
+
+                        byte marker1 = decReader.Read1Byte();
+                        uint numKeyValueItems = decReader.ReadUInt32();
+
+                        for (int i = 0; i < numKeyValueItems; ++i)
                         {
-                            bundleEntry.Offset = 0;
-                            bundleEntry.Size = 0;
-                            decReader.Seek(-4, SeekOrigin.Current); //Seek back as we are probably looking at a filename now
+                            GGFileInfo.GGKeyValuePair kvp = new GGFileInfo.GGKeyValuePair()
+                            {
+                                idxKey = decReader.ReadUInt16(),
+                                dataType = (byte)decReader.ReadByte(),
+                                idxValue = decReader.ReadUInt16()
+                            };
+                            fi.KeyValueData.Add(kvp);
+                        }
+
+                        byte marker2 = decReader.Read1Byte();
+
+                        // marker1 and marker2 are always 02?
+                        PreliminaryFileInfos.Add(fi);
+                        Console.WriteLine();
+                        fi.PrintInfo(StringTable);
+                    }
+
+                    bool b = PreliminaryFileInfos.Any(a => a.KeyValueData.Count < 3);
+
+                    foreach (var fileDict in PreliminaryFileInfos)
+                    {
+                        BundleEntry entry = new BundleEntry();
+                        entry.FileName = fileDict.GetString("filename", StringTable);
+                        entry.FileExtension = Path.GetExtension(entry.FileName).TrimStart('.');
+                        entry.Offset = fileDict.GetInteger("offset", StringTable);
+                        entry.Size = fileDict.GetInteger("size", StringTable);
+
+                        if (entry.FileName == "" || entry.Offset == 0 || entry.Size == 0)
+                        {
+                            // Error? 
+                            throw new Exception("File in pack without filename, offset or size!");
+                        }
+
+                        BundleFiles.Add(entry);
+                    }
+                }
+                else
+                {
+                    /*
+                    File records offsets section contains a series of offsets to the different information.
+                    Normal entries are 'Filename offset', 'DataOffset offset' and 'Size offset' - Seek to each offset and the value is stored as a string.
+                    However some filesize entries are missing and for 1 file in .ggpack2 the offset entry is missing.
+                    So you dont know until you seek to the offset if it is what you expect or if you're looking at a filename rather than the size/offset value you were expecting.
+                    This code works on the following basis:
+                        Filename entry is always there so just get that.
+                        If you read the offset value and it cant be converted to an integer - its a filename and there isnt an offset value. So add the file record you've got, seek back and start a new record.
+                        If you read the size value and it cant be converted to an integer - its a filename and there isnt an size value. So add the file record you've got, seek back and start a new record.
+                        If everything is fine and you've got a filename, offset and size then add the record and start a new one.
+                        After we've read everything - correct the sizes and offsets by looking at the difference between current and previous files.
+                    */
+                    BundleEntry bundleEntry = new BundleEntry();
+                    while (true)
+                    {
+                        //Read the offset of the next string, go there, read it and come back.
+                        uint NextOffset = decReader.ReadUInt32();
+                        if (NextOffset == 0xFFFFFFFF) //0xFFFFFFFF - marker for end of all offset entries
+                            break;
+
+                        long OldPos = decReader.Position;
+                        decReader.Position = NextOffset;
+                        string TmpString = decReader.ReadString(StringCoding.ZeroTerminated); //.ReadStringASCIINullTerminated();
+                        decReader.Position = OldPos;
+
+                        //Swallow these string markers
+                        if (TmpString == "files" || TmpString == "filename" || TmpString == "offset" || TmpString == "size")
+                            continue;
+
+                        //Check which one we are up to by seeing which is 'empty' file/offset/size
+                        if (bundleEntry.FileName == null)
+                        {
+                            bundleEntry.FileName = TmpString;
+                            bundleEntry.FileExtension = Path.GetExtension(TmpString).TrimStart('.');
+                        }
+                        else if (bundleEntry.Offset == -1)
+                        {
+                            int TmpInt = -1;
+                            if (Int32.TryParse(TmpString, out TmpInt) == false) //No offset value
+                            {
+                                bundleEntry.Offset = 0;
+                                bundleEntry.Size = 0;
+                                decReader.Seek(-4, SeekOrigin.Current); //Seek back as we are probably looking at a filename now
+                                BundleFiles.Add(bundleEntry); //Add the completed entry to the list
+                                bundleEntry = new BundleEntry(); //Make a new one
+                                continue;
+                            }
+                            else
+                            {
+                                bundleEntry.Offset = TmpInt;
+                            }
+                        }
+                        else if (bundleEntry.Size == -1)
+                        {
+                            int TmpInt = -1;
+                            if (Int32.TryParse(TmpString, out TmpInt) == false) //No size value
+                            {
+                                bundleEntry.Size = 0;
+                                decReader.Seek(-4, SeekOrigin.Current); //seek back as we are probably looking at a filename now
+                            }
+                            else
+                            {
+                                bundleEntry.Size = TmpInt;
+                            }
+
                             BundleFiles.Add(bundleEntry); //Add the completed entry to the list
                             bundleEntry = new BundleEntry(); //Make a new one
                             continue;
                         }
-                        else
-                        {
-                            bundleEntry.Offset = TmpInt;
-                        }
                     }
-                    else if (bundleEntry.Size == -1)
-                    {
-                        int TmpInt = -1;
-                        if (Int32.TryParse(TmpString, out TmpInt) == false) //No size value
-                        {
-                            bundleEntry.Size = 0;
-                            decReader.Seek(-4, SeekOrigin.Current); //seek back as we are probably looking at a filename now
-                        }
-                        else
-                        {
-                            bundleEntry.Size = TmpInt;
-                        }
+                    //Add last entry (if any)
+                    if (bundleEntry != null && bundleEntry.FileName != null)
+                        BundleFiles.Add(bundleEntry);
 
-                        BundleFiles.Add(bundleEntry); //Add the completed entry to the list
-                        bundleEntry = new BundleEntry(); //Make a new one
-                        continue;
-                    }
-                }
-                //Add last entry (if any)
-                if (bundleEntry != null && bundleEntry.FileName != null)
-                    BundleFiles.Add(bundleEntry);
-
-                //Now correct missing sizes / offsets
-                for (int i = 0; i < BundleFiles.Count; i++)
-                {
-                    if (BundleFiles[i].Offset == 0) //So far only seen in 1 file in .ggpack2
+                    //Now correct missing sizes / offsets
+                    for (int i = 0; i < BundleFiles.Count; i++)
                     {
-                        BundleFiles[i].Offset = BundleFiles[i - 1].Offset + BundleFiles[i - 1].Size; //BundleFiles[i + 1].Offset - BundleFiles[i - 1].Offset;
-                    }
-                    if (BundleFiles[i].Size <= 0)
-                    {
-                        if (i == BundleFiles.Count - 1) //Last entry - look at difference between data offset and its offset
+                        if (BundleFiles[i].Offset == 0) //So far only seen in 1 file in .ggpack2
                         {
-                            BundleFiles[i].Size = Convert.ToInt32(DataOffset - BundleFiles[i].Offset);
+                            BundleFiles[i].Offset = BundleFiles[i - 1].Offset + BundleFiles[i - 1].Size; //BundleFiles[i + 1].Offset - BundleFiles[i - 1].Offset;
                         }
-                        else
-                            if (BundleFiles[i + 1].Offset > 0) //1 file in ggpack2 has no size and the file after has no offset
-                            BundleFiles[i].Size = Convert.ToInt32(BundleFiles[i + 1].Offset - BundleFiles[i].Offset); //Look at difference between this and next offset
+                        if (BundleFiles[i].Size <= 0)
+                        {
+                            if (i == BundleFiles.Count - 1) //Last entry - look at difference between data offset and its offset
+                            {
+                                BundleFiles[i].Size = Convert.ToInt32(DataOffset - BundleFiles[i].Offset);
+                            }
+                            else if (BundleFiles[i + 1].Offset > 0) //1 file in ggpack2 has no size and the file after has no offset
+                                BundleFiles[i].Size = Convert.ToInt32(BundleFiles[i + 1].Offset - BundleFiles[i].Offset); //Look at difference between this and next offset
+                        }
                     }
                 }
             }
@@ -375,7 +502,7 @@ namespace ThimbleweedLibrary
                     case "wav":
                         BundleFiles[i].FileType = BundleEntry.FileTypes.Sound;
                         break;
-
+                    case "ktxbz":
                     case "png":
                         BundleFiles[i].FileType = BundleEntry.FileTypes.Image;
                         break;
@@ -393,6 +520,7 @@ namespace ThimbleweedLibrary
                     case "lip":
                     case "yack":
                     case "dinky":
+                    case "atlas":
                         BundleFiles[i].FileType = BundleEntry.FileTypes.Text;
                         break;
                 }
@@ -418,7 +546,6 @@ namespace ThimbleweedLibrary
             if (BundleFiles[FileNo].Size == 0)
                 //throw new ArgumentException(BundleFiles[FileNo].FileName + " File num " + FileNo.ToString() + " Filesize = 0 Skipping this file.");
                 Log(BundleFiles[FileNo].FileName + " File num " + FileNo.ToString() + " Filesize = 0 Skipping this file.");
-
 
             using (MemoryStream ms = new MemoryStream())
             {
@@ -542,7 +669,7 @@ namespace ThimbleweedLibrary
 
         private static byte[] SearchForKey(byte[] data, string keyChecksum, int keyLengthBytes, byte firstByte)
         {
-            for (int i = 0; i<data.Length - keyLengthBytes; ++i)
+            for (int i = 0; i < data.Length - keyLengthBytes; ++i)
             {
                 // optimization - including a single byte should be fine.
                 if (data[i] == firstByte)
@@ -568,6 +695,6 @@ namespace ThimbleweedLibrary
         }
 
         public delegate string SearchForMonkeyIslandExeEvent();
-        public  static event SearchForMonkeyIslandExeEvent OnSearchForMonkeyIsland;
+        public static event SearchForMonkeyIslandExeEvent OnSearchForMonkeyIsland;
     }
 }
