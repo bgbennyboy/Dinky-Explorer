@@ -86,7 +86,7 @@
             // 
             // openFileDialog1
             // 
-            this.openFileDialog1.Filter = "Ggpack files|*.ggpack?";
+            this.openFileDialog1.Filter = "Ggpack files|*.ggpack?;*.ggpack??";
             // 
             // richTextBoxLog
             // 

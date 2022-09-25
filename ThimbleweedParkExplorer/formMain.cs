@@ -26,7 +26,7 @@ namespace ThimbleweedParkExplorer
         public formMain()
         {
             InitializeComponent();
-
+            RtMIKeyReader.OnSearchForMonkeyIsland += RtMIKeyReader_OnSearchForMonkeyIsland;
             //Get icon from exe and use for form icon
             Icon = Icon.ExtractAssociatedIcon(System.Reflection.Assembly.GetExecutingAssembly().Location);
 
@@ -60,6 +60,14 @@ namespace ThimbleweedParkExplorer
             EnableDisableControlsContextDependant();
 
             panelBlank.BringToFront();
+        }
+
+        private string RtMIKeyReader_OnSearchForMonkeyIsland()
+        {
+            OpenFileDialog dialog = new OpenFileDialog();
+            dialog.Filter = "Executable File|*.exe";
+            if (dialog.ShowDialog() != DialogResult.OK) return "";
+            return dialog.FileName;
         }
 
         /// <summary>
@@ -699,6 +707,6 @@ namespace ThimbleweedParkExplorer
                 btnSoundPlay.PerformClick();
             }
         }
-        
+
     }
 }
