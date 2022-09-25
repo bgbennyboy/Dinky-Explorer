@@ -6,6 +6,7 @@ using System;
 using System.Data;
 using System.Drawing;
 using System.IO;
+using System.IO.Compression;
 using System.Linq;
 using System.Windows.Forms;
 using ThimbleweedLibrary;
@@ -623,6 +624,8 @@ namespace ThimbleweedParkExplorer
             ((ToolStripMenuItem)item).Checked = true;
         }
 
+        System.Diagnostics.Process ViewerProcess = null;
+
         //Listview selection changed
         private void objectListView1_SelectedIndexChanged(object sender, EventArgs e)
         {
@@ -632,6 +635,8 @@ namespace ThimbleweedParkExplorer
             EnableDisableControlsContextDependant();
 
             int index = Thimble.BundleFiles.IndexOf((BundleEntry)objectListView1.SelectedObject);
+
+            if (ViewerProcess != null && !ViewerProcess.HasExited) ViewerProcess.CloseMainWindow();
 
             switch (Thimble.BundleFiles[index].FileType)
             {
@@ -645,13 +650,59 @@ namespace ThimbleweedParkExplorer
                             ((IDisposable)oldImage).Dispose();
 
                         Thimble.SaveFileToStream(index, ms);
-                        var image = Image.FromStream(ms);
-                        pictureBoxPreview.Image = image;
 
-                        //Set scaling mode depending on whether image is larger or smaller than the picturebox. From https://stackoverflow.com/questions/41188806/fit-image-to-picturebox-if-picturebox-is-smaller-than-picture
-                        var imageSize = pictureBoxPreview.Image.Size;
-                        var fitSize = pictureBoxPreview.ClientSize;
-                        pictureBoxPreview.SizeMode = imageSize.Width > fitSize.Width || imageSize.Height > fitSize.Height ? PictureBoxSizeMode.Zoom : PictureBoxSizeMode.CenterImage;
+
+                        if (Thimble.BundleFiles[index].FileExtension == "ktxbz")
+                        {
+                            try
+                            {
+                                ms.Position = 2;
+                                var DecompressedKTX = new MemoryStream();
+
+                                using (var d = new DeflateStream(ms, CompressionMode.Decompress))
+                                {
+                                    d.CopyTo(DecompressedKTX);
+                                }
+
+                                string tempPictureName = Path.GetTempFileName() + ".ktx";
+                                File.WriteAllBytes(tempPictureName, DecompressedKTX.ToArray());
+
+                                string viewerApplication = Path.Combine(Path.GetDirectoryName(System.Reflection.Assembly.GetExecutingAssembly().Location), "ctexview.exe");
+                                if(!File.Exists(viewerApplication))
+                                {
+                                    throw new Exception(".KTX-Viewer not found. Download it at https://github.com/septag/dds-ktx/releases/tag/v1.1 and place it under " + Path.GetDirectoryName(viewerApplication));
+                                }
+                                ViewerProcess = System.Diagnostics.Process.Start(viewerApplication, tempPictureName);
+                                ViewerProcess.Exited += (o, ea) =>
+                                {
+                                    File.Delete(tempPictureName);
+                                };
+
+                                System.Threading.Tasks.Task.Run(async () =>
+                                {
+                                    await System.Threading.Tasks.Task.Delay(100);
+                                    BeginInvoke(new Action(() =>
+                                    {
+                                        this.Activate();
+                                    }));
+                                });
+                            }
+                            catch (Exception ex)
+                            {
+                                MessageBox.Show("Could not show file: " + ex.Message);
+                            }
+                        }
+                        else
+                        {
+                            var image = Image.FromStream(ms);
+                            pictureBoxPreview.Image = image;
+
+                            //Set scaling mode depending on whether image is larger or smaller than the picturebox. From https://stackoverflow.com/questions/41188806/fit-image-to-picturebox-if-picturebox-is-smaller-than-picture
+                            var imageSize = pictureBoxPreview.Image.Size;
+                            var fitSize = pictureBoxPreview.ClientSize;
+                            pictureBoxPreview.SizeMode = imageSize.Width > fitSize.Width || imageSize.Height > fitSize.Height ? PictureBoxSizeMode.Zoom : PictureBoxSizeMode.CenterImage;
+
+                        }
                     }
                     break;
 
