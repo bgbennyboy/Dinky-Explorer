@@ -5,9 +5,11 @@ using NAudio.Wave;
 using System;
 using System.Data;
 using System.Drawing;
+using System.Drawing.Imaging;
 using System.IO;
 using System.IO.Compression;
 using System.Linq;
+using System.Runtime.InteropServices;
 using System.Windows.Forms;
 using ThimbleweedLibrary;
 
@@ -325,8 +327,9 @@ namespace ThimbleweedParkExplorer
             }
             else if (sender.Equals(toolStripSaveFileAsImage))
             {
-                saveFileDialog1.Filter = "Image Files|*.png*";
+                saveFileDialog1.Filter = "Image Files|*.png;*.ktx";
                 saveFileDialog1.FileName = ((BundleEntry)objectListView1.SelectedObject).FileName;
+                if (saveFileDialog1.FileName.EndsWith(".ktxbz")) saveFileDialog1.FileName = saveFileDialog1.FileName.Replace(".ktxbz", ".ktx");
             }
             else if (sender.Equals(toolStripSaveFileAsText))
             {
@@ -346,13 +349,33 @@ namespace ThimbleweedParkExplorer
 
             if (saveFileDialog1.ShowDialog() != DialogResult.OK)
                 return;
+
             int index = Thimble.BundleFiles.IndexOf((BundleEntry)objectListView1.SelectedObject);
 
             try
             {
-                log("Saving file " + saveFileDialog1.FileName);
-                EnableDisableControls(false);
-                Thimble.SaveFile(index, saveFileDialog1.FileName);
+                if (Thimble.BundleFiles[index].FileExtension == "ktxbz")
+                {
+                    byte[] ktxData;
+                    using (var memstr = new MemoryStream())
+                    {
+                        Thimble.SaveFileToStream(index, memstr);
+                        ktxData = DecompressStream(memstr);
+                    }
+
+                    if(saveFileDialog1.FileName.ToLowerInvariant().EndsWith(".png"))
+                    {
+                        ktxData = KtxToPng(new MemoryStream(ktxData));
+                    }
+
+                    File.WriteAllBytes(saveFileDialog1.FileName, ktxData);
+                }
+                else
+                {
+                    log("Saving file " + saveFileDialog1.FileName);
+                    EnableDisableControls(false);
+                    Thimble.SaveFile(index, saveFileDialog1.FileName);
+                }
             }
             finally
             {
@@ -626,6 +649,44 @@ namespace ThimbleweedParkExplorer
 
         System.Diagnostics.Process ViewerProcess = null;
 
+        private byte[] KtxToPng(Stream ktxStream)
+        {
+            BCnEncoder.Decoder.BcDecoder decoder = new BCnEncoder.Decoder.BcDecoder();
+            var image = decoder.Decode(ktxStream);
+
+            for (int i = 0; i < image.Width * image.Height; ++i)
+            {
+                int base_addr = 4 * i;
+                //BGRA to 
+                //RGBA
+                var temp = image.data[base_addr];
+                image.data[base_addr] = image.data[base_addr + 2];
+                image.data[base_addr + 2] = temp;
+            }
+
+            GCHandle pinnedArray = GCHandle.Alloc(image.data, GCHandleType.Pinned);
+            IntPtr pointer = pinnedArray.AddrOfPinnedObject();
+
+            System.Drawing.Bitmap bmp = new Bitmap(image.Width, image.Height, image.Width * 4, System.Drawing.Imaging.PixelFormat.Format32bppArgb, pointer);
+            var ms = new MemoryStream();
+            bmp.Save(ms, ImageFormat.Png);
+
+            pinnedArray.Free();
+            return ms.ToArray();
+        }
+
+        private byte[] DecompressStream(MemoryStream ms)
+        {
+            ms.Position = 2;
+            var Decompressed = new MemoryStream();
+
+            using (var d = new DeflateStream(ms, CompressionMode.Decompress))
+            {
+                d.CopyTo(Decompressed);
+                return Decompressed.ToArray();
+            }
+        }
+
         //Listview selection changed
         private void objectListView1_SelectedIndexChanged(object sender, EventArgs e)
         {
@@ -651,57 +712,30 @@ namespace ThimbleweedParkExplorer
 
                         Thimble.SaveFileToStream(index, ms);
 
+                        Stream imageStream = ms;
 
                         if (Thimble.BundleFiles[index].FileExtension == "ktxbz")
                         {
                             try
                             {
-                                ms.Position = 2;
-                                var DecompressedKTX = new MemoryStream();
-
-                                using (var d = new DeflateStream(ms, CompressionMode.Decompress))
-                                {
-                                    d.CopyTo(DecompressedKTX);
-                                }
-
-                                string tempPictureName = Path.GetTempFileName() + ".ktx";
-                                File.WriteAllBytes(tempPictureName, DecompressedKTX.ToArray());
-
-                                string viewerApplication = Path.Combine(Path.GetDirectoryName(System.Reflection.Assembly.GetExecutingAssembly().Location), "ctexview.exe");
-                                if(!File.Exists(viewerApplication))
-                                {
-                                    throw new Exception(".KTX-Viewer not found. Download it at https://github.com/septag/dds-ktx/releases/tag/v1.1 and place it under " + Path.GetDirectoryName(viewerApplication));
-                                }
-                                ViewerProcess = System.Diagnostics.Process.Start(viewerApplication, tempPictureName);
-                                ViewerProcess.Exited += (o, ea) =>
-                                {
-                                    File.Delete(tempPictureName);
-                                };
-
-                                System.Threading.Tasks.Task.Run(async () =>
-                                {
-                                    await System.Threading.Tasks.Task.Delay(100);
-                                    BeginInvoke(new Action(() =>
-                                    {
-                                        this.Activate();
-                                    }));
-                                });
+                                imageStream = new MemoryStream(KtxToPng(new MemoryStream(DecompressStream(ms))));
                             }
                             catch (Exception ex)
                             {
                                 MessageBox.Show("Could not show file: " + ex.Message);
+                                imageStream = null;
                             }
                         }
-                        else
+
+                        if (imageStream != null)
                         {
-                            var image = Image.FromStream(ms);
+                            var image = Image.FromStream(imageStream);
                             pictureBoxPreview.Image = image;
 
                             //Set scaling mode depending on whether image is larger or smaller than the picturebox. From https://stackoverflow.com/questions/41188806/fit-image-to-picturebox-if-picturebox-is-smaller-than-picture
                             var imageSize = pictureBoxPreview.Image.Size;
                             var fitSize = pictureBoxPreview.ClientSize;
                             pictureBoxPreview.SizeMode = imageSize.Width > fitSize.Width || imageSize.Height > fitSize.Height ? PictureBoxSizeMode.Zoom : PictureBoxSizeMode.CenterImage;
-
                         }
                     }
                     break;
