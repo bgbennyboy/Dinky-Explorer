@@ -36,7 +36,8 @@ namespace ThimbleweedLibrary
             Image,
             Sound,
             Text,
-            Bnut
+            Bnut,
+            GGDict,
         };
 
         public string FileName;
@@ -241,60 +242,6 @@ namespace ThimbleweedLibrary
             }
         }
 
-
-        class GGFileInfo
-        {
-            public struct GGKeyValuePair
-            {
-                public ushort idxKey;  // index of the key-string in the string table
-                public byte dataType; // ??? maybe
-                public ushort idxValue; // index of the value-string in the string table
-            }
-
-            public List<GGKeyValuePair> KeyValueData = new List<GGKeyValuePair>();
-
-            public void PrintInfo(List<string> StringTable)
-            {
-                foreach (var kv in KeyValueData)
-                {
-                    string valueString = StringTable[kv.idxValue];
-                    switch (kv.dataType)
-                    {
-                        case 4:
-                            Console.WriteLine($"String: {StringTable[kv.idxKey]} = {valueString}");
-                            break;
-                        case 5:
-                            Console.WriteLine($"Integer: {StringTable[kv.idxKey]} = {valueString}");
-                            break;
-                        default:
-                            Console.WriteLine($"Unknown??? ({kv.dataType}): {kv.idxKey} = {kv.idxValue}");
-                            break;
-                    }
-                }
-            }
-
-            public string GetString(string key, List<string> StringTable)
-            {
-                foreach (var kvp in KeyValueData)
-                {
-                    if (SafeGetString(kvp.idxKey, StringTable) == key) return SafeGetString(kvp.idxValue, StringTable);
-                }
-                return "";
-            }
-
-            public int GetInteger(string key, List<string> StringTable)
-            {
-                if (int.TryParse(GetString(key, StringTable), out int res)) return res;
-                return 0;
-            }
-
-            private string SafeGetString(ushort index, List<string> StringTable)
-            {
-                if (index >= StringTable.Count) return "";
-                return StringTable[index];
-            }
-        }
-
         //Parse the bundle, extracting information about the files and adding BundleEntry objects for each
         public void ParseFiles()
         {
@@ -312,182 +259,24 @@ namespace ThimbleweedLibrary
                 if (DecodeUnbreakableXor((MemoryStream)decReader.BaseStream) == false)
                     throw new ArgumentException("Error parsing the packfile. Decode failed!");
 
-                //Check header is valid. First dword is 01,02,03,04
-                int header = decReader.ReadInt32();
-                //Seek past 4 unknown bytes = 0x00000001
-                int unknown = decReader.ReadInt32();
-                if (header != 0x04030201 || unknown != 0x00000001)
-                    throw new ArgumentException("Error parsing the packfile. Header invalid!");
+                decReader.BaseStream.Position = 0;
 
-                //Read and go to the start of records offset
-                int RecordsStartOffset = decReader.ReadInt32() + 1;
-                decReader.Position = RecordsStartOffset;
+                GGDict dict = new GGDict(decReader.BaseStream, FileVersion == BundleFileVersion.Version_RtMI);
+                if (!dict.Root.ContainsKey("files") || dict.Root["files"].GetType() != typeof(object).MakeArrayType()) throw new Exception("Dictionary does not contain files or files is not an array.");
+                Dictionary<string, object>[] files = (dict.Root["files"] as object[]).Select(s => s as Dictionary<string, object>).Where(o => o != null).ToArray();
 
-                if (FileVersion == BundleFileVersion.Version_RtMI)
+                foreach(var fileinfo in files)
                 {
-                    // I think this is the proper way of doing it
-                    // I have not verified whether this works with TWP's files, so at the moment these use the old method.
+                    BundleEntry entry = new BundleEntry();
+                    entry.FileName = fileinfo["filename"] as string ?? "";
+                    entry.Offset = (int)fileinfo["offset"];
+                    entry.Size = (int)fileinfo["size"];
+                    entry.FileExtension = Path.GetExtension(entry.FileName).TrimStart('.');
 
-                    List<uint> StringOffsets = new List<uint>();
-                    List<string> StringTable = new List<string>();
-                    uint currentOffset = 0;
-                    do
-                    {
-                        currentOffset = decReader.ReadUInt32();
-                        if (currentOffset < 0xffffffff) StringOffsets.Add(currentOffset);
-                    } while (currentOffset != 0xffffffff);
-
-                    foreach (var offset in StringOffsets)
-                    {
-                        decReader.Position = (long)offset;
-                        StringTable.Add(decReader.ReadString(StringCoding.ZeroTerminated));
-                    }
-
-                    decReader.Position = 12;
-                    uint unknown2 = decReader.ReadUInt32(); // often 202?
-                    uint unknown3 = decReader.ReadUInt32(); // 0x03000000?
-                    uint numberOfFiles = decReader.ReadUInt32(); // number of Files in the Pack
-
-                    List<GGFileInfo> PreliminaryFileInfos = new List<GGFileInfo>();
-                    for (uint iFile = 0; iFile < numberOfFiles; ++iFile)
-                    {
-                        GGFileInfo fi = new GGFileInfo();
-
-                        byte marker1 = decReader.Read1Byte();
-                        uint numKeyValueItems = decReader.ReadUInt32();
-
-                        for (int i = 0; i < numKeyValueItems; ++i)
-                        {
-                            GGFileInfo.GGKeyValuePair kvp = new GGFileInfo.GGKeyValuePair()
-                            {
-                                idxKey = decReader.ReadUInt16(),
-                                dataType = (byte)decReader.ReadByte(),
-                                idxValue = decReader.ReadUInt16()
-                            };
-                            fi.KeyValueData.Add(kvp);
-                        }
-
-                        byte marker2 = decReader.Read1Byte();
-
-                        // marker1 and marker2 are always 02?
-                        PreliminaryFileInfos.Add(fi);
-                        Console.WriteLine();
-                        fi.PrintInfo(StringTable);
-                    }
-
-                    bool b = PreliminaryFileInfos.Any(a => a.KeyValueData.Count < 3);
-
-                    foreach (var fileDict in PreliminaryFileInfos)
-                    {
-                        BundleEntry entry = new BundleEntry();
-                        entry.FileName = fileDict.GetString("filename", StringTable);
-                        entry.FileExtension = Path.GetExtension(entry.FileName).TrimStart('.');
-                        entry.Offset = fileDict.GetInteger("offset", StringTable);
-                        entry.Size = fileDict.GetInteger("size", StringTable);
-
-                        if (entry.FileName == "" || entry.Offset == 0 || entry.Size == 0)
-                        {
-                            // Error? 
-                            throw new Exception("File in pack without filename, offset or size!");
-                        }
-
-                        BundleFiles.Add(entry);
-                    }
+                    BundleFiles.Add(entry);
                 }
-                else
-                {
-                    /*
-                    File records offsets section contains a series of offsets to the different information.
-                    Normal entries are 'Filename offset', 'DataOffset offset' and 'Size offset' - Seek to each offset and the value is stored as a string.
-                    However some filesize entries are missing and for 1 file in .ggpack2 the offset entry is missing.
-                    So you dont know until you seek to the offset if it is what you expect or if you're looking at a filename rather than the size/offset value you were expecting.
-                    This code works on the following basis:
-                        Filename entry is always there so just get that.
-                        If you read the offset value and it cant be converted to an integer - its a filename and there isnt an offset value. So add the file record you've got, seek back and start a new record.
-                        If you read the size value and it cant be converted to an integer - its a filename and there isnt an size value. So add the file record you've got, seek back and start a new record.
-                        If everything is fine and you've got a filename, offset and size then add the record and start a new one.
-                        After we've read everything - correct the sizes and offsets by looking at the difference between current and previous files.
-                    */
-                    BundleEntry bundleEntry = new BundleEntry();
-                    while (true)
-                    {
-                        //Read the offset of the next string, go there, read it and come back.
-                        uint NextOffset = decReader.ReadUInt32();
-                        if (NextOffset == 0xFFFFFFFF) //0xFFFFFFFF - marker for end of all offset entries
-                            break;
 
-                        long OldPos = decReader.Position;
-                        decReader.Position = NextOffset;
-                        string TmpString = decReader.ReadString(StringCoding.ZeroTerminated); //.ReadStringASCIINullTerminated();
-                        decReader.Position = OldPos;
-
-                        //Swallow these string markers
-                        if (TmpString == "files" || TmpString == "filename" || TmpString == "offset" || TmpString == "size")
-                            continue;
-
-                        //Check which one we are up to by seeing which is 'empty' file/offset/size
-                        if (bundleEntry.FileName == null)
-                        {
-                            bundleEntry.FileName = TmpString;
-                            bundleEntry.FileExtension = Path.GetExtension(TmpString).TrimStart('.');
-                        }
-                        else if (bundleEntry.Offset == -1)
-                        {
-                            int TmpInt = -1;
-                            if (Int32.TryParse(TmpString, out TmpInt) == false) //No offset value
-                            {
-                                bundleEntry.Offset = 0;
-                                bundleEntry.Size = 0;
-                                decReader.Seek(-4, SeekOrigin.Current); //Seek back as we are probably looking at a filename now
-                                BundleFiles.Add(bundleEntry); //Add the completed entry to the list
-                                bundleEntry = new BundleEntry(); //Make a new one
-                                continue;
-                            }
-                            else
-                            {
-                                bundleEntry.Offset = TmpInt;
-                            }
-                        }
-                        else if (bundleEntry.Size == -1)
-                        {
-                            int TmpInt = -1;
-                            if (Int32.TryParse(TmpString, out TmpInt) == false) //No size value
-                            {
-                                bundleEntry.Size = 0;
-                                decReader.Seek(-4, SeekOrigin.Current); //seek back as we are probably looking at a filename now
-                            }
-                            else
-                            {
-                                bundleEntry.Size = TmpInt;
-                            }
-
-                            BundleFiles.Add(bundleEntry); //Add the completed entry to the list
-                            bundleEntry = new BundleEntry(); //Make a new one
-                            continue;
-                        }
-                    }
-                    //Add last entry (if any)
-                    if (bundleEntry != null && bundleEntry.FileName != null)
-                        BundleFiles.Add(bundleEntry);
-
-                    //Now correct missing sizes / offsets
-                    for (int i = 0; i < BundleFiles.Count; i++)
-                    {
-                        if (BundleFiles[i].Offset == 0) //So far only seen in 1 file in .ggpack2
-                        {
-                            BundleFiles[i].Offset = BundleFiles[i - 1].Offset + BundleFiles[i - 1].Size; //BundleFiles[i + 1].Offset - BundleFiles[i - 1].Offset;
-                        }
-                        if (BundleFiles[i].Size <= 0)
-                        {
-                            if (i == BundleFiles.Count - 1) //Last entry - look at difference between data offset and its offset
-                            {
-                                BundleFiles[i].Size = Convert.ToInt32(DataOffset - BundleFiles[i].Offset);
-                            }
-                            else if (BundleFiles[i + 1].Offset > 0) //1 file in ggpack2 has no size and the file after has no offset
-                                BundleFiles[i].Size = Convert.ToInt32(BundleFiles[i + 1].Offset - BundleFiles[i].Offset); //Look at difference between this and next offset
-                        }
-                    }
-                }
+                if (dict.Root.ContainsKey("guid")) Console.WriteLine($"Opened archive {dict.Root["guid"]}");
             }
         }
 
@@ -511,17 +300,33 @@ namespace ThimbleweedLibrary
                         BundleFiles[i].FileType = BundleEntry.FileTypes.Bnut;
                         break;
 
+                    case "json":
+                        if(FileVersion == BundleFileVersion.Version_RtMI)
+                        {
+                            BundleFiles[i].FileType = BundleEntry.FileTypes.GGDict;
+                        } else
+                        {
+                            BundleFiles[i].FileType = BundleEntry.FileTypes.Text;
+                        }
+                        break;
                     case "txt":
                     case "tsv":
                     case "nut":
-                    case "json":
                     case "fnt":
                     case "byack":
                     case "lip":
                     case "yack":
                     case "dinky":
                     case "atlas":
+                    case "anim":
+                    case "attach":
+                    case "blend":
                         BundleFiles[i].FileType = BundleEntry.FileTypes.Text;
+                        break;
+
+                    case "emitter":
+                    case "wimpy":
+                        BundleFiles[i].FileType = BundleEntry.FileTypes.GGDict;
                         break;
                 }
             }
@@ -570,8 +375,20 @@ namespace ThimbleweedLibrary
                         Decoders.DecodeBnut(ms);
                     }
 
+                    if (FileVersion == BundleFileVersion.Version_RtMI && BundleFiles[FileNo].FileName.ToLowerInvariant().EndsWith(".yack"))
+                    {
+                        // yack files seem to be encrypted twice.
+                        var yack_bytes = ms.ToArray();
+                        RtMIKeyReader.ComputeXORYack(ref yack_bytes, "");
+                        ms.Position = 0;
+                        ms.SetLength(0);
+                        ms.Write(yack_bytes);
+                        ms.Position = 0;
+                    }
+
                     ms.CopyTo(DestStream);
                 }
+
                 DestStream.Position = 0;
             }
         }
@@ -604,16 +421,24 @@ namespace ThimbleweedLibrary
     /// we only distribute the MD5-Checksum of the two data arrays (as well as the first byte of each key)
     /// 
     /// Two keys are used, a short 256 byte key beginning with 0x5D and a longer 65536 byte key starting with 0xF7
+    /// 
+    /// There is a third key used to decrypt the yack files. It is 1024 bytes in length and begins with 0x1F.
+    /// To decrypt the .yacks (after being decrypted normally!), it is necessary to know this number. 
+    /// By experiment I have discovered that the extra parameter for Carla.yack from Weird.ggpack1a appears to be 5.
     /// </summary>
     public class RtMIKeyReader
     {
         public static byte[] Key1 = null;
         public static byte[] Key2 = null;
 
+        public static byte[] KeyYack = null;
+
         // short key - checksum
         private static readonly string Key1Checksum = "B190C421FE7FEAFC77C517A232ABBB4C";
         // long key - checksum
         private static readonly string Key2Checksum = "7FAAF6574F27EBD9D2744CC68E4115C8";
+
+        private static readonly string YackKeyChecksum = "506925BB6A72B6ED50C95094275485E6";
 
         /// <summary>
         /// Decrypts the files in the fashion used by Return to Monkey Island
@@ -634,6 +459,39 @@ namespace ThimbleweedLibrary
         }
 
         /// <summary>
+        /// Decrypts the .yack files. 
+        /// Currently unknown where the extra parameter comes from.
+        /// 
+        /// Working under the assumption that the first byte in the file is 0, I try to guess the correct offset.
+        /// The chosen offset the index of the first key-byte to equal the first data byte.
+        /// 
+        /// This seems to work and the largest offset I've seen was 20.
+        /// </summary>
+        /// <param name="data"></param>
+        /// <param name="fileLocation"></param>
+        public static void ComputeXORYack(ref byte[] data, string fileLocation)
+        {
+            EnsureKeys(fileLocation);
+
+            // find possible value for extra parameter
+            int KeyOffset = 0;
+            for(int i = 0; i<KeyYack.Length; ++i)
+            {
+                if (KeyYack[i] == data[0])
+                {
+                    KeyOffset = i;
+                    Console.WriteLine($"possible contestant: {i}");
+                    break;
+                }
+            }
+
+            for (int i = 0; i < data.Length; ++i)
+            {
+                data[i] = (byte)(data[i] ^ KeyYack[(i + KeyOffset) & 0x3ff]);
+            }
+        }
+
+        /// <summary>
         /// Ensure we have the keys.
         /// </summary>
         /// <param name="fileLocation">If this directory contains a file called "Return to Monkey Island.exe", use this.</param>
@@ -641,7 +499,7 @@ namespace ThimbleweedLibrary
         private static void EnsureKeys(string fileLocation)
         {
 
-            if (Key1 == null || Key2 == null)
+            if (Key1 == null || Key2 == null || KeyYack == null)
             {
                 // We need to get the Keys from the game executable.
                 // is there an appopriate file in the resource file's directory?
@@ -658,8 +516,9 @@ namespace ThimbleweedLibrary
                 var miexe = File.ReadAllBytes(executableName);
                 Key1 = SearchForKey(miexe, Key1Checksum, 256, 0xD5);
                 Key2 = SearchForKey(miexe, Key2Checksum, 65536, 0xF7);
+                KeyYack = SearchForKey(miexe, YackKeyChecksum, 1024, 0x1F);
 
-                if (Key1 == null || Key2 == null)
+                if (Key1 == null || Key2 == null || KeyYack == null)
                 {
                     string WholeFileChecksum = Checksum(miexe, 0, miexe.Length);
                     throw new KeyNotFoundException($"The XOR-Key for Return to Monkey Island could not be extracted from the File \"{executableName}\": Checksum {WholeFileChecksum}");

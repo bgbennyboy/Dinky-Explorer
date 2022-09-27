@@ -1,6 +1,6 @@
 ﻿using BrightIdeasSoftware;
 using Microsoft.WindowsAPICodePack.Dialogs;
-using NAudio.Vorbis;
+//using NAudio.Vorbis;
 using NAudio.Wave;
 using System;
 using System.Data;
@@ -123,6 +123,8 @@ namespace ThimbleweedParkExplorer
                     return Properties.Resources.small_image;
                 else if (b.FileType == BundleEntry.FileTypes.Bnut)
                     return Properties.Resources.small_code;
+                else if (b.FileType == BundleEntry.FileTypes.GGDict)
+                    return Properties.Resources.gg;
                 else
                     return Properties.Resources.small_circle_white;
             };
@@ -363,7 +365,7 @@ namespace ThimbleweedParkExplorer
                         ktxData = DecompressStream(memstr);
                     }
 
-                    if(saveFileDialog1.FileName.ToLowerInvariant().EndsWith(".png"))
+                    if (saveFileDialog1.FileName.ToLowerInvariant().EndsWith(".png"))
                     {
                         ktxData = KtxToPng(new MemoryStream(ktxData));
                     }
@@ -406,7 +408,7 @@ namespace ThimbleweedParkExplorer
 
             if (Thimble.BundleFiles[index].FileExtension == "ogg")
             {
-                audioReader = new VorbisWaveReader(audioDataStream);
+                //audioReader = new VorbisWaveReader(audioDataStream);
             }
             else if (Thimble.BundleFiles[index].FileExtension == "wav")
             {
@@ -573,6 +575,9 @@ namespace ThimbleweedParkExplorer
                             break;
                         case BundleEntry.FileTypes.Text:
                             item.Image = Properties.Resources.small_text;
+                            break;
+                        case BundleEntry.FileTypes.GGDict:
+                            item.Image = Properties.Resources.gg;
                             break;
                     }
                 }
@@ -755,6 +760,18 @@ namespace ThimbleweedParkExplorer
                         {
                             textBoxPreview.Lines = tempArray;
                         }
+                    }
+                    break;
+
+                case BundleEntry.FileTypes.GGDict:
+                    panelText.BringToFront();
+                    using (MemoryStream ms = new MemoryStream())
+                    {
+                        Thimble.SaveFileToStream(index, ms);
+
+                        GGDict dict = new GGDict(ms, Thimble.FileVersion == BundleFileVersion.Version_RtMI);
+                        string[] lines = dict.ToJsonString().Split('\n').Select(s => s.Trim('\r')).ToArray();
+                        textBoxPreview.Lines = lines;
                     }
                     break;
 
