@@ -9,11 +9,11 @@ Made as a test project for relearning C# so the code will be wonky.
 It uses the following nuget packages:
 * NAudio
 * NAudio Vorbis
-* NVorbis
 * ObjectListView
-* Sysroot.BinaryData
 * WindowsAPICodePack-Core
 * WindowsAPICodePack-Shell
+* Newtonsoft.Json
+* BCnEncoder
 
 http://quickandeasysoftware.net
 
