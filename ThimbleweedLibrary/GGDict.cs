@@ -57,7 +57,7 @@ namespace ThimbleweedLibrary
                 {
                     var position = stream.Position;
                     stream.Position = stringAddress;
-                    Strings.Add(readNullTerminatedString());
+                    Strings.Add(reader.ReadNullTerminatedString());
                     stream.Position = position;
                 }
             } while (stringAddress < 0xFFFFFFFF);
@@ -133,18 +133,7 @@ namespace ThimbleweedLibrary
         private int ReadInteger() => int.Parse(ReadString());
         private double ReadFloat() => double.Parse(ReadString());
 
-        private string readNullTerminatedString()
-        {
-            List<byte> bytes = new List<byte>();
-            byte b;
-            do
-            {
-                b = reader.ReadByte();
-                if (b > 0) bytes.Add(b);
-            } while (b != 0);
 
-            return Encoding.UTF8.GetString(bytes.ToArray());
-        }
 
         #endregion
 

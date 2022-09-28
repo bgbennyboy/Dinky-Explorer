@@ -751,15 +751,33 @@ namespace ThimbleweedParkExplorer
 
                 case BundleEntry.FileTypes.Text:
                     panelText.BringToFront();
+
                     using (MemoryStream ms = new MemoryStream())
                     {
                         Thimble.SaveFileToStream(index, ms);
 
-                        string[] tempArray = new string[] { }; //initialise an empty array of strings
-                        if (Decoders.ExtractText(ms, out tempArray) == true)
+                        if (Thimble.BundleFiles[index].FileExtension == "yack" && Thimble.FileVersion == BundleFileVersion.Version_RtMI)
                         {
-                            textBoxPreview.Lines = tempArray;
+                            try
+                            {
+                                ms.Position = 0;
+                                YackDecompiler yack = new YackDecompiler(ms);
+                                textBoxPreview.Lines = ("Note: This file was decompiled. Not all opcodes are understood!" + yack.ToString()).Split('\n');
+                            }
+                            catch (Exception ex)
+                            {
+                                textBoxPreview.Lines = new string[] { "could not decompile .yack:", ex.Message };
+                            }
                         }
+                        else
+                        {
+                            string[] tempArray = new string[] { }; //initialise an empty array of strings
+                            if (Decoders.ExtractText(ms, out tempArray) == true)
+                            {
+                                textBoxPreview.Lines = tempArray;
+                            }
+                        }
+
                     }
                     break;
 

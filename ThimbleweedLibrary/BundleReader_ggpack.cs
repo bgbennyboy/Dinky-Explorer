@@ -359,10 +359,9 @@ namespace ThimbleweedLibrary
                 ms.Position = 0;
 
                 bool skipDecode = false;
+                
                 // In Rtmi, the FMOD .bank files used for audio do not seem to be Xor'd. 
-                // I have not yet determined to what extent the other resource files are encoded. The sound engine's .bank-files definitely aren't encoded.
                 // Although it should be noted that the game uses FMOD's built-in encryption for the files. (The password is easily extracted from the .exe as well)
-                // The .json files seem to contain some amount of readable text after being decoded and not before.
                 if ((FileVersion == BundleFileVersion.Version_RtMI && BundleFiles[FileNo].FileName.ToLowerInvariant().EndsWith(".bank"))) skipDecode = true;
 
                 //Decode data records
