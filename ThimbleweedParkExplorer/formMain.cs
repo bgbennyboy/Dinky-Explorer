@@ -1,6 +1,6 @@
 ﻿using BrightIdeasSoftware;
 using Microsoft.WindowsAPICodePack.Dialogs;
-//using NAudio.Vorbis;
+using NAudio.Vorbis;
 using NAudio.Wave;
 using System;
 using System.Data;
@@ -408,7 +408,7 @@ namespace ThimbleweedParkExplorer
 
             if (Thimble.BundleFiles[index].FileExtension == "ogg")
             {
-                //audioReader = new VorbisWaveReader(audioDataStream);
+                audioReader = new VorbisWaveReader(audioDataStream);
             }
             else if (Thimble.BundleFiles[index].FileExtension == "wav")
             {

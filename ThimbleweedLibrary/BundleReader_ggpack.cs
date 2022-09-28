@@ -1,4 +1,4 @@
-﻿using Syroot.BinaryData;
+﻿//using Syroot.BinaryData;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -61,7 +61,7 @@ namespace ThimbleweedLibrary
         public List<BundleEntry> BundleFiles;
         public event EventHandler<StringEventArgs> LogEvent;
         private string BundleFilename;
-        private BinaryStream fileReader;
+        private BinaryReader fileReader;
         private bool _disposed = false;
 
         //Constructor
@@ -71,7 +71,7 @@ namespace ThimbleweedLibrary
             {
                 BundleFilename = ResourceFile;
 
-                fileReader = new BinaryStream(File.Open(BundleFilename, FileMode.Open));
+                fileReader = new BinaryReader(File.Open(BundleFilename, FileMode.Open));
 
                 if (DetectBundle() == false)
                 {
@@ -132,7 +132,7 @@ namespace ThimbleweedLibrary
             uint DataOffset = fileReader.ReadUInt32();
             uint DataSize = fileReader.ReadUInt32();
 
-            using (BinaryStream decReader = new BinaryStream(new MemoryStream())) //Frees when done + underlying stream
+            using (BinaryReader decReader = new BinaryReader(new MemoryStream())) //Frees when done + underlying stream
             {
                 //Try to decode all versions
                 var fileVersions = Enum.GetValues(typeof(BundleFileVersion)).Cast<BundleFileVersion>().Where(v => v != BundleFileVersion.Unknown); //Build an array of enums but exclude the unknown enum
@@ -141,9 +141,9 @@ namespace ThimbleweedLibrary
                     FileVersion = currentFileVersion;
 
                     fileReader.BaseStream.Position = DataOffset;
-                    decReader.Position = 0;
+                    decReader.BaseStream.Position = 0;
                     CopyStream(fileReader.BaseStream, decReader.BaseStream, Convert.ToInt32(DataSize));
-                    decReader.Position = 0;
+                    decReader.BaseStream.Position = 0;
 
                     //Decode data records
                     if (isValid = DecodeUnbreakableXor((MemoryStream)decReader.BaseStream))
@@ -245,15 +245,15 @@ namespace ThimbleweedLibrary
         //Parse the bundle, extracting information about the files and adding BundleEntry objects for each
         public void ParseFiles()
         {
-            fileReader.Position = 0;
+            fileReader.BaseStream.Position = 0;
             uint DataOffset = fileReader.ReadUInt32();
             uint DataSize = fileReader.ReadUInt32();
             fileReader.BaseStream.Position = DataOffset;
 
-            using (BinaryStream decReader = new BinaryStream(new MemoryStream())) //Frees when done + underlying stream
+            using (BinaryReader decReader = new BinaryReader(new MemoryStream())) //Frees when done + underlying stream
             {
                 CopyStream(fileReader.BaseStream, decReader.BaseStream, Convert.ToInt32(DataSize));
-                decReader.Position = 0;
+                decReader.BaseStream.Position = 0;
 
                 //Decode all data records
                 if (DecodeUnbreakableXor((MemoryStream)decReader.BaseStream) == false)
@@ -354,7 +354,7 @@ namespace ThimbleweedLibrary
 
             using (MemoryStream ms = new MemoryStream())
             {
-                fileReader.Position = BundleFiles[FileNo].Offset;
+                fileReader.BaseStream.Position = BundleFiles[FileNo].Offset;
                 CopyStream(fileReader.BaseStream, ms, BundleFiles[FileNo].Size);
                 ms.Position = 0;
 
@@ -379,10 +379,10 @@ namespace ThimbleweedLibrary
                     {
                         // yack files seem to be encrypted twice.
                         var yack_bytes = ms.ToArray();
-                        RtMIKeyReader.ComputeXORYack(ref yack_bytes, "");
+                        RtMIKeyReader.ComputeXORYack(ref yack_bytes, BundleFiles[FileNo].FileName.Length - ".yack".Length, "");
                         ms.Position = 0;
                         ms.SetLength(0);
-                        ms.Write(yack_bytes);
+                        ms.Write(yack_bytes, 0, yack_bytes.Length);
                         ms.Position = 0;
                     }
 
@@ -469,25 +469,28 @@ namespace ThimbleweedLibrary
         /// </summary>
         /// <param name="data"></param>
         /// <param name="fileLocation"></param>
-        public static void ComputeXORYack(ref byte[] data, string fileLocation)
+        public static void ComputeXORYack(ref byte[] data, int keyOffset, string fileLocation)
         {
             EnsureKeys(fileLocation);
 
             // find possible value for extra parameter
-            int KeyOffset = 0;
-            for(int i = 0; i<KeyYack.Length; ++i)
+
+            if (keyOffset < 0)
             {
-                if (KeyYack[i] == data[0])
+                for (int i = 0; i < KeyYack.Length; ++i)
                 {
-                    KeyOffset = i;
-                    Console.WriteLine($"possible contestant: {i}");
-                    break;
+                    if (KeyYack[i] == data[0])
+                    {
+                        keyOffset = i;
+                        Console.WriteLine($"possible contestant: {i}");
+                        break;
+                    }
                 }
             }
 
             for (int i = 0; i < data.Length; ++i)
             {
-                data[i] = (byte)(data[i] ^ KeyYack[(i + KeyOffset) & 0x3ff]);
+                data[i] = (byte)(data[i] ^ KeyYack[(i + keyOffset) & 0x3ff]);
             }
         }
 
