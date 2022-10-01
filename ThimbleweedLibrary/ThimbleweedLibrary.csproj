@@ -46,7 +46,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Decoders.cs" />
-    <Compile Include="DinkDecompiler.cs" />
+    <Compile Include="DinkDisassembler.cs" />
     <Compile Include="ExtensionMethods.cs" />
     <Compile Include="GGDict.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
