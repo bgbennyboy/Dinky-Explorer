@@ -810,6 +810,26 @@ namespace ThimbleweedParkExplorer
 
                 default:
                     panelBlank.BringToFront();
+                    if (Thimble.BundleFiles[index].FileExtension == "dink")
+                    {
+                        panelText.BringToFront();
+
+                        using (MemoryStream ms = new MemoryStream())
+                        {
+                            Thimble.SaveFileToStream(index, ms);
+                            DinkDisassembler decomp = new DinkDisassembler(ms);
+                            string decompiled = decomp.ToString();
+                            File.WriteAllText("dinky.txt", decompiled);
+                            string[] lines = ("The contents of this file have been dumped to dinky.txt.\n" + decompiled).Split('\n');
+                            if(lines.Length > 10000)
+                            {
+                                string[] trimmed = new string[10000]; for (int i = 0; i < 10000; ++i) trimmed[i] = lines[i];
+                                trimmed[9999] = "... This file was trimmed for display ...";
+                                lines = trimmed;
+                            }
+                            textBoxPreview.Lines = lines;
+                        }
+                    }
                     break;
             }
         }

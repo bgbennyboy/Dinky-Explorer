@@ -21,7 +21,13 @@ namespace ThimbleweedLibrary
                 LABEL = 0x09,
                 GOTO = 10,
                 GOSUB = 0x13,
-                DIALOG_CHOICE = 0x64,
+                DIALOG_CHOICE_1 = 0x64,
+                DIALOG_CHOICE_2 = 0x65,
+                DIALOG_CHOICE_3 = 0x66,
+                DIALOG_CHOICE_4 = 0x67,
+                DIALOG_CHOICE_5 = 0x68,
+                BEGIN_CHOICES = 0x0C,
+                END_CHOICES = 0x0B,
             }
 
             public YackOpcode Opcode;
@@ -99,9 +105,17 @@ namespace ThimbleweedLibrary
                 case YackStatement.YackOpcode.GOSUB:
                     if (ys.ConditionalFlag > 0) return $"if {stGetString(ys.parameters[0])} gosub {stGetString(ys.parameters[1])}";
                     return $"gosub {stGetString(ys.parameters[0])}";
-                case YackStatement.YackOpcode.DIALOG_CHOICE:
-                    if (ys.ConditionalFlag > 0) return $"if {stGetString(ys.parameters[0])} DialogChoice {stGetString(ys.parameters[1])} -> {stGetString(ys.parameters[2])}";
-                    return $"DialogChoice {stGetString(ys.parameters[0])} -> {stGetString(ys.parameters[1])}";
+                case YackStatement.YackOpcode.BEGIN_CHOICES:
+                    return "--- Begin Dialog Choices ---";
+                case YackStatement.YackOpcode.END_CHOICES:
+                    return "---  End Dialog Choices  ---";
+                case YackStatement.YackOpcode.DIALOG_CHOICE_1:
+                case YackStatement.YackOpcode.DIALOG_CHOICE_2:
+                case YackStatement.YackOpcode.DIALOG_CHOICE_3:
+                case YackStatement.YackOpcode.DIALOG_CHOICE_4:
+                case YackStatement.YackOpcode.DIALOG_CHOICE_5:
+                    if (ys.ConditionalFlag > 0) return $"if {stGetString(ys.parameters[0])} {ys.RawOpcode - 0x64}: {stGetString(ys.parameters[1])} -> {stGetString(ys.parameters[2])}";
+                    return $"{ys.RawOpcode - 0x64}: {stGetString(ys.parameters[0])} -> {stGetString(ys.parameters[1])}";
             }
         }
 
