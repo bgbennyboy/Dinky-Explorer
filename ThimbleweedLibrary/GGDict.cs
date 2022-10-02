@@ -130,8 +130,8 @@ namespace ThimbleweedLibrary
             return Strings[(int)StringIndex];
         }
 
-        private int ReadInteger() => int.Parse(ReadString());
-        private double ReadFloat() => double.Parse(ReadString());
+        private int ReadInteger() => int.Parse(ReadString(), System.Globalization.CultureInfo.InvariantCulture);
+        private double ReadFloat() => double.Parse(ReadString(), System.Globalization.CultureInfo.InvariantCulture);
 
 
 
