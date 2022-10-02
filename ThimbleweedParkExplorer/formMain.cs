@@ -115,7 +115,7 @@ namespace ThimbleweedParkExplorer
             {
                 BundleEntry b = (BundleEntry)rowObject;
                 //Song s = (Song)rowObject;
-                if (b.FileType == BundleEntry.FileTypes.Sound)
+                if (b.FileType == BundleEntry.FileTypes.Sound || b.FileType == BundleEntry.FileTypes.Soundbank)
                     return Properties.Resources.small_audio;
                 else if (b.FileType == BundleEntry.FileTypes.Text)
                     return Properties.Resources.small_text;
@@ -397,6 +397,30 @@ namespace ThimbleweedParkExplorer
 
             int index = Thimble.BundleFiles.IndexOf((BundleEntry)objectListView1.SelectedObject);
 
+            //Dump audio from bank
+            if (Thimble.BundleFiles[index].FileType == BundleEntry.FileTypes.Soundbank)
+            {
+                using (var openFolder = new CommonOpenFileDialog())
+                {
+                    openFolder.AllowNonFileSystemItems = true;
+                    openFolder.Multiselect = false;
+                    openFolder.IsFolderPicker = true;
+                    openFolder.Title = "Select a folder to save the audio into";
+
+                    if (openFolder.ShowDialog() != CommonFileDialogResult.Ok)
+                        return;
+                    using (MemoryStream ms = new MemoryStream())
+                    {
+                        Thimble.SaveFileToStream(index, ms);
+                        ms.Position = 0;
+                        FMODBankExtractor fmodbank = new FMODBankExtractor(ms);
+                        fmodbank.LogEvent += this.HandleLogEvent;
+                        fmodbank.SaveAllToDir(openFolder.FileName);
+                        log("...done. Audio saved to " + openFolder.FileName);
+                    }
+                }
+            }
+
             if (Thimble.BundleFiles[index].FileType != BundleEntry.FileTypes.Sound)
                 return;
 
@@ -571,6 +595,7 @@ namespace ThimbleweedParkExplorer
                             item.Image = Properties.Resources.small_image;
                             break;
                         case BundleEntry.FileTypes.Sound:
+                        case BundleEntry.FileTypes.Soundbank:
                             item.Image = Properties.Resources.small_audio;
                             break;
                         case BundleEntry.FileTypes.Text:
@@ -746,6 +771,7 @@ namespace ThimbleweedParkExplorer
                     break;
 
                 case BundleEntry.FileTypes.Sound:
+                case BundleEntry.FileTypes.Soundbank:
                     panelAudio.BringToFront();
                     break;
 
@@ -842,7 +868,7 @@ namespace ThimbleweedParkExplorer
 
             int index = Thimble.BundleFiles.IndexOf((BundleEntry)objectListView1.SelectedObject);
 
-            if (Thimble.BundleFiles[index].FileType == BundleEntry.FileTypes.Sound)
+            if (Thimble.BundleFiles[index].FileType == BundleEntry.FileTypes.Sound || Thimble.BundleFiles[index].FileType == BundleEntry.FileTypes.Soundbank)
             {
                 btnSoundPlay.PerformClick();
             }

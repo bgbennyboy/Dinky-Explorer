@@ -38,6 +38,7 @@ namespace ThimbleweedLibrary
             Text,
             Bnut,
             GGDict,
+            Soundbank,
         };
 
         public string FileName;
@@ -328,6 +329,12 @@ namespace ThimbleweedLibrary
                     case "wimpy":
                         BundleFiles[i].FileType = BundleEntry.FileTypes.GGDict;
                         break;
+                    case "bank":
+                        if (GetMultipleExtension(BundleFiles[i].FileName) == ".assets.bank") //only the assets.bank files contain the FSB in ReMI
+                        {
+                            BundleFiles[i].FileType = BundleEntry.FileTypes.Soundbank;
+                        }
+                        break;
                 }
             }
         }
@@ -409,6 +416,20 @@ namespace ThimbleweedLibrary
         protected virtual void Log(string e)
         {
             this.LogEvent?.Invoke(this, new StringEventArgs(e));
+        }
+
+        private static string GetMultipleExtension(string path)
+        {
+            var ret = "";
+            for (; ; )
+            {
+                var ext = Path.GetExtension(path);
+                if (String.IsNullOrEmpty(ext))
+                    break;
+                path = path.Substring(0, path.Length - ext.Length);
+                ret = ext + ret;
+            }
+            return ret;
         }
     }
 
@@ -554,6 +575,7 @@ namespace ThimbleweedLibrary
                 return String.Join("", MD5.ComputeHash(buffer, start, offset).Select(s => s.ToString("X2")));
             }
         }
+
 
         public delegate string SearchForMonkeyIslandExeEvent();
         public static event SearchForMonkeyIslandExeEvent OnSearchForMonkeyIsland;
