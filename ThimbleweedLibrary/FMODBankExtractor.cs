@@ -65,7 +65,7 @@ namespace ThimbleweedLibrary
             Reverse(SourceBytes);
             for (int i = 0; i < SourceBytes.Length; i++)
             {
-                SourceBytes[i] = (byte)(SourceBytes[i] ^ Key[j]); 
+                SourceBytes[i] = (byte)(SourceBytes[i] ^ Key[j]);
                 j++;
                 if (j == Key.Length)
                 {
@@ -113,6 +113,24 @@ namespace ThimbleweedLibrary
                 File.WriteAllBytes(filePath, data);
                 Log($"Extracted sample {name}");
             }
+        }
+
+        public string[] EnumerateFiles()
+        {
+            FmodSoundBank bank = FsbLoader.LoadFsbFromByteArray(FSBarray);
+            return bank.Samples.Select(s => s.Name).ToArray();
+        }
+
+        public byte[] ExtractSingleFile(string filename, out string extension)
+        {
+            FmodSoundBank bank = FsbLoader.LoadFsbFromByteArray(FSBarray);
+            var sample = bank.Samples.Where(b => b.Name == filename).FirstOrDefault();
+            if (sample == null) throw new FileNotFoundException($"File {filename} not found in bank.");
+            if (!sample.RebuildAsStandardFileFormat(out byte[] data, out extension))
+            {
+                throw new Exception($"Failed to extract sample {filename}");
+            }
+            return data;
         }
 
     }

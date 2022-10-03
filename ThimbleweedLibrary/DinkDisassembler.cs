@@ -163,7 +163,6 @@ namespace ThimbleweedLibrary
                             return $"{opcodeName} ::&{function.GetLocalAsString((int)PotentialParameter3).Trim('"')}";
                         case DinkyOpCode.OP_PUSH_LOCALREF:
                             return $"{opcodeName} &{function.GetLocalAsString((int)PotentialParameter3).Trim('"')}";
-
                         case DinkyOpCode.OP_PUSH_UPVAR:         // push a variable from an upper closure to the stack
                             {
                                 if (PotentialParameter2 != 0)
