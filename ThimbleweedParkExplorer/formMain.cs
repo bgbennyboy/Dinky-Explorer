@@ -25,10 +25,14 @@ namespace ThimbleweedParkExplorer
         private WaveStream audioReader;
         private MemoryStream audioDataStream;
         public BundleReader_ggpack Thimble;
+        private SoundBankViewer bankViewer;
 
         public formMain()
         {
             InitializeComponent();
+            bankAudioListHost.Child = bankViewer = new SoundBankViewer();
+            bankViewer.LogEvent += text => log(text);
+
             RtMIKeyReader.OnSearchForMonkeyIsland += RtMIKeyReader_OnSearchForMonkeyIsland;
             //Get icon from exe and use for form icon
             Icon = Icon.ExtractAssociatedIcon(System.Reflection.Assembly.GetExecutingAssembly().Location);
@@ -203,10 +207,6 @@ namespace ThimbleweedParkExplorer
             f.ShowDialog(this);
             f.Dispose();
         }
-
-
-
-
 
 
         //************************************************Save handlers*********************************************************************
@@ -396,30 +396,6 @@ namespace ThimbleweedParkExplorer
                 return;
 
             int index = Thimble.BundleFiles.IndexOf((BundleEntry)objectListView1.SelectedObject);
-
-            //Dump audio from bank
-            if (Thimble.BundleFiles[index].FileType == BundleEntry.FileTypes.Soundbank)
-            {
-                using (var openFolder = new CommonOpenFileDialog())
-                {
-                    openFolder.AllowNonFileSystemItems = true;
-                    openFolder.Multiselect = false;
-                    openFolder.IsFolderPicker = true;
-                    openFolder.Title = "Select a folder to save the audio into";
-
-                    if (openFolder.ShowDialog() != CommonFileDialogResult.Ok)
-                        return;
-                    using (MemoryStream ms = new MemoryStream())
-                    {
-                        Thimble.SaveFileToStream(index, ms);
-                        ms.Position = 0;
-                        FMODBankExtractor fmodbank = new FMODBankExtractor(ms);
-                        fmodbank.LogEvent += this.HandleLogEvent;
-                        fmodbank.SaveAllToDir(openFolder.FileName);
-                        log("...done. Audio saved to " + openFolder.FileName);
-                    }
-                }
-            }
 
             if (Thimble.BundleFiles[index].FileType != BundleEntry.FileTypes.Sound)
                 return;
@@ -770,11 +746,18 @@ namespace ThimbleweedParkExplorer
                     }
                     break;
 
-                case BundleEntry.FileTypes.Sound:
                 case BundleEntry.FileTypes.Soundbank:
+                    {
+                        bankAudioListHost.BringToFront();
+                        MemoryStream ms = new MemoryStream();
+                        Thimble.SaveFileToStream(index, ms);
+                        ms.Position = 0;
+                        bankViewer.SetBank(ms);
+                    }
+                    break;
+                case BundleEntry.FileTypes.Sound:
                     panelAudio.BringToFront();
                     break;
-
                 case BundleEntry.FileTypes.Text:
                     panelText.BringToFront();
 
@@ -847,7 +830,7 @@ namespace ThimbleweedParkExplorer
                             string decompiled = decomp.ToString();
                             File.WriteAllText("dinky.txt", decompiled);
                             string[] lines = ("The contents of this file have been dumped to dinky.txt.\n" + decompiled).Split('\n');
-                            if(lines.Length > 10000)
+                            if (lines.Length > 10000)
                             {
                                 string[] trimmed = new string[10000]; for (int i = 0; i < 10000; ++i) trimmed[i] = lines[i];
                                 trimmed[9999] = "... This file was trimmed for display ...";
