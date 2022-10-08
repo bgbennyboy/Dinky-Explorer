@@ -874,24 +874,30 @@ namespace ThimbleweedParkExplorer
             if (data == null || !(data is string[] files)) return;
 
             objectListView1.RemoveObjects(Thimble.BundleFiles);
-            
-            foreach (var file in files)
+            try
             {
-                if (Path.GetExtension(file).ToLower().TrimStart('.') == "dinkypatch")
+                foreach (var file in files)
                 {
-                    RtmiPatchScripts(file);
+                    if (Path.GetExtension(file).ToLower().TrimStart('.') == "dinkypatch")
+                    {
+                        RtmiPatchScripts(file);
+                    }
+                    else
+                    {
+                        log($"Adding file \"{file}\"");
+                        Thimble.AddFile(file);
+                    }
                 }
-                else
-                {
-                    log($"Adding file \"{file}\"");
-                    Thimble.AddFile(file);
-                }
+
+                log($"Saving pack file.");
+                Thimble.Save();
+                log($"Pack file saved.");
+            }
+            catch (Exception ex)
+            {
+                log($"error packing files: {ex.Message}");
             }
 
-            log($"Saving pack file.");
-            Thimble.Save();
-            log($"Pack file saved.");
-            
             UpdateOlv1();
         }
 
@@ -943,6 +949,5 @@ namespace ThimbleweedParkExplorer
                 Thimble.AddFile(new MemoryStream(reassembled), "Weird.dink");
             }
         }
-
     }
 }

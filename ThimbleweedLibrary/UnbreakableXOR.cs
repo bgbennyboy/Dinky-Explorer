@@ -18,11 +18,11 @@ namespace ThimbleweedLibrary
 
         public static readonly Dictionary<BundleFileVersion, IXorCryptor> Cryptors = new Dictionary<BundleFileVersion, IXorCryptor>()
         {
-            { BundleFileVersion.Version_RtMI, Cryptor_RTMI },
             { BundleFileVersion.Version_Delores, Cryptor_Delores },
             { BundleFileVersion.Version_918, Cryptor_918 },
             { BundleFileVersion.Version_957, Cryptor_957 },
             { BundleFileVersion.Version_849, Cryptor_849 },
+            { BundleFileVersion.Version_RtMI, Cryptor_RTMI },
         };
     }
 
@@ -115,7 +115,6 @@ namespace ThimbleweedLibrary
 
         public bool Encrypt(Stream source, Stream target, string packFileLocation, int length = -1)
         {
-            // Todo
             throw new NotImplementedException();
         }
     }

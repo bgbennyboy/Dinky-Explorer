@@ -77,6 +77,7 @@ namespace ThimbleweedLibrary
                                     if (item.value is float f) number = f;
                                     else if (item.value is double d) number = d;
                                     else if (item.value is int i) number = i;
+                                    else if (item.value is long l) number = l;
                                     else throw new ArgumentException($"Unknown value: {item.value}");
 
                                     if (item.valuetype is string valuetype && valuetype.ToLowerInvariant() == "int")
@@ -101,6 +102,7 @@ namespace ThimbleweedLibrary
                                         if (item.old_value is float ovf) oldvalue = (float)ovf;
                                         else if (item.old_value is double ovd) oldvalue = (float)ovd;
                                         else if (item.old_value is int ovi) oldvalue = (float)ovi;
+                                        else if (item.old_value is long ovl) oldvalue = (float)ovl;
                                         if (item.oldvaluetype?.ToLowerInvariant() == "int")
                                         {
                                             oldvalue = (int)(float)oldvalue;
