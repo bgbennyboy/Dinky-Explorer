@@ -743,7 +743,7 @@ namespace ThimbleweedLibrary
 
                 string[] parts = instString.Split().Where(a => a.Length > 0).ToArray();
                 if (parts.Length == 0) throw new ArgumentException($"Could not parse instruction: empty.");
-                if (uint.TryParse(parts[0], out uint instructionCodeRaw)) return new DinkyInstruction(instructionCodeRaw);
+                if (uint.TryParse(parts[0], System.Globalization.NumberStyles.HexNumber, System.Globalization.CultureInfo.InvariantCulture, out uint instructionCodeRaw)) return new DinkyInstruction(instructionCodeRaw);
 
                 string opcodeString = "OP_" + parts[0];
                 if (!Enum.TryParse(opcodeString, true, out DinkyInstruction.DinkyOpCode opCode)) throw new ArgumentException($"Could not parse instruction: invalid opcode \"{opcodeString}\"");
