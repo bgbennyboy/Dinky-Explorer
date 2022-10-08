@@ -33,6 +33,29 @@ namespace ThimbleweedLibrary
             }
         }
 
+        /// <summary>
+        /// Save the disassembled structure back into its binary representation.
+        /// This should result in an identical File if no changes have been made to the functions.
+        /// </summary>
+        /// <returns>byte array of dinky data</returns>
+        public byte[] SaveDink()
+        {
+            using (var ms = new MemoryStream())
+            {
+                var bw = new BinaryWriter(ms);
+
+                foreach (var func in Functions)
+                {
+                    byte[] funcBlock = func.SaveFunctionBlock();
+                    bw.Write((uint)0x3441789C);
+                    bw.Write((uint)funcBlock.Length);
+                    bw.Write(funcBlock);
+                }
+
+                return ms.ToArray();
+            }
+        }
+
         private readonly List<ParsedFunction> Functions = new List<ParsedFunction>();
 
         public override string ToString() => String.Join("\n\n", Functions);
@@ -129,13 +152,33 @@ namespace ThimbleweedLibrary
                     if (Enum.IsDefined(typeof(DinkyOpCode), (int)OpcodeRaw)) Opcode = (DinkyOpCode)OpcodeRaw;
                 }
 
+                public DinkyInstruction(DinkyOpCode OpCode, uint Argument3 = 0, uint Argument2 = 0)
+                {
+                    this.Opcode = OpCode;
+                    this.OpcodeRaw = (uint)OpCode;
+                    this.PotentialParameter1 = 0;
+                    this.PotentialParameter2 = (byte)Argument2;
+                    this.PotentialParameter3 = Argument3;
+                    this.instruction = OpcodeRaw | ((uint)Argument2 << 0x0F) | (Argument3 << 0x17);
+                }
+
+                public DinkyInstruction(DinkyOpCode OpCode, ushort longArgument)
+                {
+                    this.Opcode = OpCode;
+                    this.OpcodeRaw = (uint)OpCode;
+                    this.PotentialParameter1 = longArgument;
+                    this.PotentialParameter2 = 0;
+                    this.PotentialParameter3 = 0;
+                    this.instruction = OpcodeRaw | ((uint)longArgument << 7);
+                }
+
                 public string ToString(ParsedFunction function)
                 {
                     string opcodeName = Opcode.ToString().Replace("OP_", "");
                     switch (Opcode)
                     {
                         case DinkyOpCode.UNKNOWN:               // the game would terminate execution of the script if an unknown opcode was reached
-                            return $"Unknown opcode {OpcodeRaw:X2} - {instruction:X8}.";
+                            return $"// Unknown opcode {OpcodeRaw:X2} - {instruction:X8}.";
                         case DinkyOpCode.OP_JUMP:               // jumps always
                         case DinkyOpCode.OP_JUMP_FALSE:         // jumps if stack.pop == false
                         case DinkyOpCode.OP_JUMP_TOPFALSE:      // jumps if stack.top == false
@@ -146,30 +189,30 @@ namespace ThimbleweedLibrary
                                 return $"{opcodeName} {jumpAmount}";
                             }
                         case DinkyOpCode.OP_REMOVED:
-                            return $"{opcodeName}: This opcode is no longer used and treated as No-Op"; // Seems to have been in use at one point.
+                            return $"{opcodeName} // This opcode is no longer used and treated as No-Op"; // Seems to have been in use at one point.
                         case DinkyOpCode.OP_NOP:                // No Operation
                         case DinkyOpCode.OP_RETURN:             // Returns from function
                         case DinkyOpCode.OP_PUSH_NULL:          // pushes null to the stack 
                             return opcodeName;
                         case DinkyOpCode.OP_PUSH_CONST:         // push a constant to the stack
                         case DinkyOpCode.OP_PUSH_LOCAL:         // push a local variable to the stack
-                            return $"{opcodeName} {function.GetLocalAsString((int)PotentialParameter3)}";
+                            return $"{opcodeName} {function.GetLocalAsString((int)PotentialParameter3, true)}";
                         case DinkyOpCode.OP_PUSH_GLOBAL:        // push the global variable with this name to the stack
-                            return $"{opcodeName} ::{function.GetLocalAsString((int)PotentialParameter3).Trim('"')}";
+                            return $"{opcodeName} ::{function.GetLocalAsString((int)PotentialParameter3, false)}";
                         case DinkyOpCode.OP_PUSH_FUNCTION:      // push the function with this GUID to the stack
                         case DinkyOpCode.OP_PUSH_VAR:           // push a script-local variable with this name to the stack (?)
-                            return $"{opcodeName} {function.GetLocalAsString((int)PotentialParameter3).Trim('"')}";
+                            return $"{opcodeName} {function.GetLocalAsString((int)PotentialParameter3, false)}";
                         case DinkyOpCode.OP_PUSH_GLOBALREF:
-                            return $"{opcodeName} ::&{function.GetLocalAsString((int)PotentialParameter3).Trim('"')}";
+                            return $"{opcodeName} ::&{function.GetLocalAsString((int)PotentialParameter3, false)}";
                         case DinkyOpCode.OP_PUSH_LOCALREF:
-                            return $"{opcodeName} &{function.GetLocalAsString((int)PotentialParameter3).Trim('"')}";
+                            return $"{opcodeName} &{function.GetLocalAsString((int)PotentialParameter3, false)}";
                         case DinkyOpCode.OP_PUSH_UPVAR:         // push a variable from an upper closure to the stack
                             {
                                 if (PotentialParameter2 != 0)
                                 {
                                     return $"{opcodeName} ( local {PotentialParameter3} in Closure {PotentialParameter2})";
                                 }
-                                return $"{opcodeName} {function.GetLocalAsString((int)PotentialParameter3).Trim('"')}";
+                                return $"{opcodeName} {function.GetLocalAsString((int)PotentialParameter3, false)}";
                             }
                         case DinkyOpCode.OP_PUSH_UPVARREF:         // push a variable from an upper closure to the stack
                             {
@@ -177,10 +220,10 @@ namespace ThimbleweedLibrary
                                 {
                                     return $"{opcodeName} &( local {PotentialParameter3} in Closure {PotentialParameter2})";
                                 }
-                                return $"{opcodeName} &{function.GetLocalAsString((int)PotentialParameter3).Trim('"')}";
+                                return $"{opcodeName} &{function.GetLocalAsString((int)PotentialParameter3, false)}";
                             }
                         case DinkyOpCode.OP_PUSH_VARREF:           // push a script-local variable with this name to the stack (?)
-                            return $"{opcodeName} &{function.GetLocalAsString((int)PotentialParameter3).Trim('"')}";
+                            return $"{opcodeName} &{function.GetLocalAsString((int)PotentialParameter3, false)}";
                         case DinkyOpCode.OP_PUSH_INDEXREF:
                             return opcodeName;
                         case DinkyOpCode.OP_DUP_TOP:                // stack.push(stack.top)
@@ -192,49 +235,49 @@ namespace ThimbleweedLibrary
                         case DinkyOpCode.OP_UONECOMP:               // stack.push(stack.pop ^ 0xFFFFFFFF)
                             return opcodeName;
                         case DinkyOpCode.OP_MATH:                   // various math operations on the top two elements on the stack
-                            return $"{opcodeName} {PotentialParameter3:X2} (Todo: find out which operation this is.)";
+                            return $"{opcodeName} {PotentialParameter3:X2} //(Todo: find out which operation this is.)";
                         case DinkyOpCode.OP_LAND:
                         case DinkyOpCode.OP_LOR:
-                            return $"{opcodeName} (possibly unused - I couldn't find it in the game.)";
+                            return $"{opcodeName} //(possibly unused - I couldn't find it in the game.)";
                         case DinkyOpCode.OP_INDEX:
                             if (((PotentialParameter1 >> 1) & 1) == 0)
                             {
                                 return $"{opcodeName} (stack)";
                             }
-                            else return $"{opcodeName} {function.GetLocalAsString((int)PotentialParameter3)}";
+                            else return $"{opcodeName} {function.GetLocalAsString((int)PotentialParameter3, true)}";
                         case DinkyOpCode.OP_ITERATE:
-                            return $"{opcodeName} {function.GetLocalAsString((int)PotentialParameter3)}";
+                            return $"{opcodeName} {function.GetLocalAsString((int)PotentialParameter3, true)}";
                         case DinkyOpCode.OP_ITERATEKV:
-                            return $"{opcodeName} {function.GetLocalAsString((int)PotentialParameter3)}";
+                            return $"{opcodeName} {function.GetLocalAsString((int)PotentialParameter3, true)}";
                         case DinkyOpCode.OP_CALL:
                         case DinkyOpCode.OP_FCALL:
-                            return $"{opcodeName}";
+                            return $"{opcodeName} {PotentialParameter3}";
                         case DinkyOpCode.OP_CALLINDEXED:
-                            return $"{opcodeName} (possibly unused)";
+                            return $"{opcodeName} // (possibly unused)";
                         case DinkyOpCode.OP_CALL_NATIVE:
                         case DinkyOpCode.OP_FCALL_NATIVE:
-                            return $"{opcodeName} {function.GetLocalAsString((int)(PotentialParameter1 & 0xFFFF))}({PotentialParameter3} parameters)";
+                            return $"{opcodeName} {function.GetLocalAsString((int)(PotentialParameter1 & 0xFFFF), true)} ({PotentialParameter3} parameters)";
                         case DinkyOpCode.OP_POP:
                             return opcodeName;
                         case DinkyOpCode.OP_STORE_LOCAL:
-                            return $"{opcodeName} slot {PotentialParameter3}";
+                            return $"{opcodeName} slot {function.GetLocalAsString((int)PotentialParameter3, false)}";
                         case DinkyOpCode.OP_STORE_UPVAR:
-                            return $"{opcodeName} slot {PotentialParameter3} in Closure {PotentialParameter2}";
+                            return $"{opcodeName} slot {function.GetLocalAsString((int)PotentialParameter3, false)} in Closure {PotentialParameter2}";
                         case DinkyOpCode.OP_STORE_ROOT:
-                            return $"{opcodeName} slot {PotentialParameter3}";
+                            return $"{opcodeName} slot {function.GetLocalAsString((int)PotentialParameter3, false)}";
                         case DinkyOpCode.OP_STORE_VAR:
-                            return $"{opcodeName} {function.GetLocalAsString((int)PotentialParameter3).Trim('"')}";
+                            return $"{opcodeName} {function.GetLocalAsString((int)PotentialParameter3, false)}";
                         case DinkyOpCode.OP_SET_LOCAL:
-                            return $"{opcodeName} {function.GetLocalAsString((int)PotentialParameter3).Trim('"')} <- {function.GetLocalAsString((int)PotentialParameter2 & 0xFF).Trim('"')}";
+                            return $"{opcodeName} {function.GetLocalAsString((int)PotentialParameter3, false)} <- {function.GetLocalAsString((int)PotentialParameter2 & 0xFF, false)}";
                         case DinkyOpCode.OP_NULL_LOCAL:
-                            return $"{opcodeName} {function.GetLocalAsString((int)PotentialParameter3).Trim('"')} <- null";
+                            return $"{opcodeName} {function.GetLocalAsString((int)PotentialParameter3, false)} <- null";
                         case DinkyOpCode.OP_MATH_REF:
                         case DinkyOpCode.OP_INC_REF:
                         case DinkyOpCode.OP_DEC_REF:
                             return $"{opcodeName} {PotentialParameter3:X3}";
                         case DinkyOpCode.OP_ADD_LOCAL:
-                            var one = function.GetLocalAsString((int)PotentialParameter3);
-                            var two = function.GetLocalAsString(PotentialParameter2);
+                            var one = function.GetLocalAsString((int)PotentialParameter3, true);
+                            var two = function.GetLocalAsString(PotentialParameter2, true);
                             return $"{opcodeName} {one} {two}";
                         case DinkyOpCode.OP_TERNARY:
                             int onFalse = (int)PotentialParameter2 - 0x80;
@@ -242,6 +285,8 @@ namespace ThimbleweedLibrary
                             return $"{opcodeName} true -> {onTrue}, false -> {onFalse}";
                         case DinkyOpCode.OP_BREAKPOINT:
                             return opcodeName;
+                        case DinkyOpCode.OP_NEW_SLOT:
+                            return $"{opcodeName} {function.GetLocalAsString((int)PotentialParameter3, false)}";
                         default:
                             return $"{instruction:X8} -- {opcodeName} ({OpcodeRaw:X2}) {PotentialParameter1:X8} {PotentialParameter2:X2} {PotentialParameter3:X2}";
                     }
@@ -270,13 +315,93 @@ namespace ThimbleweedLibrary
             public readonly string UID;
             public readonly string FunctionName;
 
-            public readonly uint unknownInfo1;
-            public readonly uint unknownInfo2;
 
-            public readonly DinkyInstructionSegment[] InstructionSegments;
-            public readonly DinkyLocal[] Locals;
-            public readonly DinkyInstruction[] Instructions;
-            public readonly DataBlock StringDataBlock;
+            public DinkyInstructionSegment[] InstructionSegments;
+            public DinkyLocal[] Locals;
+            public DinkyInstruction[] Instructions;
+            public DataBlock StringDataBlock;
+
+            uint unk1, unk2, unk3;
+
+            public uint unknownInfo1;
+            public uint NumberOfConstants;
+            byte[] InfoBlockExtraBytes;
+
+            public byte[] SaveFunctionBlock()
+            {
+                using (var ms = new MemoryStream())
+                {
+                    BinaryWriter bw = new BinaryWriter(ms);
+
+                    void WriteString(string s)
+                    {
+                        byte[] data = Encoding.UTF8.GetBytes(s);
+                        bw.Write(data);
+                        bw.Write((byte)0);
+                    }
+
+                    uint requiredLength(string s) => (uint)Encoding.UTF8.GetByteCount(s) + (uint)1;
+
+                    // Write unknown block
+                    bw.Write((uint)0x7F46a125);
+                    bw.Write(unk1);
+                    bw.Write(unk2);
+                    bw.Write((ushort)unk3);
+
+                    // Write info block
+                    bw.Write((uint)0x16F94B62);
+                    bw.Write((uint)(requiredLength(UID) + requiredLength(FunctionName) + requiredLength(ScriptName) + 4 + 4 + (uint)InfoBlockExtraBytes.Length));
+                    WriteString(UID);
+                    WriteString(FunctionName);
+                    WriteString(ScriptName);
+                    bw.Write(unknownInfo1);
+                    bw.Write(NumberOfConstants);
+                    bw.Write(InfoBlockExtraBytes);
+
+                    // Write string data
+                    bw.Write((uint)0x983f1cfa);
+                    bw.Write((uint)StringDataBlock.data.Length);
+                    bw.Write(StringDataBlock.data);
+
+                    // Write locals
+                    bw.Write((uint)0xFD4BC33A);
+                    bw.Write((uint)Locals.Length * 4 * 2);
+                    foreach (var l in Locals)
+                    {
+                        bw.Write((uint)l.DataType);
+                        bw.Write((uint)l.Value);
+                    }
+
+                    // Write instructions
+                    bw.Write((uint)0x55ED4D1D);
+                    bw.Write((uint)Instructions.Length * 4);
+                    foreach (var i in Instructions)
+                    {
+                        bw.Write((uint)i.instruction);
+                    }
+
+                    // Write instruction segments
+                    bw.Write((uint)0x62D34042);
+                    bw.Write((uint)InstructionSegments.Length * 4 * 3);
+                    foreach (var i in InstructionSegments)
+                    {
+                        bw.Write(i.LineNumber);
+                        bw.Write(i.fromInstruction);
+                        bw.Write(i.toInstruction);
+                    }
+
+                    // write other (unknown) blocks
+                    uint[] knownBlocks = new uint[] { 0x7F46a125, 0x16F94B62, 0x62D34042, 0xFD4BC33A, 0x55ED4D1D, 0x983f1cfa };
+                    foreach (var block in blocks.Where(b => !knownBlocks.Contains(b.typeCode)))
+                    {
+                        bw.Write((uint)block.typeCode);
+                        bw.Write((uint)block.data.Length);
+                        bw.Write(block.data);
+                    }
+
+                    return ms.ToArray();
+                }
+            }
 
             public ParsedFunction(byte[] functionBlock)
             {
@@ -292,9 +417,9 @@ namespace ThimbleweedLibrary
                         {
                             case 0x7F46a125:
                                 {
-                                    uint unk1 = br.ReadUInt32();
-                                    uint unk2 = br.ReadUInt32();
-                                    uint unk3 = br.ReadUInt16();
+                                    unk1 = br.ReadUInt32();
+                                    unk2 = br.ReadUInt32();
+                                    unk3 = br.ReadUInt16();
                                 }
                                 break;
                             default:
@@ -319,7 +444,13 @@ namespace ThimbleweedLibrary
                             FunctionName = functionInfo.ReadNullTerminatedString();
                             ScriptName = functionInfo.ReadNullTerminatedString();
                             unknownInfo1 = functionInfo.ReadUInt32();
-                            unknownInfo2 = functionInfo.ReadUInt32();
+                            NumberOfConstants = functionInfo.ReadUInt32();
+                            List<byte> extraBytes = new List<byte>();
+                            while (functionInfo.BaseStream.Position < functionInfo.BaseStream.Length)
+                            {
+                                extraBytes.Add(functionInfo.ReadByte());
+                            }
+                            InfoBlockExtraBytes = extraBytes.ToArray();
                         }
                     }
                 }
@@ -381,59 +512,298 @@ namespace ThimbleweedLibrary
                 }
             }
 
-            public string LocalToString(DinkyLocal local)
+            public string LocalToString(DinkyLocal local, bool quotedString)
             {
                 switch (local.DataType)
                 {
                     case 0x102:
                         // int
-                        return local.Value.ToString();
+                        return ((int)local.Value).ToString();
                     case 0x103:
                         // float
-                        return BitConverter.ToSingle(BitConverter.GetBytes(local.Value), 0).ToString();
+                        return $"{BitConverter.ToSingle(BitConverter.GetBytes(local.Value), 0).ToString()}f";
                     case 0x204:
                         using (var ms = new MemoryStream(StringDataBlock.data))
                         {
                             var br = new BinaryReader(ms);
                             ms.Position = local.Value;
-                            return $"\"{br.ReadNullTerminatedString()}\"";
+                            if (quotedString) return $"\"{br.ReadNullTerminatedString()}\"";
+                            else return br.ReadNullTerminatedString();
                         }
                     default:
                         return $"(Unknown type {local.DataType:X3}: {local.Value:X8})";
                 }
             }
 
-            public string GetLocalAsString(int iLocal)
+            public string GetLocalAsString(int iLocal, bool quotedString)
             {
                 if (iLocal < 0 || iLocal >= Locals.Length) return $"Invalid local: {iLocal}";
-                return LocalToString(Locals[iLocal]);
+                return $"{LocalToString(Locals[iLocal], quotedString)} [{iLocal}]";
             }
 
             public override string ToString()
             {
                 StringBuilder sb = new StringBuilder();
                 sb.AppendLine($"{UID}: {ScriptName}::{FunctionName}()");
+                sb.AppendLine($"[{Locals.Length} locals]");
 
-                foreach (var segment in InstructionSegments)
+                int iInstruction = 0;
+                foreach (var instruction in Instructions)
                 {
-                    sb.AppendLine($"\t{segment.LineNumber:X4}:");
-                    uint i1 = segment.fromInstruction;
-                    do
+                    string marker = "";
+                    if (InstructionSegments.Any(i => i.fromInstruction == iInstruction))
                     {
-                        sb.AppendLine($"\t\t{Instructions[(int)i1].ToString(this)}");
-                        ++i1;
-                    } while (i1 < segment.toInstruction);
-                }
+                        marker = InstructionSegments.Where(i => i.fromInstruction == iInstruction).FirstOrDefault().LineNumber.ToString("D4");
+                    }
+                    else marker = "    ";
 
-                // The last "return" opcode is not always part of the last segment.
-                if (InstructionSegments.Length == 0 || InstructionSegments.Last().toInstruction == Instructions.Length - 1 && InstructionSegments.Last().fromInstruction < InstructionSegments.Last().toInstruction)
-                {
-                    sb.AppendLine("\t");
-                    for (int i3 = (int)(InstructionSegments.LastOrDefault().toInstruction); i3 < Instructions.Length; ++i3) sb.AppendLine($"\t\t{Instructions[i3].ToString(this)}");
+                    sb.AppendLine($"{iInstruction:D4}: {marker} {instruction.ToString(this)}");
+
+                    ++iInstruction;
                 }
 
                 return sb.ToString();
             }
+
+            #region Patching
+            // Functions related to patching the script data.
+
+            private Dictionary<uint, string> stringsFromStringBlock()
+            {
+                Dictionary<uint, string> Strings = new Dictionary<uint, string>();
+                using (var ms = new MemoryStream(StringDataBlock.data))
+                {
+                    var reader = new BinaryReader(ms);
+                    while (ms.Position < ms.Length)
+                    {
+                        uint offset = (uint)ms.Position;
+                        Strings[offset] = reader.ReadNullTerminatedString();
+                    }
+                }
+                return Strings;
+            }
+
+            private void stringsToStringBlock(Dictionary<uint, string> Strings)
+            {
+                // write strings and adjust offsets
+                using (var ms = new MemoryStream())
+                {
+                    BinaryWriter bw = new BinaryWriter(ms);
+
+                    Dictionary<uint, List<int>> LocalsUsingThisString = new Dictionary<uint, List<int>>();
+                    for (int i = 0; i < Locals.Length; ++i)
+                    {
+                        if (Locals[i].DataType == 0x204)
+                        {
+                            if (!LocalsUsingThisString.ContainsKey(Locals[i].Value)) LocalsUsingThisString[Locals[i].Value] = new List<int>();
+                            LocalsUsingThisString[Locals[i].Value].Add(i);
+                        }
+                    }
+
+                    foreach (var kvp in Strings)
+                    {
+                        uint newOffset = (uint)ms.Position;
+                        uint oldOffset = kvp.Key;
+                        bw.Write(Encoding.UTF8.GetBytes(kvp.Value));
+                        bw.Write((byte)0);
+
+                        if (LocalsUsingThisString.ContainsKey(oldOffset))
+                        {
+                            foreach (var i in LocalsUsingThisString[oldOffset])
+                            {
+                                Locals[i].Value = newOffset;
+                            }
+                        }
+                    }
+
+                    StringDataBlock.data = ms.ToArray();
+                }
+            }
+
+            private void CheckLocalValue(int iLocal, object value)
+            {
+                if (value == null) return;
+                if (value is int i)
+                {
+                    if (Locals[iLocal].DataType != 0x102) throw new ArgumentException($"Local {iLocal} mismatch: not an integer");
+                    if (Locals[iLocal].Value != (uint)i) throw new ArgumentException($"Local {iLocal} mismatch: actual value {(int)Locals[iLocal].Value} does not match new value {i}");
+                }
+                else if (value is float f)
+                {
+                    if (Locals[iLocal].DataType != 0x103) throw new ArgumentException($"Local {iLocal} mismatch: not a float");
+                    float actualValue = BitConverter.ToSingle(BitConverter.GetBytes(Locals[iLocal].Value), 0);
+                    if (actualValue != f) throw new ArgumentException($"Local {iLocal} mismatch: actual value {actualValue} does not match new value {f}");
+                }
+                else if (value is string s)
+                {
+                    if (Locals[iLocal].DataType != 0x204) throw new ArgumentException($"Local {iLocal} mismatch: not a string");
+                    string actualValue;
+                    using (var ms = new MemoryStream(StringDataBlock.data))
+                    {
+                        var br = new BinaryReader(ms);
+                        ms.Position = Locals[iLocal].Value;
+                        actualValue = br.ReadNullTerminatedString();
+                    }
+                    if (actualValue != s) throw new ArgumentException($"Local {iLocal} mismatch: actual value {actualValue} does not match new value {s}");
+                }
+            }
+
+            public void Patch_SetLocal(int iLocal, string newValue, object sanityCheck_oldValue = null)
+            {
+                if (iLocal < 0 || iLocal >= Locals.Length) throw new ArgumentOutOfRangeException($"invalid local index {iLocal}");
+                CheckLocalValue(iLocal, sanityCheck_oldValue);
+
+                // Read strings and offsets
+                Dictionary<uint, string> Strings = stringsFromStringBlock();
+
+                // adjust local
+                if (Locals[iLocal].DataType != 0x204)
+                {
+                    Locals[iLocal].DataType = 0x204;
+                    Strings[0xFFFFFFFF] = newValue;
+                    Locals[iLocal].Value = 0xFFFFFFFF;
+                }
+                else
+                {
+                    Strings[Locals[iLocal].Value] = newValue;
+                }
+
+                stringsToStringBlock(Strings);
+            }
+
+            public void Patch_SetLocal(int iLocal, int newValue, object sanityCheck_oldValue = null)
+            {
+                if (iLocal < 0 || iLocal >= Locals.Length) throw new ArgumentOutOfRangeException($"invalid local index {iLocal}");
+                CheckLocalValue(iLocal, sanityCheck_oldValue);
+                Locals[iLocal].DataType = 0x102;
+                Locals[iLocal].Value = (uint)newValue;
+            }
+
+            public void Patch_SetLocal(int iLocal, float newValue, object sanityCheck_oldValue = null)
+            {
+                if (iLocal < 0 || iLocal >= Locals.Length) throw new ArgumentOutOfRangeException($"invalid local index {iLocal}");
+                CheckLocalValue(iLocal, sanityCheck_oldValue);
+                Locals[iLocal].DataType = 0x103;
+                Locals[iLocal].Value = BitConverter.ToUInt32(BitConverter.GetBytes(newValue), 0);
+            }
+
+            private int Patch_AddLocalRaw(int sanityCheck_newSlotIndex, uint typeCode, uint value)
+            {
+                if (sanityCheck_newSlotIndex >= 0 && Locals.Length != sanityCheck_newSlotIndex) throw new ArgumentException("New local would be allocated to unexpected slot.");
+                var newLocals = new DinkyLocal[Locals.Length + 1];
+                for (int i = 0; i < Locals.Length; ++i) newLocals[i] = Locals[i];
+                newLocals[sanityCheck_newSlotIndex].Value = value;
+                newLocals[sanityCheck_newSlotIndex].DataType = typeCode;
+
+                Locals = newLocals;
+                NumberOfConstants = (uint)newLocals.Length;
+                return Locals.Length - 1;
+            }
+
+            public int Patch_AddIntLocal(int sanityCheck_newSlotIndex, int value) => Patch_AddLocalRaw(sanityCheck_newSlotIndex, 0x102, (uint)value);
+            public int Patch_AddFloatLocal(int sanityCheck_newSlotIndex, float value) => Patch_AddLocalRaw(sanityCheck_newSlotIndex, 0x103, BitConverter.ToUInt32(BitConverter.GetBytes(value), 0));
+            public int Patch_AddStringLocal(int sanityCheck_newSlotIndex, string value)
+            {
+                var result = Patch_AddLocalRaw(sanityCheck_newSlotIndex, 0x204, 0xFFFFFFFF);
+                var strings = stringsFromStringBlock();
+                strings[0xFFFFFFFF] = value;
+                stringsToStringBlock(strings);
+                return result;
+            }
+
+            public void Patch_ReplaceInstruction(int iInstruction, DinkyInstruction newInstruction, DinkyInstruction? sanityCheck_oldInstruction = null)
+            {
+                if (iInstruction < 0 || iInstruction >= Instructions.Length) throw new ArgumentException($"Invalid instruction index {iInstruction}");
+                if (sanityCheck_oldInstruction != null)
+                    if (Instructions[iInstruction].instruction != sanityCheck_oldInstruction.Value.instruction)
+                        throw new ArgumentException($"Instruction mismatch: actual instruction {Instructions[iInstruction]} does not match Instruction {sanityCheck_oldInstruction.Value}");
+
+                Instructions[iInstruction] = newInstruction;
+            }
+
+            public void Patch_InsertInstruction(int iInstruction, IEnumerable<DinkyInstruction> newInstructions)
+            {
+                if (iInstruction < 0 || iInstruction > Instructions.Length) throw new ArgumentException($"Invalid instruction index {iInstruction}");
+                List<DinkyInstruction> instructions = Instructions.ToList();
+                foreach (var newInstruction in newInstructions)
+                {
+                    instructions.Insert(iInstruction, newInstruction);
+                    iInstruction++;
+                }
+                Instructions = instructions.ToArray();
+            }
+
+            public static DinkyInstruction Patch_ParseInstruction(string instString)
+            {
+                string[] commentMarker = new string[] { ";", "#", "//" };
+                foreach (var marker in commentMarker)
+                {
+                    if (instString.Contains(marker)) instString = instString.Substring(0, instString.IndexOf(marker));
+                }
+
+                string[] parts = instString.Split().Where(a => a.Length > 0).ToArray();
+                if (parts.Length == 0) throw new ArgumentException($"Could not parse instruction: empty.");
+                if (uint.TryParse(parts[0], out uint instructionCodeRaw)) return new DinkyInstruction(instructionCodeRaw);
+
+                string opcodeString = "OP_" + parts[0];
+                if (!Enum.TryParse(opcodeString, true, out DinkyInstruction.DinkyOpCode opCode)) throw new ArgumentException($"Could not parse instruction: invalid opcode \"{opcodeString}\"");
+
+                switch (opCode)
+                {
+                    default:
+                    case DinkyInstruction.DinkyOpCode.UNKNOWN:
+                        throw new ArgumentException($"Could not parse instruction: unsupported OpCode {opCode}");
+                    case DinkyInstruction.DinkyOpCode.OP_NOP:
+                    case DinkyInstruction.DinkyOpCode.OP_REMOVED:
+                    case DinkyInstruction.DinkyOpCode.OP_RETURN:
+                    case DinkyInstruction.DinkyOpCode.OP_PUSH_NULL:
+                    case DinkyInstruction.DinkyOpCode.OP_BREAKPOINT:
+                    case DinkyInstruction.DinkyOpCode.OP_POP:
+                    case DinkyInstruction.DinkyOpCode.OP_DUP_TOP:
+                    case DinkyInstruction.DinkyOpCode.OP_UNOT:
+                    case DinkyInstruction.DinkyOpCode.OP_UMINUS:
+                    case DinkyInstruction.DinkyOpCode.OP_UONECOMP:
+                        return new DinkyInstruction(opCode);
+                    case DinkyInstruction.DinkyOpCode.OP_JUMP:
+                    case DinkyInstruction.DinkyOpCode.OP_JUMP_FALSE:
+                    case DinkyInstruction.DinkyOpCode.OP_JUMP_TOPFALSE:
+                    case DinkyInstruction.DinkyOpCode.OP_JUMP_TOPTRUE:
+                    case DinkyInstruction.DinkyOpCode.OP_JUMP_TRUE:
+                        {
+                            if (parts.Length < 2 || !int.TryParse(parts[1], out int jmpAmount)) throw new ArgumentException($"Could not parse instruction: invalid jump target.");
+                            ushort toJump = (ushort)(jmpAmount + 0x7FFF);
+                            return new DinkyInstruction(opCode, toJump);
+                        }
+                    case DinkyInstruction.DinkyOpCode.OP_PUSH_CONST:
+                    case DinkyInstruction.DinkyOpCode.OP_PUSH_LOCAL:
+                    case DinkyInstruction.DinkyOpCode.OP_PUSH_GLOBAL:
+                    case DinkyInstruction.DinkyOpCode.OP_PUSH_FUNCTION:
+                    case DinkyInstruction.DinkyOpCode.OP_PUSH_VAR:
+                    case DinkyInstruction.DinkyOpCode.OP_PUSH_GLOBALREF:
+                    case DinkyInstruction.DinkyOpCode.OP_PUSH_LOCALREF:
+                    case DinkyInstruction.DinkyOpCode.OP_PUSH_VARREF:
+                    case DinkyInstruction.DinkyOpCode.OP_NULL_LOCAL:
+                        {
+                            if (parts.Length < 2 || !int.TryParse(parts[1], out int iLocal)) throw new ArgumentException($"Could not parse instruction: invalid local index.");
+                            return new DinkyInstruction(opCode, (uint)iLocal, 0);
+                        }
+                    case DinkyInstruction.DinkyOpCode.OP_CALL:
+                    case DinkyInstruction.DinkyOpCode.OP_FCALL:
+                        {
+                            if (parts.Length < 2 || !int.TryParse(parts[1], out int numArgs)) throw new ArgumentException($"Could not parse instruction: invalid number of arguments.");
+                            return new DinkyInstruction(opCode, (uint)numArgs, 0);
+                        }
+                    case DinkyInstruction.DinkyOpCode.OP_MATH:
+                        {
+                            if (parts.Length < 2 || !int.TryParse(parts[1], System.Globalization.NumberStyles.HexNumber, System.Globalization.CultureInfo.InvariantCulture, out int mathOp)) throw new ArgumentException($"Could not parse instruction: invalid math operation.");
+                            return new DinkyInstruction(opCode, (uint)mathOp, 0);
+                        }
+                }
+            }
+
+
+
+            #endregion
         }
 
     }

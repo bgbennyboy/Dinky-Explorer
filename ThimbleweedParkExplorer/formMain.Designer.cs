@@ -22,6 +22,7 @@
             this.openFileDialog1 = new System.Windows.Forms.OpenFileDialog();
             this.richTextBoxLog = new System.Windows.Forms.RichTextBox();
             this.panel1 = new System.Windows.Forms.Panel();
+            this.cueTextBox1 = new CueTextBox();
             this.btnAbout = new System.Windows.Forms.Button();
             this.btnSaveAllFiles = new System.Windows.Forms.Button();
             this.btnSaveFile = new System.Windows.Forms.Button();
@@ -36,12 +37,12 @@
             this.columnSize = ((BrightIdeasSoftware.OLVColumn)(new BrightIdeasSoftware.OLVColumn()));
             this.imageList1 = new System.Windows.Forms.ImageList(this.components);
             this.panelAudio = new System.Windows.Forms.Panel();
-            this.bankAudioListHost = new System.Windows.Forms.Integration.ElementHost();
             this.labelSoundProgress = new System.Windows.Forms.Label();
             this.trackBarSound = new System.Windows.Forms.TrackBar();
             this.btnSoundStop = new System.Windows.Forms.Button();
             this.btnSoundPause = new System.Windows.Forms.Button();
             this.btnSoundPlay = new System.Windows.Forms.Button();
+            this.bankAudioListHost = new System.Windows.Forms.Integration.ElementHost();
             this.panelBlank = new System.Windows.Forms.Panel();
             this.pictureBox1 = new System.Windows.Forms.PictureBox();
             this.panelProgress = new System.Windows.Forms.Panel();
@@ -64,7 +65,6 @@
             this.toolStripSaveFileAsText = new System.Windows.Forms.ToolStripMenuItem();
             this.toolStripSaveFileAsImage = new System.Windows.Forms.ToolStripMenuItem();
             this.toolStripSaveFileAsAudio = new System.Windows.Forms.ToolStripMenuItem();
-            this.cueTextBox1 = new CueTextBox();
             this.progressBar1 = new ThimbleweedParkExplorer.CustomProgressBar();
             this.panel1.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.splitContainer1)).BeginInit();
@@ -122,6 +122,19 @@
             this.panel1.Name = "panel1";
             this.panel1.Size = new System.Drawing.Size(894, 55);
             this.panel1.TabIndex = 0;
+            // 
+            // cueTextBox1
+            // 
+            this.cueTextBox1.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle;
+            this.cueTextBox1.Cue = "Search";
+            this.cueTextBox1.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.cueTextBox1.Font = new System.Drawing.Font("Segoe UI", 20.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.cueTextBox1.Location = new System.Drawing.Point(434, 0);
+            this.cueTextBox1.Margin = new System.Windows.Forms.Padding(4, 4, 4, 2);
+            this.cueTextBox1.Name = "cueTextBox1";
+            this.cueTextBox1.Size = new System.Drawing.Size(460, 43);
+            this.cueTextBox1.TabIndex = 13;
+            this.cueTextBox1.TextChanged += new System.EventHandler(this.cueTextBox1_TextChanged);
             // 
             // btnAbout
             // 
@@ -345,16 +358,6 @@
             this.panelAudio.Size = new System.Drawing.Size(282, 379);
             this.panelAudio.TabIndex = 1;
             // 
-            // bankAudioListHost
-            // 
-            this.bankAudioListHost.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.bankAudioListHost.Location = new System.Drawing.Point(0, 0);
-            this.bankAudioListHost.Name = "bankAudioListHost";
-            this.bankAudioListHost.Size = new System.Drawing.Size(282, 379);
-            this.bankAudioListHost.TabIndex = 15;
-            this.bankAudioListHost.Text = "elementHost1";
-            this.bankAudioListHost.Child = null;
-            // 
             // labelSoundProgress
             // 
             this.labelSoundProgress.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Left | System.Windows.Forms.AnchorStyles.Right)));
@@ -421,6 +424,16 @@
             this.btnSoundPlay.TabIndex = 0;
             this.btnSoundPlay.UseVisualStyleBackColor = true;
             this.btnSoundPlay.Click += new System.EventHandler(this.btnSoundPlay_Click);
+            // 
+            // bankAudioListHost
+            // 
+            this.bankAudioListHost.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.bankAudioListHost.Location = new System.Drawing.Point(0, 0);
+            this.bankAudioListHost.Name = "bankAudioListHost";
+            this.bankAudioListHost.Size = new System.Drawing.Size(282, 379);
+            this.bankAudioListHost.TabIndex = 15;
+            this.bankAudioListHost.Text = "elementHost1";
+            this.bankAudioListHost.Child = null;
             // 
             // panelBlank
             // 
@@ -618,19 +631,6 @@
             this.toolStripSaveFileAsAudio.Text = "As audio";
             this.toolStripSaveFileAsAudio.Click += new System.EventHandler(this.SaveFileAsHandler);
             // 
-            // cueTextBox1
-            // 
-            this.cueTextBox1.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle;
-            this.cueTextBox1.Cue = "Search";
-            this.cueTextBox1.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.cueTextBox1.Font = new System.Drawing.Font("Segoe UI", 20.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.cueTextBox1.Location = new System.Drawing.Point(434, 0);
-            this.cueTextBox1.Margin = new System.Windows.Forms.Padding(4, 4, 4, 2);
-            this.cueTextBox1.Name = "cueTextBox1";
-            this.cueTextBox1.Size = new System.Drawing.Size(460, 43);
-            this.cueTextBox1.TabIndex = 13;
-            this.cueTextBox1.TextChanged += new System.EventHandler(this.cueTextBox1_TextChanged);
-            // 
             // progressBar1
             // 
             this.progressBar1.Dock = System.Windows.Forms.DockStyle.Bottom;
@@ -658,6 +658,8 @@
             this.StartPosition = System.Windows.Forms.FormStartPosition.CenterScreen;
             this.Text = "Thimbleweed Park Explorer";
             this.FormClosing += new System.Windows.Forms.FormClosingEventHandler(this.formMain_FormClosing);
+            this.DragDrop += new System.Windows.Forms.DragEventHandler(this.formMain_DragDrop);
+            this.DragEnter += new System.Windows.Forms.DragEventHandler(this.objectListView1_DragEnter);
             this.panel1.ResumeLayout(false);
             this.panel1.PerformLayout();
             this.splitContainer1.Panel1.ResumeLayout(false);

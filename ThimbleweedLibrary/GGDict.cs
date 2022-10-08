@@ -16,6 +16,7 @@ namespace ThimbleweedLibrary
         private bool shortKeyIndices;
         private Stream stream;
         private BinaryReader reader;
+        private BinaryWriter writer;
 
         private List<string> Strings = new List<string>();
 
@@ -35,6 +36,12 @@ namespace ThimbleweedLibrary
         }
 
         public readonly Dictionary<string, object> Root;
+
+        public GGDict(Dictionary<string, object> root, bool shortKeyIndices)
+        {
+            Root = root;
+            this.shortKeyIndices = shortKeyIndices;
+        }
 
         public GGDict(Stream file, bool shortKeyIndices)
         {
@@ -67,6 +74,105 @@ namespace ThimbleweedLibrary
             Root = ReadValue() as Dictionary<string, object>;
             if (Root == null) throw new Exception("Root of file is not a dictionary.");
         }
+
+        #region writing 
+
+        public void Write(Stream target)
+        {
+            var start = (uint)target.Position;
+            this.stream = target;
+            this.writer = new BinaryWriter(stream);
+            this.Strings.Clear();
+
+            writer.Write((uint)0x04030201); // signature
+            writer.Write((uint)0x00000001); // unknown
+            writer.Write((uint)0); // Reserved!
+            WriteValue(Root);
+            uint stringListOffset = (uint)stream.Position - start;
+            writer.Write((byte)TypeCode.OFFSETS);
+            // how many bytes of offsets?
+            var offsetsLength = (Strings.Count + 1) * 4;
+
+            var stringsBase = stringListOffset + 1 + offsetsLength;
+            var stringAddress = stringsBase;
+            foreach(var str in Strings)
+            {
+                writer.Write((uint)stringAddress);
+                stringAddress += Encoding.UTF8.GetByteCount(str) + 1;
+            }
+            writer.Write((uint)0xFFFFFFFF);
+
+            foreach (var str in Strings)
+            {
+                byte[] data = Encoding.UTF8.GetBytes(str);
+                writer.Write(data);
+                writer.Write((byte)0);
+            }
+
+            stream.Position = 8;
+            writer.Write((uint)stringListOffset);
+        }
+
+        int write_addString(string s)
+        {
+            int i = Strings.IndexOf(s);
+            if (i >= 0) return i;
+            Strings.Add(s);
+            return Strings.IndexOf(s);
+        }
+
+        void write_writeStringIndex(string s)
+        {
+            int i = write_addString(s);
+            if (shortKeyIndices) writer.Write((ushort)(i));
+            else writer.Write((uint)(i));
+        }
+
+        void WriteValue(object value)
+        {
+            if (value is Dictionary<string, object> dictionary)
+            {
+                writer.Write((byte)TypeCode.DICTIONARY);
+                writer.Write((uint)dictionary.Count);
+                foreach (var kvp in dictionary)
+                {
+                    write_writeStringIndex(kvp.Key);
+                    WriteValue(kvp.Value);
+                }
+                writer.Write((byte)TypeCode.DICTIONARY);
+            }
+            else if (value is object[] array)
+            {
+                writer.Write((byte)TypeCode.ARRAY);
+                writer.Write((uint)array.Length);
+                foreach (var val in array)
+                {
+                    WriteValue(val);
+                }
+                writer.Write((byte)TypeCode.ARRAY);
+            }
+            else if (value is string str)
+            {
+                writer.Write((byte)TypeCode.STRING);
+                write_writeStringIndex(str);
+            }
+            else if (value is int i)
+            {
+                writer.Write((byte)TypeCode.INTEGER);
+                write_writeStringIndex(i.ToString());
+            }
+            else if (value is double d)
+            {
+                writer.Write((byte)TypeCode.FLOAT);
+                write_writeStringIndex(d.ToString(System.Globalization.CultureInfo.InvariantCulture));
+            }
+            else
+            {
+                writer.Write((byte)TypeCode.NULL);
+            }
+        }
+
+        #endregion
 
         #region reading
         object ReadValue()
@@ -130,7 +236,17 @@ namespace ThimbleweedLibrary
             return Strings[(int)StringIndex];
         }
 
-        private int ReadInteger() => int.Parse(ReadString(), System.Globalization.CultureInfo.InvariantCulture);
+        private int ReadInteger()
+        {
+            string str = ReadString();
+            if(str == "files")
+            {
+
+            }
+            Console.WriteLine(str);
+            return int.Parse(str, System.Globalization.CultureInfo.InvariantCulture);
+        }
+            
         private double ReadFloat() => double.Parse(ReadString(), System.Globalization.CultureInfo.InvariantCulture);
 
 
