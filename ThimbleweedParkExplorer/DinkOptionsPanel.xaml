@@ -1,0 +1,47 @@
+﻿<UserControl x:Class="ThimbleweedParkExplorer.DinkOptionsPanel"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
+             xmlns:local="clr-namespace:ThimbleweedParkExplorer"
+             mc:Ignorable="d" 
+             d:DesignHeight="450" d:DesignWidth="300">
+    <Grid Background="LightGray">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="auto"/>
+            <RowDefinition/>
+            <RowDefinition Height="auto"/>
+        </Grid.RowDefinitions>
+        <Grid Grid.Row="0">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition/>
+                <ColumnDefinition Width="auto"/>
+            </Grid.ColumnDefinitions>
+            <TextBlock FontSize="15" Margin="5" VerticalAlignment="Center">Compiled script file (Weird.dink):</TextBlock>
+        </Grid>
+        <Grid Grid.Row="1" Background="White">
+            <ScrollViewer HorizontalScrollBarVisibility="Disabled" VerticalScrollBarVisibility="Auto">
+                <StackPanel>
+                    <Button Margin="5" Click="DumpToFile">
+                        <StackPanel Orientation="Horizontal">
+                            <Image Margin="5" Source="/Resources/save_32.png" MaxHeight="20"/>
+                            <TextBlock VerticalAlignment="Center" FontSize="16">Dump all to file</TextBlock>
+                        </StackPanel>
+                    </Button>
+                    <Button Margin="5" Click="DumpToFiles">
+                        <StackPanel Orientation="Horizontal">
+                            <Image Margin="5" Source="/Resources/save_32.png" MaxHeight="20"/>
+                            <TextBlock VerticalAlignment="Center" FontSize="16">Dump to individual files</TextBlock>
+                        </StackPanel>
+                    </Button>
+                    <Button Margin="5" TextBlock.FontSize="16" Click="ApplyPatch">
+                        Apply patch file
+                    </Button>
+                    <Button Margin="5" TextBlock.FontSize="16" Click="EditPatchFile">
+                        Create / edit patch file
+                    </Button>
+                </StackPanel>
+            </ScrollViewer>
+        </Grid>
+    </Grid>
+</UserControl>

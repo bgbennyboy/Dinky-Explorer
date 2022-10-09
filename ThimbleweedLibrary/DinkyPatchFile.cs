@@ -14,12 +14,16 @@ namespace ThimbleweedLibrary
         public string author;
 
         public List<DinkyPatch> function_patches = new List<DinkyPatch>();
+        public List<Comment> function_comments = new List<Comment>();
 
         public void ApplyPatch(DinkDisassembler dinkFile)
         {
             foreach (var funcToPatch in function_patches)
             {
-                var function = dinkFile.FunctionsInScript(funcToPatch.script ?? "").Where(f => f.FunctionName == funcToPatch.function).FirstOrDefault();
+                DinkDisassembler.ParsedFunction function = null;
+                if (String.IsNullOrWhiteSpace(funcToPatch.function_id)) function = dinkFile.FunctionsInScript(funcToPatch.script ?? "").Where(f => f.FunctionName == funcToPatch.function).FirstOrDefault();
+                else function = dinkFile.FunctionByUid(funcToPatch.function_id);
+                
                 if (function == null) throw new ArgumentException($"Could not find function to patch: {funcToPatch.script}::{funcToPatch.function}().");
                 try
                 {
@@ -32,10 +36,19 @@ namespace ThimbleweedLibrary
             }
         }
 
+        public class Comment
+        {
+            public string comment_type;
+            public string comment;
+            public string function_id;
+            public int instruction_index = -1;
+        }
+
         public class DinkyPatch
         {
             public string script;
             public string function;
+            public string function_id;
             public string comment;
 
             public List<DinkyPatchItem> patches = new List<DinkyPatchItem>();

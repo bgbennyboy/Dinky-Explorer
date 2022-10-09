@@ -26,6 +26,7 @@ namespace ThimbleweedParkExplorer
         private MemoryStream audioDataStream;
         public BundleReader_ggpack Thimble;
         private SoundBankViewer bankViewer;
+        private DinkOptionsPanel dinkOptions;
 
         public formMain()
         {
@@ -33,6 +34,9 @@ namespace ThimbleweedParkExplorer
             AllowDrop = true;
             bankAudioListHost.Child = bankViewer = new SoundBankViewer();
             bankViewer.LogEvent += text => log(text);
+            DinkOptionsHost.Child = dinkOptions = new DinkOptionsPanel();
+            dinkOptions.Log += text => log(text);
+            dinkOptions.OnApplyPatch += patchfile => AddFilesToPack(new string[] { patchfile });
 
             RtMIKeyReader.OnSearchForMonkeyIsland += RtMIKeyReader_OnSearchForMonkeyIsland;
             //Get icon from exe and use for form icon
@@ -820,29 +824,24 @@ namespace ThimbleweedParkExplorer
                     }
                     break;
 
-                default:
-                    panelBlank.BringToFront();
-                    if (Thimble.BundleFiles[index].FileExtension == "dink")
+                case BundleEntry.FileTypes.CompiledScript:
                     {
                         panelText.BringToFront();
 
                         using (MemoryStream ms = new MemoryStream())
                         {
                             Thimble.SaveFileToStream(index, ms);
-                            DinkDisassembler decomp = new DinkDisassembler(ms);
+                            DinkDisassembler disassembled = new DinkDisassembler(ms);
 
-                            string decompiled = decomp.ToString();
-                            File.WriteAllText("dinky.txt", decompiled);
-                            string[] lines = ("The contents of this file have been dumped to dinky.txt.\n" + decompiled).Split('\n');
-                            if (lines.Length > 10000)
-                            {
-                                string[] trimmed = new string[10000]; for (int i = 0; i < 10000; ++i) trimmed[i] = lines[i];
-                                trimmed[9999] = "... This file was trimmed for display ...";
-                                lines = trimmed;
-                            }
-                            textBoxPreview.Lines = lines;
+                            DinkOptionsHost.BringToFront();
+                            dinkOptions.dink = disassembled;
+                            string decompiled = disassembled.ToString();
                         }
                     }
+                    break;
+                default:
+                    panelBlank.BringToFront();
+
                     break;
             }
         }
@@ -872,7 +871,11 @@ namespace ThimbleweedParkExplorer
 
             var data = e.Data.GetData(DataFormats.FileDrop);
             if (data == null || !(data is string[] files)) return;
+            AddFilesToPack(files);
+        }
 
+        private void AddFilesToPack(string[] files)
+        {
             objectListView1.RemoveObjects(Thimble.BundleFiles);
             try
             {

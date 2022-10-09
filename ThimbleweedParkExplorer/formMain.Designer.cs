@@ -66,6 +66,7 @@
             this.toolStripSaveFileAsImage = new System.Windows.Forms.ToolStripMenuItem();
             this.toolStripSaveFileAsAudio = new System.Windows.Forms.ToolStripMenuItem();
             this.progressBar1 = new ThimbleweedParkExplorer.CustomProgressBar();
+            this.DinkOptionsHost = new System.Windows.Forms.Integration.ElementHost();
             this.panel1.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.splitContainer1)).BeginInit();
             this.splitContainer1.Panel1.SuspendLayout();
@@ -264,6 +265,7 @@
             // 
             // splitContainer1.Panel2
             // 
+            this.splitContainer1.Panel2.Controls.Add(this.DinkOptionsHost);
             this.splitContainer1.Panel2.Controls.Add(this.panelAudio);
             this.splitContainer1.Panel2.Controls.Add(this.bankAudioListHost);
             this.splitContainer1.Panel2.Controls.Add(this.panelBlank);
@@ -641,6 +643,17 @@
             this.progressBar1.TabIndex = 10;
             this.progressBar1.Visible = false;
             // 
+            // DinkOptionsHost
+            // 
+            this.DinkOptionsHost.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.DinkOptionsHost.Location = new System.Drawing.Point(0, 0);
+            this.DinkOptionsHost.Margin = new System.Windows.Forms.Padding(0);
+            this.DinkOptionsHost.Name = "DinkOptionsHost";
+            this.DinkOptionsHost.Size = new System.Drawing.Size(282, 379);
+            this.DinkOptionsHost.TabIndex = 15;
+            this.DinkOptionsHost.Text = "elementHost1";
+            this.DinkOptionsHost.Child = null;
+            // 
             // formMain
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(96F, 96F);
@@ -733,6 +746,7 @@
         private System.Windows.Forms.ToolStripMenuItem toolStripSaveFileAsAudio;
         private System.Windows.Forms.ToolStripMenuItem toolStripSaveAllBnut;
         private System.Windows.Forms.Integration.ElementHost bankAudioListHost;
+        private System.Windows.Forms.Integration.ElementHost DinkOptionsHost;
     }
 }
 

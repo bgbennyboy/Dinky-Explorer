@@ -67,6 +67,8 @@ namespace ThimbleweedLibrary
                     return FileTypes.GGDict;
                 case "assets.bank":
                     return FileTypes.Soundbank;
+                case "dink":
+                    return FileTypes.CompiledScript;
                 default:
                     return FileTypes.None;
             }
@@ -81,6 +83,7 @@ namespace ThimbleweedLibrary
             Bnut,
             GGDict,
             Soundbank,
+            CompiledScript,
         };
 
         public string FileName;

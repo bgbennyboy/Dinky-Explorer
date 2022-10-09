@@ -33,6 +33,8 @@ namespace ThimbleweedLibrary
             }
         }
 
+        public ParsedFunction FunctionByUid(string function_id) => Functions.Where(f => f.UID == function_id).FirstOrDefault();
+
         /// <summary>
         /// Save the disassembled structure back into its binary representation.
         /// This should result in an identical File if no changes have been made to the functions.
@@ -289,6 +291,209 @@ namespace ThimbleweedLibrary
                             return $"{opcodeName} {function.GetLocalAsString((int)PotentialParameter3, false)}";
                         default:
                             return $"{instruction:X8} -- {opcodeName} ({OpcodeRaw:X2}) {PotentialParameter1:X8} {PotentialParameter2:X2} {PotentialParameter3:X2}";
+                    }
+                }
+
+                public List<int> getPotentialJumpTargets()
+                {
+                    List<int> targets = new List<int>();
+                    switch (Opcode)
+                    {
+                        case DinkyOpCode.OP_JUMP:
+                        case DinkyOpCode.OP_JUMP_FALSE:
+                        case DinkyOpCode.OP_JUMP_TOPFALSE:
+                        case DinkyOpCode.OP_JUMP_TOPTRUE:
+                        case DinkyOpCode.OP_JUMP_TRUE:
+                            int jumpAmount = (int)((PotentialParameter1 & 0xFFFF) - 0x7FFF);
+                            targets.Add(jumpAmount);
+                            break;
+                        case DinkyOpCode.OP_TERNARY:
+                            int onFalse = (int)PotentialParameter2 - 0x80;
+                            int onTrue = (int)PotentialParameter3 - 0x80;
+                            targets.Add(onFalse);
+                            targets.Add(onTrue);
+                            break;
+                    }
+                    return targets;
+                }
+
+                public int? getReferencedLocals()
+                {
+                    switch (Opcode)
+                    {
+                        case DinkyOpCode.UNKNOWN:
+                        case DinkyOpCode.OP_JUMP:
+                        case DinkyOpCode.OP_JUMP_FALSE:
+                        case DinkyOpCode.OP_JUMP_TOPFALSE:
+                        case DinkyOpCode.OP_JUMP_TOPTRUE:
+                        case DinkyOpCode.OP_JUMP_TRUE:
+                        case DinkyOpCode.OP_REMOVED:
+                        case DinkyOpCode.OP_NOP:
+                        case DinkyOpCode.OP_RETURN:
+                        case DinkyOpCode.OP_PUSH_NULL:
+                        case DinkyOpCode.OP_PUSH_INDEXREF:
+                        case DinkyOpCode.OP_DUP_TOP:
+                        case DinkyOpCode.OP_UNOT:
+                        case DinkyOpCode.OP_UMINUS:
+                        case DinkyOpCode.OP_UONECOMP:
+                        case DinkyOpCode.OP_MATH:
+                        case DinkyOpCode.OP_LAND:
+                        case DinkyOpCode.OP_LOR:
+                        case DinkyOpCode.OP_CALL:
+                        case DinkyOpCode.OP_FCALL:
+                        case DinkyOpCode.OP_CALLINDEXED:
+                        case DinkyOpCode.OP_CALL_NATIVE:
+                        case DinkyOpCode.OP_FCALL_NATIVE:
+                        case DinkyOpCode.OP_POP:
+                        case DinkyOpCode.OP_STORE_LOCAL:
+                        case DinkyOpCode.OP_STORE_UPVAR:
+                        case DinkyOpCode.OP_STORE_ROOT:
+                        case DinkyOpCode.OP_MATH_REF:
+                        case DinkyOpCode.OP_INC_REF:
+                        case DinkyOpCode.OP_DEC_REF:
+                        case DinkyOpCode.OP_ADD_LOCAL:
+                        case DinkyOpCode.OP_TERNARY:
+                        case DinkyOpCode.OP_BREAKPOINT:
+                        default:
+                            return null;
+                        case DinkyOpCode.OP_PUSH_CONST:
+                        case DinkyOpCode.OP_PUSH_LOCAL:
+                        case DinkyOpCode.OP_PUSH_GLOBAL:
+                        case DinkyOpCode.OP_PUSH_FUNCTION:
+                        case DinkyOpCode.OP_PUSH_VAR:
+                        case DinkyOpCode.OP_PUSH_GLOBALREF:
+                        case DinkyOpCode.OP_PUSH_LOCALREF:
+                        case DinkyOpCode.OP_PUSH_VARREF:
+                        case DinkyOpCode.OP_ITERATE:
+                        case DinkyOpCode.OP_ITERATEKV:
+                        case DinkyOpCode.OP_NEW_SLOT:
+                        case DinkyOpCode.OP_NULL_LOCAL:
+                        case DinkyOpCode.OP_SET_LOCAL:
+                        case DinkyOpCode.OP_STORE_VAR:
+                        case DinkyOpCode.OP_INDEX:
+                            return (int)PotentialParameter3;
+                        case DinkyOpCode.OP_PUSH_UPVAR:
+                        case DinkyOpCode.OP_PUSH_UPVARREF:
+                            {
+                                if (PotentialParameter2 != 0) return null;
+                                return (int)PotentialParameter3;
+                            }
+                    }
+                }
+
+                public override string ToString()
+                {
+                    string opcodeName = Opcode.ToString().Replace("OP_", "");
+                    switch (Opcode)
+                    {
+                        case DinkyOpCode.UNKNOWN:               // the game would terminate execution of the script if an unknown opcode was reached
+                            return $"{instruction:X8} - unknown opcode {OpcodeRaw:X2}";
+                        case DinkyOpCode.OP_JUMP:               // jumps always
+                        case DinkyOpCode.OP_JUMP_FALSE:         // jumps if stack.pop == false
+                        case DinkyOpCode.OP_JUMP_TOPFALSE:      // jumps if stack.top == false
+                        case DinkyOpCode.OP_JUMP_TOPTRUE:       // jumps if stack.top == true
+                        case DinkyOpCode.OP_JUMP_TRUE:          // jumps if stack.pop == true
+                            {
+                                int jumpAmount = (int)((PotentialParameter1 & 0xFFFF) - 0x7FFF);
+                                return $"{opcodeName} {jumpAmount}";
+                            }
+                        case DinkyOpCode.OP_REMOVED:
+                            return $"{opcodeName}"; // Seems to have been in use at one point.
+                        case DinkyOpCode.OP_NOP:                // No Operation
+                        case DinkyOpCode.OP_RETURN:             // Returns from function
+                        case DinkyOpCode.OP_PUSH_NULL:          // pushes null to the stack 
+                            return opcodeName;
+                        case DinkyOpCode.OP_PUSH_CONST:         // push a constant to the stack
+                        case DinkyOpCode.OP_PUSH_LOCAL:         // push a local variable to the stack
+                        case DinkyOpCode.OP_PUSH_GLOBAL:        // push the global variable with this name to the stack
+                        case DinkyOpCode.OP_PUSH_FUNCTION:      // push the function with this GUID to the stack
+                        case DinkyOpCode.OP_PUSH_VAR:           // push a script-local variable with this name to the stack (?)
+                        case DinkyOpCode.OP_PUSH_GLOBALREF:
+                        case DinkyOpCode.OP_PUSH_LOCALREF:
+                            return $"{opcodeName} {PotentialParameter3}";
+                        case DinkyOpCode.OP_PUSH_UPVAR:         // push a variable from an upper closure to the stack
+                            {
+                                if (PotentialParameter2 != 0)
+                                {
+                                    return $"{opcodeName} ( local {PotentialParameter3} in Closure {PotentialParameter2})";
+                                }
+                                return $"{opcodeName} {PotentialParameter3}";
+                            }
+                        case DinkyOpCode.OP_PUSH_UPVARREF:         // push a variable from an upper closure to the stack
+                            {
+                                if (PotentialParameter2 != 0)
+                                {
+                                    return $"{opcodeName} &( local {PotentialParameter3} in Closure {PotentialParameter2})";
+                                }
+                                return $"{opcodeName} {PotentialParameter3}";
+                            }
+                        case DinkyOpCode.OP_PUSH_VARREF:           // push a script-local variable with this name to the stack (?)
+                            return $"{opcodeName} {PotentialParameter3}";
+                        case DinkyOpCode.OP_PUSH_INDEXREF:
+                            return opcodeName;
+                        case DinkyOpCode.OP_DUP_TOP:                // stack.push(stack.top)
+                            return opcodeName;
+                        case DinkyOpCode.OP_UNOT:                   // stack.push(!stack.pop)
+                            return opcodeName;
+                        case DinkyOpCode.OP_UMINUS:                 // stack.push(-stack.pop)
+                            return opcodeName;
+                        case DinkyOpCode.OP_UONECOMP:               // stack.push(stack.pop ^ 0xFFFFFFFF)
+                            return opcodeName;
+                        case DinkyOpCode.OP_MATH:                   // various math operations on the top two elements on the stack
+                            return $"{opcodeName} {PotentialParameter3:X2}";
+                        case DinkyOpCode.OP_LAND:
+                        case DinkyOpCode.OP_LOR:
+                            return $"{opcodeName} //(possibly unused - I couldn't find it in the game.)";
+                        case DinkyOpCode.OP_INDEX:
+                            if (((PotentialParameter1 >> 1) & 1) == 0)
+                            {
+                                return $"{opcodeName} (stack)";
+                            }
+                            else return $"{opcodeName} {PotentialParameter3}";
+                        case DinkyOpCode.OP_ITERATE:
+                            return $"{opcodeName} {PotentialParameter3}";
+                        case DinkyOpCode.OP_ITERATEKV:
+                            return $"{opcodeName} {PotentialParameter3}";
+                        case DinkyOpCode.OP_CALL:
+                        case DinkyOpCode.OP_FCALL:
+                            return $"{opcodeName} {PotentialParameter3}";
+                        case DinkyOpCode.OP_CALLINDEXED:
+                            return $"{opcodeName} // (possibly unused)";
+                        case DinkyOpCode.OP_CALL_NATIVE:
+                        case DinkyOpCode.OP_FCALL_NATIVE:
+                            return $"{opcodeName} {(PotentialParameter1 & 0xFFFF)} ({PotentialParameter3} parameters)";
+                        case DinkyOpCode.OP_POP:
+                            return opcodeName;
+                        case DinkyOpCode.OP_STORE_LOCAL:
+                            return $"{opcodeName} slot {PotentialParameter3}";
+                        case DinkyOpCode.OP_STORE_UPVAR:
+                            return $"{opcodeName} slot {PotentialParameter3} in Closure {PotentialParameter2}";
+                        case DinkyOpCode.OP_STORE_ROOT:
+                            return $"{opcodeName} slot {PotentialParameter3}";
+                        case DinkyOpCode.OP_STORE_VAR:
+                            return $"{opcodeName} {PotentialParameter3}";
+                        case DinkyOpCode.OP_SET_LOCAL:
+                            return $"{opcodeName} {PotentialParameter3} <- {(PotentialParameter2 & 0xFF)}";
+                        case DinkyOpCode.OP_NULL_LOCAL:
+                            return $"{opcodeName} {PotentialParameter3} <- null";
+                        case DinkyOpCode.OP_MATH_REF:
+                        case DinkyOpCode.OP_INC_REF:
+                        case DinkyOpCode.OP_DEC_REF:
+                            return $"{opcodeName} {PotentialParameter3:X3}";
+                        case DinkyOpCode.OP_ADD_LOCAL:
+                            var one = PotentialParameter3.ToString();
+                            var two = PotentialParameter2.ToString();
+                            return $"{opcodeName} {one} {two}";
+                        case DinkyOpCode.OP_TERNARY:
+                            int onFalse = (int)PotentialParameter2 - 0x80;
+                            int onTrue = (int)PotentialParameter3 - 0x80;
+                            return $"{opcodeName} true -> {onTrue}, false -> {onFalse}";
+                        case DinkyOpCode.OP_BREAKPOINT:
+                            return opcodeName;
+                        case DinkyOpCode.OP_NEW_SLOT:
+                            return $"{opcodeName} {PotentialParameter3}";
+                        default:
+                            return $"{instruction:X8} {opcodeName} {PotentialParameter1:X8} {PotentialParameter2:X2} {PotentialParameter3:X2}";
                     }
                 }
             }
