@@ -36,12 +36,12 @@
             this.columnSize = ((BrightIdeasSoftware.OLVColumn)(new BrightIdeasSoftware.OLVColumn()));
             this.imageList1 = new System.Windows.Forms.ImageList(this.components);
             this.panelAudio = new System.Windows.Forms.Panel();
-            this.bankAudioListHost = new System.Windows.Forms.Integration.ElementHost();
             this.labelSoundProgress = new System.Windows.Forms.Label();
             this.trackBarSound = new System.Windows.Forms.TrackBar();
             this.btnSoundStop = new System.Windows.Forms.Button();
             this.btnSoundPause = new System.Windows.Forms.Button();
             this.btnSoundPlay = new System.Windows.Forms.Button();
+            this.bankAudioListHost = new System.Windows.Forms.Integration.ElementHost();
             this.panelBlank = new System.Windows.Forms.Panel();
             this.pictureBox1 = new System.Windows.Forms.PictureBox();
             this.panelProgress = new System.Windows.Forms.Panel();
@@ -104,7 +104,7 @@
             this.richTextBoxLog.ShowSelectionMargin = true;
             this.richTextBoxLog.Size = new System.Drawing.Size(894, 68);
             this.richTextBoxLog.TabIndex = 4;
-            this.richTextBoxLog.Text = "Thimbleweed Park Explorer\nhttp://quickandeasysoftware.net\n";
+            this.richTextBoxLog.Text = "Dinky Explorer\nhttp://quickandeasysoftware.net\n";
             // 
             // panel1
             // 
@@ -345,16 +345,6 @@
             this.panelAudio.Size = new System.Drawing.Size(282, 379);
             this.panelAudio.TabIndex = 1;
             // 
-            // bankAudioListHost
-            // 
-            this.bankAudioListHost.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.bankAudioListHost.Location = new System.Drawing.Point(0, 0);
-            this.bankAudioListHost.Name = "bankAudioListHost";
-            this.bankAudioListHost.Size = new System.Drawing.Size(282, 379);
-            this.bankAudioListHost.TabIndex = 15;
-            this.bankAudioListHost.Text = "elementHost1";
-            this.bankAudioListHost.Child = null;
-            // 
             // labelSoundProgress
             // 
             this.labelSoundProgress.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Left | System.Windows.Forms.AnchorStyles.Right)));
@@ -422,6 +412,16 @@
             this.btnSoundPlay.UseVisualStyleBackColor = true;
             this.btnSoundPlay.Click += new System.EventHandler(this.btnSoundPlay_Click);
             // 
+            // bankAudioListHost
+            // 
+            this.bankAudioListHost.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.bankAudioListHost.Location = new System.Drawing.Point(0, 0);
+            this.bankAudioListHost.Name = "bankAudioListHost";
+            this.bankAudioListHost.Size = new System.Drawing.Size(282, 379);
+            this.bankAudioListHost.TabIndex = 15;
+            this.bankAudioListHost.Text = "elementHost1";
+            this.bankAudioListHost.Child = null;
+            // 
             // panelBlank
             // 
             this.panelBlank.Controls.Add(this.pictureBox1);
@@ -436,6 +436,7 @@
             // 
             this.pictureBox1.Dock = System.Windows.Forms.DockStyle.Fill;
             this.pictureBox1.Image = ((System.Drawing.Image)(resources.GetObject("pictureBox1.Image")));
+            this.pictureBox1.InitialImage = ((System.Drawing.Image)(resources.GetObject("pictureBox1.InitialImage")));
             this.pictureBox1.Location = new System.Drawing.Point(0, 0);
             this.pictureBox1.Margin = new System.Windows.Forms.Padding(4);
             this.pictureBox1.Name = "pictureBox1";
@@ -656,7 +657,7 @@
             this.MinimumSize = new System.Drawing.Size(470, 400);
             this.Name = "formMain";
             this.StartPosition = System.Windows.Forms.FormStartPosition.CenterScreen;
-            this.Text = "Thimbleweed Park Explorer";
+            this.Text = "Dinky Explorer";
             this.FormClosing += new System.Windows.Forms.FormClosingEventHandler(this.formMain_FormClosing);
             this.panel1.ResumeLayout(false);
             this.panel1.PerformLayout();

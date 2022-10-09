@@ -68,8 +68,7 @@
             this.labelAboutText.Name = "labelAboutText";
             this.labelAboutText.Size = new System.Drawing.Size(397, 201);
             this.labelAboutText.TabIndex = 2;
-            this.labelAboutText.Text = "Thimbleweed Park Explorer\r\n\r\nVersion\r\n\r\nBy Bennyboy\r\n\r\nhttp://quickandeasysoftwar" +
-    "e.net\r\n";
+            this.labelAboutText.Text = "Dinky Explorer\r\n\r\nVersion\r\n\r\nBy Bennyboy\r\n\r\nhttp://quickandeasysoftware.net\r\n";
             this.labelAboutText.TextAlign = System.Drawing.ContentAlignment.MiddleCenter;
             this.labelAboutText.Click += new System.EventHandler(this.labelAboutText_Click);
             // 

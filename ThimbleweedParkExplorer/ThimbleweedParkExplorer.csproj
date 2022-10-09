@@ -52,7 +52,7 @@
     <Prefer32Bit>false</Prefer32Bit>
   </PropertyGroup>
   <PropertyGroup>
-    <ApplicationIcon>TP Explorer Icon.ico</ApplicationIcon>
+    <ApplicationIcon>Dinky Explorer Icon.ico</ApplicationIcon>
   </PropertyGroup>
   <ItemGroup>
     <Reference Include="BCnEncoderNet45, Version=0.0.1.0, Culture=neutral, processorArchitecture=MSIL">
@@ -248,20 +248,18 @@
     <None Include="Resources\small_text.png" />
   </ItemGroup>
   <ItemGroup>
-    <None Include="Resources\Doublefine Explorer Side Logo.fw.png" />
-  </ItemGroup>
-  <ItemGroup>
     <Resource Include="Resources\Play_24x24.png">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Resource>
   </ItemGroup>
   <ItemGroup>
-    <None Include="Resources\TPExp_FullBackground.png" />
     <Resource Include="Resources\pause.png">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Resource>
     <None Include="Resources\stop.png" />
     <None Include="Resources\gg.png" />
+    <Content Include="Dinky Explorer Icon.ico" />
+    <Content Include="Resources\DinkyExp_FullBackground.png" />
     <Content Include="TP Explorer Icon.ico" />
   </ItemGroup>
   <ItemGroup>
