@@ -9,7 +9,7 @@
     <UserControl.Resources>
         <!-- Colors -->
         <Brush x:Key="MiddleSplitterColor">LightGray</Brush>
-        <Brush x:Key="CommentColor">#FF81D089</Brush>
+        <Brush x:Key="CommentColor">#FF229C87</Brush>
         <Brush x:Key="ModifiedInstructionColor">red</Brush>
         <Brush x:Key="AddedColor">#FF15AF00</Brush>
         <Brush x:Key="MouseOverColor">#d0f5ef</Brush>
@@ -82,11 +82,13 @@
             <Grid.RowDefinitions>
                 <RowDefinition Height="auto"/>
                 <RowDefinition Height="auto"/>
+                <RowDefinition Height="auto"/>
                 <RowDefinition/>
             </Grid.RowDefinitions>
             <TextBlock Grid.ColumnSpan="2" FontSize="16" FontWeight="DemiBold" Name="FunctionName">Function and script name goes here!</TextBlock>
             <TextBlock Grid.Row="1" Style="{DynamicResource keyTextBlock}">Remarks:</TextBlock>
             <TextBox Grid.Row="1" Style="{DynamicResource valueTextBox}" Grid.Column="1" Name="Comment"/>
+            <Button Grid.Row="2" Margin="2" Click="AutoComment" ToolTip="Try to reconstruct the function calls in pseudo-code. (overwrites in-line comments)">Auto-comment</Button>
         </Grid>
         <Grid Grid.Row="1">
             <Grid.ColumnDefinitions>
@@ -139,9 +141,11 @@
                                 </ItemsControl.ItemTemplate>
                             </ItemsControl>
                             <Grid Grid.Column="0" Name="ScrollIndicator_parent">
-                                <Grid Background="#30000000" VerticalAlignment="top" Name="ScrollIndicator_marker"/>
+                                <Grid Background="#30000000" VerticalAlignment="top" Name="ScrollIndicator_marker">
+                                    <Thumb Opacity="0" DragDelta="ScrollMarker_DragDelta"/>
+                                </Grid>
                             </Grid>
-                            <ScrollViewer ScrollChanged="instructions_scroller_ScrollChanged" SizeChanged="instructions_scroller_SizeChanged" Grid.Column="1" Margin="0,10" HorizontalScrollBarVisibility="Disabled" VerticalScrollBarVisibility="Auto" Name="instructions_scroller">
+                            <ScrollViewer ScrollChanged="Instructions_scroller_ScrollChanged" SizeChanged="Instructions_scroller_SizeChanged" Grid.Column="1" Margin="0,10" HorizontalScrollBarVisibility="Disabled" VerticalScrollBarVisibility="Auto" Name="instructions_scroller">
                                 <ItemsControl Name="Instructions" BorderThickness="0" ItemsSource="{Binding instructions}" HorizontalContentAlignment="Stretch">
                                     <ItemsControl.ItemTemplate>
                                         <DataTemplate>

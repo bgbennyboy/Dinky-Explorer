@@ -57,7 +57,7 @@ namespace ThimbleweedParkExplorer.DinkPatch
 
                 EditCommentsCommand = new DinkPatchGui.ActionCommand(() =>
                 {
-                    EditComments ec = new EditComments(string.Join("\n", PreComment.Split('\n').Select(s => s.TrimStart(';'))), LineComment.TrimStart(';'));
+                    EditComments ec = new EditComments(string.Join("\n", PreComment.Split('\n').Select(s => s.TrimStart(';', ' '))), LineComment.TrimStart(';', ' '));
                     ec.Closing += (o, e) =>
                     {
 
@@ -439,7 +439,33 @@ namespace ThimbleweedParkExplorer.DinkPatch
                     }
                 }
             }
+        }
 
+        private void AutoComment(object sender, RoutedEventArgs e)
+        {
+            foreach (var inst in instructions)
+            {
+                var idx = inst.InstructionIndex;
+                var instruction = inst.parsedInstruction;
+                if (instruction == null) continue;
+
+                switch (instruction.Value.Opcode)
+                {
+                    case DinkDisassembler.ParsedFunction.DinkyInstruction.DinkyOpCode.OP_CALL:
+                    case DinkDisassembler.ParsedFunction.DinkyInstruction.DinkyOpCode.OP_FCALL:
+                    case DinkDisassembler.ParsedFunction.DinkyInstruction.DinkyOpCode.OP_STORE_INDEXED:
+                    case DinkDisassembler.ParsedFunction.DinkyInstruction.DinkyOpCode.OP_JUMP:
+                    case DinkDisassembler.ParsedFunction.DinkyInstruction.DinkyOpCode.OP_JUMP_TRUE:
+                    case DinkDisassembler.ParsedFunction.DinkyInstruction.DinkyOpCode.OP_JUMP_TOPTRUE:
+                    case DinkDisassembler.ParsedFunction.DinkyInstruction.DinkyOpCode.OP_JUMP_FALSE:
+                    case DinkDisassembler.ParsedFunction.DinkyInstruction.DinkyOpCode.OP_JUMP_TOPFALSE:
+                    case DinkDisassembler.ParsedFunction.DinkyInstruction.DinkyOpCode.OP_STORE_LOCAL:
+                    case DinkDisassembler.ParsedFunction.DinkyInstruction.DinkyOpCode.OP_NULL_LOCAL:
+                    case DinkDisassembler.ParsedFunction.DinkyInstruction.DinkyOpCode.OP_SET_LOCAL:
+                        inst.LineComment = $"; {GetAutoCommentForInstruction(ref idx)};";
+                        break;
+                }
+            }
         }
 
         public void SavePatch()
@@ -731,8 +757,7 @@ namespace ThimbleweedParkExplorer.DinkPatch
 
         private void MouseEnterInstruction(object sender, MouseEventArgs e)
         {
-            var inst = (sender as FrameworkElement)?.DataContext as EditableInstruction;
-            if (inst == null) return;
+            if (!((sender as FrameworkElement)?.DataContext is EditableInstruction inst)) return;
 
             int? referenced = inst.getReferencedConstant();
             if (referenced != null)
@@ -740,8 +765,7 @@ namespace ThimbleweedParkExplorer.DinkPatch
                 foreach (var c in constants.Where(cc => cc.constantIndex == referenced.Value))
                 {
                     c.IsHighlighted = true;
-                    var uielement = Constants.ItemContainerGenerator.ContainerFromItem(c) as FrameworkElement;
-                    if (uielement != null)
+                    if (Constants.ItemContainerGenerator.ContainerFromItem(c) is FrameworkElement uielement)
                         uielement.BringIntoView();
                 }
             }
@@ -757,8 +781,7 @@ namespace ThimbleweedParkExplorer.DinkPatch
 
         private void MouseLeaveInstruction(object sender, MouseEventArgs e)
         {
-            var inst = (sender as FrameworkElement)?.DataContext as EditableInstruction;
-            if (inst == null) inst = sender as EditableInstruction;
+            if (!((sender as FrameworkElement)?.DataContext is EditableInstruction inst)) inst = sender as EditableInstruction;
             if (inst == null) return;
 
             int? referenced = inst.getReferencedConstant();
@@ -781,8 +804,7 @@ namespace ThimbleweedParkExplorer.DinkPatch
 
         private void MouseEnterConstant(object sender, MouseEventArgs e)
         {
-            var constant = (sender as FrameworkElement)?.DataContext as EditableConstant;
-            if (constant == null) constant = sender as EditableConstant;
+            if (!((sender as FrameworkElement)?.DataContext is EditableConstant constant)) constant = sender as EditableConstant;
             if (constant == null) return;
 
             foreach (var inst in instructions)
@@ -797,8 +819,7 @@ namespace ThimbleweedParkExplorer.DinkPatch
 
         private void MouseLeaveConstant(object sender, MouseEventArgs e)
         {
-            var constant = (sender as FrameworkElement)?.DataContext as EditableConstant;
-            if (constant == null) constant = sender as EditableConstant;
+            if (!((sender as FrameworkElement)?.DataContext is EditableConstant constant)) constant = sender as EditableConstant;
             if (constant == null) return;
 
             foreach (var inst in instructions)
@@ -813,8 +834,7 @@ namespace ThimbleweedParkExplorer.DinkPatch
 
         private void InsertInstruction(object sender, MouseButtonEventArgs e)
         {
-            EditableInstruction after = (sender as FrameworkElement)?.DataContext as EditableInstruction;
-            if (after == null) return;
+            if (!((sender as FrameworkElement)?.DataContext is EditableInstruction after)) return;
 
             int i = after.InstructionIndex;
             EditableInstruction ei = new EditableInstruction()
@@ -839,10 +859,10 @@ namespace ThimbleweedParkExplorer.DinkPatch
             OnInstructionsUpdated(modifiedInstructions);
         }
 
-        private void instructions_scroller_ScrollChanged(object sender, ScrollChangedEventArgs e) => setScrollMarker();
-        private void instructions_scroller_SizeChanged(object sender, SizeChangedEventArgs e) => setScrollMarker();
+        private void Instructions_scroller_ScrollChanged(object sender, ScrollChangedEventArgs e) => SetScrollMarker();
+        private void Instructions_scroller_SizeChanged(object sender, SizeChangedEventArgs e) => SetScrollMarker();
 
-        private void setScrollMarker()
+        private void SetScrollMarker()
         {
             double totalHeight = Instructions.ActualHeight;
             double shownHeight = instructions_scroller.ActualHeight;
@@ -863,7 +883,174 @@ namespace ThimbleweedParkExplorer.DinkPatch
 
         private void UserControl_Loaded(object sender, RoutedEventArgs e)
         {
-            setScrollMarker();
+            SetScrollMarker();
         }
+
+        private void ScrollMarker_DragDelta(object sender, System.Windows.Controls.Primitives.DragDeltaEventArgs e)
+        {
+            double totalHeight = Instructions.ActualHeight;
+            double indicatorPanelHeight = ScrollIndicator_parent.ActualHeight;
+
+            if (totalHeight == 0 || indicatorPanelHeight == 0) return;
+            double ratio = e.VerticalChange / indicatorPanelHeight;
+            double delta = totalHeight * ratio;
+
+            instructions_scroller.ScrollToVerticalOffset(instructions_scroller.VerticalOffset + delta);
+        }
+
+        private string GetAutoCommentForInstruction(ref int index)
+        {
+            string GetConstantAsString(int constantIndex, bool quoted = false)
+            {
+                if (constantIndex >= constants.Count || constantIndex < 0) return "";
+                var c = constants[constantIndex];
+
+                if (c.IsModified)
+                {
+                    if (c.ComputedType == "string" && quoted) return $"\"{c.NewValue}\"";
+                    return c.NewValue;
+                }
+                else
+                {
+                    if (c.originalType == "[string]" && quoted) return $"\"{c.originalValue}\"";
+                    return c.originalValue;
+                }
+            }
+            if (index < 0 || index >= instructions.Count) return "";
+            var instruction = instructions[index].parsedInstruction;
+            if (instruction == null) return "";
+            switch (instruction.Value.Opcode)
+            {
+                default:
+                    return "?";
+                case DinkDisassembler.ParsedFunction.DinkyInstruction.DinkyOpCode.OP_PUSH_NULL:
+                    return "null";
+                case DinkDisassembler.ParsedFunction.DinkyInstruction.DinkyOpCode.OP_PUSH_CONST:
+                    return GetConstantAsString((int)instruction.Value.PotentialParameter3, true);
+                case DinkDisassembler.ParsedFunction.DinkyInstruction.DinkyOpCode.OP_PUSH_VAR:
+                case DinkDisassembler.ParsedFunction.DinkyInstruction.DinkyOpCode.OP_PUSH_GLOBAL:
+                    return GetConstantAsString((int)instruction.Value.PotentialParameter3);
+                case DinkDisassembler.ParsedFunction.DinkyInstruction.DinkyOpCode.OP_PUSH_LOCAL:
+                    return $"local{instruction.Value.PotentialParameter3}";
+                case DinkDisassembler.ParsedFunction.DinkyInstruction.DinkyOpCode.OP_PUSH_LOCALREF:
+                    return $"&local{instruction.Value.PotentialParameter3}";
+                case DinkDisassembler.ParsedFunction.DinkyInstruction.DinkyOpCode.OP_PUSH_VARREF:
+                case DinkDisassembler.ParsedFunction.DinkyInstruction.DinkyOpCode.OP_PUSH_GLOBALREF:
+                    return $"&{GetConstantAsString((int)instruction.Value.PotentialParameter3)}";
+                case DinkDisassembler.ParsedFunction.DinkyInstruction.DinkyOpCode.OP_CALL:
+                case DinkDisassembler.ParsedFunction.DinkyInstruction.DinkyOpCode.OP_FCALL:
+                    {
+                        index -= 1;
+                        string functionName = GetAutoCommentForInstruction(ref index);
+                        List<string> arguments = new List<string>();
+                        for (int i = 0; i < instruction.Value.PotentialParameter3; ++i)
+                        {
+                            index -= 1;
+                            arguments.Add(GetAutoCommentForInstruction(ref index));
+                        }
+                        arguments.Reverse();
+                        return $"{functionName}({String.Join(", ", arguments)})";
+                    }
+                case DinkDisassembler.ParsedFunction.DinkyInstruction.DinkyOpCode.OP_INDEX:
+                    {
+                        string member = GetConstantAsString((int)instruction.Value.PotentialParameter3);
+                        index -= 1;
+                        return $"{GetAutoCommentForInstruction(ref index)}.{member}";
+                    }
+                case DinkDisassembler.ParsedFunction.DinkyInstruction.DinkyOpCode.OP_STORE_INDEXED:
+                    {
+                        index -= 1;
+                        string member = GetAutoCommentForInstruction(ref index);
+                        index -= 1;
+                        string before = GetAutoCommentForInstruction(ref index);
+                        index -= 1;
+                        string value = GetAutoCommentForInstruction(ref index);
+                        return $"{before}[{member}] = {value}";
+                    }
+                case DinkDisassembler.ParsedFunction.DinkyInstruction.DinkyOpCode.OP_MATH:
+                    {
+                        index -= 1;
+                        string rhs = GetAutoCommentForInstruction(ref index);
+                        index -= 1;
+                        string lhs = GetAutoCommentForInstruction(ref index);
+                        switch (instruction.Value.PotentialParameter3)
+                        {
+                            case 0x3F: return $"{lhs} == {rhs}";
+                            case 0x40: return $"{lhs} != {rhs}";
+                            default: return $"{lhs} (math 0x{instruction.Value.PotentialParameter3:X2}) {rhs}";
+                        }
+                    }
+                case DinkDisassembler.ParsedFunction.DinkyInstruction.DinkyOpCode.OP_JUMP:
+                    {
+                        int jumpAmount = (int)((instruction.Value.PotentialParameter1 & 0xFFFF) - 0x7FFF);
+                        return $"GoTo {(index + jumpAmount + 1)}";
+                    }
+                case DinkDisassembler.ParsedFunction.DinkyInstruction.DinkyOpCode.OP_JUMP_TRUE:
+                case DinkDisassembler.ParsedFunction.DinkyInstruction.DinkyOpCode.OP_JUMP_TOPTRUE:
+                    {
+                        int jumpAmount = (int)((instruction.Value.PotentialParameter1 & 0xFFFF) - 0x7FFF);
+                        int iMe = index;
+
+                        index -= 1;
+                        string condition = GetAutoCommentForInstruction(ref index);
+                        return $"if({condition}) GoTo {(iMe + jumpAmount + 1)}";
+                    }
+                case DinkDisassembler.ParsedFunction.DinkyInstruction.DinkyOpCode.OP_JUMP_FALSE:
+                case DinkDisassembler.ParsedFunction.DinkyInstruction.DinkyOpCode.OP_JUMP_TOPFALSE:
+                    {
+                        int jumpAmount = (int)((instruction.Value.PotentialParameter1 & 0xFFFF) - 0x7FFF);
+                        int iMe = index;
+
+                        index -= 1;
+                        string condition = GetAutoCommentForInstruction(ref index);
+                        return $"if(!({condition})) GoTo {(iMe + jumpAmount + 1)}";
+                    }
+                case DinkDisassembler.ParsedFunction.DinkyInstruction.DinkyOpCode.OP_NEW_ARRAY:
+                    {
+                        string myParam = GetConstantAsString((int)instruction.Value.PotentialParameter3);
+                        if (!int.TryParse(myParam, out int numItems)) return "";
+
+                        List<string> items = new List<string>();
+                        for (int i = 0; i < numItems; ++i)
+                        {
+                            index -= 1;
+                            items.Add(GetAutoCommentForInstruction(ref index));
+                        }
+
+                        items.Reverse();
+                        return $"[{String.Join(", ", items)}]";
+                    }
+                case DinkDisassembler.ParsedFunction.DinkyInstruction.DinkyOpCode.OP_STORE_LOCAL:
+                    {
+                        index -= 1;
+                        string value = GetAutoCommentForInstruction(ref index);
+                        return $"local{instruction.Value.PotentialParameter3} = {value}";
+                    }
+                case DinkDisassembler.ParsedFunction.DinkyInstruction.DinkyOpCode.OP_NULL_LOCAL:
+                    return $"local{instruction.Value.PotentialParameter3} = null";
+                case DinkDisassembler.ParsedFunction.DinkyInstruction.DinkyOpCode.OP_SET_LOCAL:
+                    return $"local{instruction.Value.PotentialParameter3} = {GetConstantAsString(instruction.Value.PotentialParameter2 & 0xFF, true)}";
+                case DinkDisassembler.ParsedFunction.DinkyInstruction.DinkyOpCode.OP_UNOT:
+                    {
+                        index -= 1;
+                        string value = GetAutoCommentForInstruction(ref index);
+                        return $"!({value})";
+                    }
+                case DinkDisassembler.ParsedFunction.DinkyInstruction.DinkyOpCode.OP_UMINUS:
+                    {
+                        index -= 1;
+                        string value = GetAutoCommentForInstruction(ref index);
+                        return $"-({value})";
+                    }
+                case DinkDisassembler.ParsedFunction.DinkyInstruction.DinkyOpCode.OP_UONECOMP:
+                    {
+                        index -= 1;
+                        string value = GetAutoCommentForInstruction(ref index);
+                        return $"~({value})";
+                    }
+
+            }
+        }
+
     }
 }

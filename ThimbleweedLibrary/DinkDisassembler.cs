@@ -270,7 +270,7 @@ namespace ThimbleweedLibrary
                         case DinkyOpCode.OP_STORE_VAR:
                             return $"{opcodeName} {function.GetLocalAsString((int)PotentialParameter3, false)}";
                         case DinkyOpCode.OP_SET_LOCAL:
-                            return $"{opcodeName} {function.GetLocalAsString((int)PotentialParameter3, false)} <- {function.GetLocalAsString((int)PotentialParameter2 & 0xFF, false)}";
+                            return $"{opcodeName} {((int)PotentialParameter2 & 0xFF)} <- {function.GetLocalAsString((int)PotentialParameter3, false)}";
                         case DinkyOpCode.OP_NULL_LOCAL:
                             return $"{opcodeName} {function.GetLocalAsString((int)PotentialParameter3, false)} <- null";
                         case DinkyOpCode.OP_MATH_REF:
@@ -473,7 +473,7 @@ namespace ThimbleweedLibrary
                         case DinkyOpCode.OP_STORE_VAR:
                             return $"{opcodeName} {PotentialParameter3}";
                         case DinkyOpCode.OP_SET_LOCAL:
-                            return $"{opcodeName} {PotentialParameter3} <- {(PotentialParameter2 & 0xFF)}";
+                            return $"{opcodeName} {(PotentialParameter2 & 0xFF)} <- {PotentialParameter3}";
                         case DinkyOpCode.OP_NULL_LOCAL:
                             return $"{opcodeName} {PotentialParameter3} <- null";
                         case DinkyOpCode.OP_MATH_REF:
@@ -1005,8 +1005,6 @@ namespace ThimbleweedLibrary
                         }
                 }
             }
-
-
 
             #endregion
         }
