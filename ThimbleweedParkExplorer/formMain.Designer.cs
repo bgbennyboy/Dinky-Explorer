@@ -105,7 +105,7 @@
             this.richTextBoxLog.ShowSelectionMargin = true;
             this.richTextBoxLog.Size = new System.Drawing.Size(894, 68);
             this.richTextBoxLog.TabIndex = 4;
-            this.richTextBoxLog.Text = "Thimbleweed Park Explorer\nhttp://quickandeasysoftware.net\n";
+            this.richTextBoxLog.Text = "Dinky Explorer\nhttp://quickandeasysoftware.net\n";
             // 
             // panel1
             // 
@@ -451,6 +451,7 @@
             // 
             this.pictureBox1.Dock = System.Windows.Forms.DockStyle.Fill;
             this.pictureBox1.Image = ((System.Drawing.Image)(resources.GetObject("pictureBox1.Image")));
+            this.pictureBox1.InitialImage = ((System.Drawing.Image)(resources.GetObject("pictureBox1.InitialImage")));
             this.pictureBox1.Location = new System.Drawing.Point(0, 0);
             this.pictureBox1.Margin = new System.Windows.Forms.Padding(4);
             this.pictureBox1.Name = "pictureBox1";
@@ -669,7 +670,7 @@
             this.MinimumSize = new System.Drawing.Size(470, 400);
             this.Name = "formMain";
             this.StartPosition = System.Windows.Forms.FormStartPosition.CenterScreen;
-            this.Text = "Thimbleweed Park Explorer";
+            this.Text = "Dinky Explorer";
             this.FormClosing += new System.Windows.Forms.FormClosingEventHandler(this.formMain_FormClosing);
             this.DragDrop += new System.Windows.Forms.DragEventHandler(this.formMain_DragDrop);
             this.DragEnter += new System.Windows.Forms.DragEventHandler(this.objectListView1_DragEnter);
