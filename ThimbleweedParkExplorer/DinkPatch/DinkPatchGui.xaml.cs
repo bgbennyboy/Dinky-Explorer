@@ -71,8 +71,10 @@ namespace ThimbleweedParkExplorer
                     catch (Exception ex)
                     {
                         MessageBox.Show($"Could not open patch file: {ex.Message}", "Failed opening patch file.");
+                        return;
                     }
                 }
+                else return;
             }
 
             loadFile();
