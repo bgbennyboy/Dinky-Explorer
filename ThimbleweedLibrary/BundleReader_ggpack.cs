@@ -68,6 +68,7 @@ namespace ThimbleweedLibrary
                 case "assets.bank":
                     return FileTypes.Soundbank;
                 case "dink":
+                case "vanilla.dink": // added by this tool to preserve the original script file.
                     return FileTypes.CompiledScript;
                 default:
                     return FileTypes.None;
@@ -132,13 +133,13 @@ namespace ThimbleweedLibrary
             sourceStream.Position = Offset;
             if (EncryptedInSource || FileExtension == "bank")
             {
-                BundleReader_ggpack.CopyStream(sourceStream, target, Size);
+                CopyStream(sourceStream, target, Size);
                 return (uint)Size;
             }
 
             using (var data = new MemoryStream())
             {
-                BundleReader_ggpack.CopyStream(sourceStream, data, Size);
+                CopyStream(sourceStream, data, Size);
                 data.Position = 0;
                 if (Cryptor.FileVersion == BundleFileVersion.Version_RtMI && FileExtension == "yack")
                 {
@@ -173,7 +174,7 @@ namespace ThimbleweedLibrary
                 if (skipDecode)
                 {
                     var pos = target.Position;
-                    BundleReader_ggpack.CopyStream(sourceStream, target, Size);
+                    CopyStream(sourceStream, target, Size);
                     target.Position = pos;
                     return;
                 }
@@ -207,6 +208,19 @@ namespace ThimbleweedLibrary
             return $"Offset: 0x{Offset:X8} Size: {Size,8} Name: {FileName}";
         }
 
+
+        //Copy between streams
+        private static void CopyStream(Stream input, Stream output, int bytes)
+        {
+            byte[] buffer = new byte[32768];
+            int read;
+            while (bytes > 0 &&
+                   (read = input.Read(buffer, 0, Math.Min(buffer.Length, bytes))) > 0)
+            {
+                output.Write(buffer, 0, read);
+                bytes -= read;
+            }
+        }
     }
 
     public class BundleReader_ggpack : IDisposable
@@ -404,18 +418,6 @@ namespace ThimbleweedLibrary
             }
         }
 
-        //Copy between streams
-        public static void CopyStream(Stream input, Stream output, int bytes)
-        {
-            byte[] buffer = new byte[32768];
-            int read;
-            while (bytes > 0 &&
-                   (read = input.Read(buffer, 0, Math.Min(buffer.Length, bytes))) > 0)
-            {
-                output.Write(buffer, 0, read);
-                bytes -= read;
-            }
-        }
 
         #region IDisposable
         //Destructor

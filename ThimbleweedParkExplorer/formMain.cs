@@ -911,6 +911,7 @@ namespace ThimbleweedParkExplorer
                 log("Patch files are only supported for RtMI");
                 return;
             }
+
             log($"Applying patch {file}...");
             DinkyPatchFile patchfile = null;
             try
@@ -935,6 +936,14 @@ namespace ThimbleweedParkExplorer
                 }
                 weirddink.Extract(ms);
                 ms.Position = 0;
+
+                var originalScriptFile = Thimble.BundleFiles.Where(f => f.FileName.ToLowerInvariant() == "weird.vanilla.dink").FirstOrDefault();
+                if (originalScriptFile == null)
+                {
+                    Thimble.AddFile(ms, "Weird.vanilla.dink");
+                    ms.Position = 0;
+                }
+
                 DinkDisassembler dinkFile = new DinkDisassembler(ms);
 
                 try
