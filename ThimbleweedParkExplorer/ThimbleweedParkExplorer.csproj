@@ -8,7 +8,7 @@
     <OutputType>WinExe</OutputType>
     <AppDesignerFolder>Properties</AppDesignerFolder>
     <RootNamespace>ThimbleweedParkExplorer</RootNamespace>
-    <AssemblyName>ThimbleweedParkExplorer</AssemblyName>
+    <AssemblyName>DinkyExplorer</AssemblyName>
     <TargetFrameworkVersion>v4.8</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
     <TargetFrameworkProfile />
@@ -144,6 +144,21 @@
     <Compile Include="CustomProgressBar.cs">
       <SubType>Component</SubType>
     </Compile>
+    <Compile Include="DinkOptionsPanel.xaml.cs">
+      <DependentUpon>DinkOptionsPanel.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="DinkPatch\DinkPatchedFunction.xaml.cs">
+      <DependentUpon>DinkPatchedFunction.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="DinkPatch\DinkPatchGui.xaml.cs">
+      <DependentUpon>DinkPatchGui.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="DinkPatch\EditComments.xaml.cs">
+      <DependentUpon>EditComments.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="DinkPatch\SelectDinkyFunction.xaml.cs">
+      <DependentUpon>SelectDinkyFunction.xaml</DependentUpon>
+    </Compile>
     <Compile Include="formAbout.cs">
       <SubType>Form</SubType>
     </Compile>
@@ -275,6 +290,26 @@
     </BootstrapperPackage>
   </ItemGroup>
   <ItemGroup>
+    <Page Include="DinkOptionsPanel.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="DinkPatch\DinkPatchedFunction.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="DinkPatch\DinkPatchGui.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="DinkPatch\EditComments.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="DinkPatch\SelectDinkyFunction.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
     <Page Include="SoundBankViewer.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>

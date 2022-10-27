@@ -22,6 +22,7 @@
             this.openFileDialog1 = new System.Windows.Forms.OpenFileDialog();
             this.richTextBoxLog = new System.Windows.Forms.RichTextBox();
             this.panel1 = new System.Windows.Forms.Panel();
+            this.cueTextBox1 = new CueTextBox();
             this.btnAbout = new System.Windows.Forms.Button();
             this.btnSaveAllFiles = new System.Windows.Forms.Button();
             this.btnSaveFile = new System.Windows.Forms.Button();
@@ -64,8 +65,8 @@
             this.toolStripSaveFileAsText = new System.Windows.Forms.ToolStripMenuItem();
             this.toolStripSaveFileAsImage = new System.Windows.Forms.ToolStripMenuItem();
             this.toolStripSaveFileAsAudio = new System.Windows.Forms.ToolStripMenuItem();
-            this.cueTextBox1 = new CueTextBox();
             this.progressBar1 = new ThimbleweedParkExplorer.CustomProgressBar();
+            this.DinkOptionsHost = new System.Windows.Forms.Integration.ElementHost();
             this.panel1.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.splitContainer1)).BeginInit();
             this.splitContainer1.Panel1.SuspendLayout();
@@ -122,6 +123,19 @@
             this.panel1.Name = "panel1";
             this.panel1.Size = new System.Drawing.Size(894, 55);
             this.panel1.TabIndex = 0;
+            // 
+            // cueTextBox1
+            // 
+            this.cueTextBox1.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle;
+            this.cueTextBox1.Cue = "Search";
+            this.cueTextBox1.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.cueTextBox1.Font = new System.Drawing.Font("Segoe UI", 20.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.cueTextBox1.Location = new System.Drawing.Point(434, 0);
+            this.cueTextBox1.Margin = new System.Windows.Forms.Padding(4, 4, 4, 2);
+            this.cueTextBox1.Name = "cueTextBox1";
+            this.cueTextBox1.Size = new System.Drawing.Size(460, 43);
+            this.cueTextBox1.TabIndex = 13;
+            this.cueTextBox1.TextChanged += new System.EventHandler(this.cueTextBox1_TextChanged);
             // 
             // btnAbout
             // 
@@ -251,6 +265,7 @@
             // 
             // splitContainer1.Panel2
             // 
+            this.splitContainer1.Panel2.Controls.Add(this.DinkOptionsHost);
             this.splitContainer1.Panel2.Controls.Add(this.panelAudio);
             this.splitContainer1.Panel2.Controls.Add(this.bankAudioListHost);
             this.splitContainer1.Panel2.Controls.Add(this.panelBlank);
@@ -619,19 +634,6 @@
             this.toolStripSaveFileAsAudio.Text = "As audio";
             this.toolStripSaveFileAsAudio.Click += new System.EventHandler(this.SaveFileAsHandler);
             // 
-            // cueTextBox1
-            // 
-            this.cueTextBox1.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle;
-            this.cueTextBox1.Cue = "Search";
-            this.cueTextBox1.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.cueTextBox1.Font = new System.Drawing.Font("Segoe UI", 20.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.cueTextBox1.Location = new System.Drawing.Point(434, 0);
-            this.cueTextBox1.Margin = new System.Windows.Forms.Padding(4, 4, 4, 2);
-            this.cueTextBox1.Name = "cueTextBox1";
-            this.cueTextBox1.Size = new System.Drawing.Size(460, 43);
-            this.cueTextBox1.TabIndex = 13;
-            this.cueTextBox1.TextChanged += new System.EventHandler(this.cueTextBox1_TextChanged);
-            // 
             // progressBar1
             // 
             this.progressBar1.Dock = System.Windows.Forms.DockStyle.Bottom;
@@ -641,6 +643,17 @@
             this.progressBar1.Size = new System.Drawing.Size(894, 19);
             this.progressBar1.TabIndex = 10;
             this.progressBar1.Visible = false;
+            // 
+            // DinkOptionsHost
+            // 
+            this.DinkOptionsHost.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.DinkOptionsHost.Location = new System.Drawing.Point(0, 0);
+            this.DinkOptionsHost.Margin = new System.Windows.Forms.Padding(0);
+            this.DinkOptionsHost.Name = "DinkOptionsHost";
+            this.DinkOptionsHost.Size = new System.Drawing.Size(282, 379);
+            this.DinkOptionsHost.TabIndex = 15;
+            this.DinkOptionsHost.Text = "elementHost1";
+            this.DinkOptionsHost.Child = null;
             // 
             // formMain
             // 
@@ -659,6 +672,8 @@
             this.StartPosition = System.Windows.Forms.FormStartPosition.CenterScreen;
             this.Text = "Dinky Explorer";
             this.FormClosing += new System.Windows.Forms.FormClosingEventHandler(this.formMain_FormClosing);
+            this.DragDrop += new System.Windows.Forms.DragEventHandler(this.formMain_DragDrop);
+            this.DragEnter += new System.Windows.Forms.DragEventHandler(this.objectListView1_DragEnter);
             this.panel1.ResumeLayout(false);
             this.panel1.PerformLayout();
             this.splitContainer1.Panel1.ResumeLayout(false);
@@ -732,6 +747,7 @@
         private System.Windows.Forms.ToolStripMenuItem toolStripSaveFileAsAudio;
         private System.Windows.Forms.ToolStripMenuItem toolStripSaveAllBnut;
         private System.Windows.Forms.Integration.ElementHost bankAudioListHost;
+        private System.Windows.Forms.Integration.ElementHost DinkOptionsHost;
     }
 }
 

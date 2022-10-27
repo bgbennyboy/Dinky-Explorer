@@ -26,12 +26,17 @@ namespace ThimbleweedParkExplorer
         private MemoryStream audioDataStream;
         public BundleReader_ggpack Thimble;
         private SoundBankViewer bankViewer;
+        private DinkOptionsPanel dinkOptions;
 
         public formMain()
         {
             InitializeComponent();
+            AllowDrop = true;
             bankAudioListHost.Child = bankViewer = new SoundBankViewer();
             bankViewer.LogEvent += text => log(text);
+            DinkOptionsHost.Child = dinkOptions = new DinkOptionsPanel();
+            dinkOptions.Log += text => log(text);
+            dinkOptions.OnApplyPatch += patchfile => AddFilesToPack(new string[] { patchfile });
 
             RtMIKeyReader.OnSearchForMonkeyIsland += RtMIKeyReader_OnSearchForMonkeyIsland;
             //Get icon from exe and use for form icon
@@ -163,12 +168,7 @@ namespace ThimbleweedParkExplorer
 
                 richTextBoxLog.Clear();
                 log("Opened " + openFileDialog1.SafeFileName);
-                objectListView1.SetObjects(Thimble.BundleFiles);
-                objectListView1.AutoResizeColumns();
-                panelBlank.BringToFront();
-                AddFiletypeContextEntries();
-                UpdateSaveAllMenu();
-                log(Thimble.BundleFiles.Count + " files in bundle.");
+                UpdateOlv1();
             }
             catch (ArgumentException ex)
             {
@@ -179,6 +179,16 @@ namespace ThimbleweedParkExplorer
             {
                 EnableDisableControls(true);
             }
+        }
+
+        void UpdateOlv1()
+        {
+            objectListView1.SetObjects(Thimble.BundleFiles);
+            objectListView1.AutoResizeColumns();
+            panelBlank.BringToFront();
+            AddFiletypeContextEntries();
+            UpdateSaveAllMenu();
+            log(Thimble.BundleFiles.Count + " files in bundle.");
         }
 
         //Button view clicked
@@ -494,10 +504,7 @@ namespace ThimbleweedParkExplorer
 
 
         //Handle log event from other class
-        private void HandleLogEvent(object sender, StringEventArgs e)
-        {
-            log(e.Message);
-        }
+        private void HandleLogEvent(string Message) => log(Message);
 
         //Log string to the textbox
         private void log(string logText)
@@ -765,7 +772,7 @@ namespace ThimbleweedParkExplorer
                     {
                         Thimble.SaveFileToStream(index, ms);
 
-                        if (Thimble.BundleFiles[index].FileExtension == "yack" && Thimble.FileVersion == BundleFileVersion.Version_RtMI)
+                        if (Thimble.BundleFiles[index].FileExtension == "yack" && Thimble.Cryptor.FileVersion == BundleFileVersion.Version_RtMI)
                         {
                             try
                             {
@@ -796,7 +803,7 @@ namespace ThimbleweedParkExplorer
                     {
                         Thimble.SaveFileToStream(index, ms);
 
-                        GGDict dict = new GGDict(ms, Thimble.FileVersion == BundleFileVersion.Version_RtMI);
+                        GGDict dict = new GGDict(ms, Thimble.Cryptor.FileVersion == BundleFileVersion.Version_RtMI);
                         string[] lines = dict.ToJsonString().Split('\n').Select(s => s.Trim('\r')).ToArray();
                         textBoxPreview.Lines = lines;
                     }
@@ -817,28 +824,24 @@ namespace ThimbleweedParkExplorer
                     }
                     break;
 
-                default:
-                    panelBlank.BringToFront();
-                    if (Thimble.BundleFiles[index].FileExtension == "dink")
+                case BundleEntry.FileTypes.CompiledScript:
                     {
                         panelText.BringToFront();
 
                         using (MemoryStream ms = new MemoryStream())
                         {
                             Thimble.SaveFileToStream(index, ms);
-                            DinkDisassembler decomp = new DinkDisassembler(ms);
-                            string decompiled = decomp.ToString();
-                            File.WriteAllText("dinky.txt", decompiled);
-                            string[] lines = ("The contents of this file have been dumped to dinky.txt.\n" + decompiled).Split('\n');
-                            if (lines.Length > 10000)
-                            {
-                                string[] trimmed = new string[10000]; for (int i = 0; i < 10000; ++i) trimmed[i] = lines[i];
-                                trimmed[9999] = "... This file was trimmed for display ...";
-                                lines = trimmed;
-                            }
-                            textBoxPreview.Lines = lines;
+                            DinkDisassembler disassembled = new DinkDisassembler(ms);
+
+                            DinkOptionsHost.BringToFront();
+                            dinkOptions.dink = disassembled;
+                            string decompiled = disassembled.ToString();
                         }
                     }
+                    break;
+                default:
+                    panelBlank.BringToFront();
+
                     break;
             }
         }
@@ -857,5 +860,106 @@ namespace ThimbleweedParkExplorer
             }
         }
 
+        private void objectListView1_DragEnter(object sender, DragEventArgs e)
+        {
+            e.Effect = DragDropEffects.All;
+        }
+
+        private void formMain_DragDrop(object sender, DragEventArgs e)
+        {
+            if (Thimble == null) return;
+
+            var data = e.Data.GetData(DataFormats.FileDrop);
+            if (data == null || !(data is string[] files)) return;
+            AddFilesToPack(files);
+        }
+
+        private void AddFilesToPack(string[] files)
+        {
+            objectListView1.RemoveObjects(Thimble.BundleFiles);
+            try
+            {
+                foreach (var file in files)
+                {
+                    if (Path.GetExtension(file).ToLower().TrimStart('.') == "dinkypatch")
+                    {
+                        RtmiPatchScripts(file);
+                    }
+                    else
+                    {
+                        log($"Adding file \"{file}\"");
+                        Thimble.AddFile(file);
+                    }
+                }
+
+                log($"Saving pack file.");
+                Thimble.Save();
+                log($"Pack file saved.");
+            }
+            catch (Exception ex)
+            {
+                log($"error packing files: {ex.Message}");
+            }
+
+            UpdateOlv1();
+        }
+
+        private void RtmiPatchScripts(string file)
+        {
+            if (Thimble.Cryptor.FileVersion != BundleFileVersion.Version_RtMI)
+            {
+                log("Patch files are only supported for RtMI");
+                return;
+            }
+
+            log($"Applying patch {file}...");
+            DinkyPatchFile patchfile = null;
+            try
+            {
+                patchfile = Newtonsoft.Json.JsonConvert.DeserializeObject(File.ReadAllText(file), typeof(DinkyPatchFile)) as DinkyPatchFile;
+            }
+            catch (Exception ex)
+            {
+                log($"could not load patch file: {ex.Message}");
+                return;
+            }
+
+            log($"patch: {patchfile.title} by {patchfile.author}:\n\t{patchfile.description}");
+
+            using (var ms = new MemoryStream())
+            {
+                var weirddink = Thimble.BundleFiles.Where(b => b.FileName.ToLower() == "weird.dink").FirstOrDefault();
+                if (weirddink == null)
+                {
+                    log("Could not find file \"Weird.dink\". Are you sure you opened the right pack file?");
+                    return;
+                }
+                weirddink.Extract(ms);
+                ms.Position = 0;
+
+                var originalScriptFile = Thimble.BundleFiles.Where(f => f.FileName.ToLowerInvariant() == "weird.vanilla.dink").FirstOrDefault();
+                if (originalScriptFile == null)
+                {
+                    Thimble.AddFile(ms, "Weird.vanilla.dink");
+                    ms.Position = 0;
+                }
+
+                DinkDisassembler dinkFile = new DinkDisassembler(ms);
+
+                try
+                {
+                    patchfile.ApplyPatch(dinkFile);
+                }
+                catch (Exception ex)
+                {
+                    log($"could not apply patch:\n\t{ex.Message}");
+                    return;
+                }
+
+                log("patch applied successfully.");
+                var reassembled = dinkFile.SaveDink();
+                Thimble.AddFile(new MemoryStream(reassembled), "Weird.dink");
+            }
+        }
     }
 }

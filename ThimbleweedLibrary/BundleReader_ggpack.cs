@@ -14,22 +14,67 @@ namespace ThimbleweedLibrary
         Version_918,
         Version_957,
         Version_Delores,
-        Version_RtMI
-    }
-
-    //For the logging event
-    public class StringEventArgs : EventArgs
-    {
-        public string Message { get; private set; }
-
-        public StringEventArgs(string message)
-        {
-            this.Message = message;
-        }
+        Version_RtMI,
     }
 
     public class BundleEntry
     {
+        private static string GetMultipleExtension(string path)
+        {
+            var ret = "";
+            for (; ; )
+            {
+                var ext = Path.GetExtension(path);
+                if (String.IsNullOrEmpty(ext))
+                    break;
+                path = path.Substring(0, path.Length - ext.Length);
+                ret = ext + ret;
+            }
+            return ret;
+        }
+
+        private static FileTypes FileTypeFromFileName(string fileName, BundleFileVersion bundle)
+        {
+            string extension = GetMultipleExtension(fileName).TrimStart('.').ToLower();
+            switch (extension)
+            {
+                case "ogg":
+                case "wav":
+                    return FileTypes.Sound;
+                case "ktxbz":
+                case "png":
+                    return FileTypes.Image;
+                case "bnut":
+                    return FileTypes.Bnut;
+                case "json":
+                    if (bundle == BundleFileVersion.Version_RtMI) return FileTypes.GGDict;
+                    return FileTypes.Text;
+                case "txt":
+                case "tsv":
+                case "nut":
+                case "fnt":
+                case "byack":
+                case "lip":
+                case "yack":
+                case "dinky":
+                case "atlas":
+                case "anim":
+                case "attach":
+                case "blend":
+                    return FileTypes.Text;
+                case "emitter":
+                case "wimpy":
+                    return FileTypes.GGDict;
+                case "assets.bank":
+                    return FileTypes.Soundbank;
+                case "dink":
+                case "vanilla.dink": // added by this tool to preserve the original script file.
+                    return FileTypes.CompiledScript;
+                default:
+                    return FileTypes.None;
+            }
+        }
+
         public enum FileTypes
         {
             None,
@@ -39,31 +84,157 @@ namespace ThimbleweedLibrary
             Bnut,
             GGDict,
             Soundbank,
+            CompiledScript,
         };
 
         public string FileName;
         public string FileExtension;
-        public Int64 Offset = -1;
+        public long Offset = -1;
         public int Size = -1;
         public FileTypes FileType = FileTypes.None;
+
+        private IXorCryptor Cryptor;
+        private Stream sourceStream;
+        private bool EncryptedInSource;
+
+        public BundleEntry(Dictionary<string, object> fileinfo, IXorCryptor cryptor, Stream sourceStream)
+        {
+            FileName = fileinfo["filename"] as string ?? "";
+            Offset = (int)fileinfo["offset"];
+            Size = (int)fileinfo["size"];
+            Cryptor = cryptor;
+            this.sourceStream = sourceStream;
+            EncryptedInSource = true;
+
+            FileExtension = Path.GetExtension(FileName).TrimStart('.');
+            FileType = BundleEntry.FileTypeFromFileName(FileName, Cryptor.FileVersion);
+        }
+
+        public BundleEntry(Stream dataStream, IXorCryptor cryptor, string FileNameInBundle)
+        {
+            FileName = FileNameInBundle;
+            Offset = 0;
+            Size = (int)dataStream.Length;
+
+            Cryptor = cryptor;
+            EncryptedInSource = false;
+            {
+                sourceStream = new MemoryStream();
+                dataStream.Position = 0;
+                dataStream.CopyTo(sourceStream);
+            }
+
+            FileExtension = Path.GetExtension(FileName).TrimStart('.');
+            FileType = BundleEntry.FileTypeFromFileName(FileName, Cryptor.FileVersion);
+        }
+
+        public uint Write(Stream target)
+        {
+            sourceStream.Position = Offset;
+            if (EncryptedInSource || FileExtension == "bank")
+            {
+                CopyStream(sourceStream, target, Size);
+                return (uint)Size;
+            }
+
+            using (var data = new MemoryStream())
+            {
+                CopyStream(sourceStream, data, Size);
+                data.Position = 0;
+                if (Cryptor.FileVersion == BundleFileVersion.Version_RtMI && FileExtension == "yack")
+                {
+                    byte[] b = data.ToArray();
+                    RtMIKeyReader.ComputeXORYack(ref b, FileName.Length - ".yack".Length, "");
+                    data.Position = 0;
+                    data.SetLength(0);
+                    data.Write(b, 0, b.Length);
+                    data.Position = 0;
+                }
+
+                var pos = target.Position;
+                Cryptor.Encrypt(data, target, "");
+                target.Position = pos + data.Length;
+                return (uint)data.Length;
+            }
+        }
+
+        public void Extract(Stream target, bool autodecode = true)
+        {
+            sourceStream.Position = Offset;
+
+            // Raw file (unencrypted)?
+            {
+                bool skipDecode = false;
+                // if the file was not in encrypted form to begin with, we do not need to decrypt it.
+                if (!EncryptedInSource) skipDecode = true;
+                // In Rtmi, the FMOD .bank files used for audio do not seem to be Xor'd. 
+                // Although it should be noted that the game uses FMOD's built-in encryption for the files. (The password is easily extracted from the .exe as well)
+                if ((Cryptor.FileVersion == BundleFileVersion.Version_RtMI && FileExtension == "bank")) skipDecode = true;
+
+                if (skipDecode)
+                {
+                    var pos = target.Position;
+                    CopyStream(sourceStream, target, Size);
+                    target.Position = pos;
+                    return;
+                }
+            }
+
+            using (var unpacked = new MemoryStream())
+            {
+                if (!Cryptor.Decrypt(sourceStream, unpacked, "", Size)) throw new InvalidDataException("Could not decrypt file.");
+
+                // Decode BNUT?
+                if ((autodecode == true) && (FileType == FileTypes.Bnut)) Decoders.DecodeBnut(unpacked);
+                // Decode YACK?
+                if (Cryptor.FileVersion == BundleFileVersion.Version_RtMI && FileExtension == "yack")
+                {
+                    var yack_bytes = unpacked.ToArray();
+                    RtMIKeyReader.ComputeXORYack(ref yack_bytes, FileName.Length - ".yack".Length, "");
+                    unpacked.Position = 0;
+                    unpacked.SetLength(0);
+                    unpacked.Write(yack_bytes, 0, yack_bytes.Length);
+                    unpacked.Position = 0;
+                }
+
+                var pos = target.Position;
+                unpacked.CopyTo(target);
+                target.Position = pos;
+            }
+        }
 
         public override string ToString()
         {
             return $"Offset: 0x{Offset:X8} Size: {Size,8} Name: {FileName}";
         }
+
+
+        //Copy between streams
+        private static void CopyStream(Stream input, Stream output, int bytes)
+        {
+            byte[] buffer = new byte[32768];
+            int read;
+            while (bytes > 0 &&
+                   (read = input.Read(buffer, 0, Math.Min(buffer.Length, bytes))) > 0)
+            {
+                output.Write(buffer, 0, read);
+                bytes -= read;
+            }
+        }
     }
 
     public class BundleReader_ggpack : IDisposable
     {
-        private static readonly byte[] magic_bytes_thimbleweed = new byte[] { 0x4F, 0xD0, 0xA0, 0xAC, 0x4A, 0x5B, 0xB9, 0xE5, 0x93, 0x79, 0x45, 0xA5, 0xC1, 0xCB, 0x31, 0x93 };
-        private static readonly byte[] magic_bytes_delores = new byte[] { 0x3F, 0x41, 0x41, 0x60, 0x95, 0x87, 0x4A, 0xE6, 0x34, 0xC6, 0x3A, 0x86, 0x29, 0x27, 0x77, 0x8D, 0x38, 0xB4, 0x96, 0xC9, 0x38, 0xB4, 0x96, 0xC9, 0x00, 0xE0, 0x0A, 0xC6, 0x00, 0xE0, 0x0A, 0xC6, 0x00, 0x3C, 0x1C, 0xC6, 0x00, 0x3C, 0x1C, 0xC6, 0x00, 0xE4, 0x40, 0xC6, 0x00, 0xE4, 0x40, 0xC6 };
+        public delegate void LogEventType(string message);
+        public event LogEventType LogEvent;
 
-        public BundleFileVersion FileVersion { get; private set; }
-        public List<BundleEntry> BundleFiles;
-        public event EventHandler<StringEventArgs> LogEvent;
+        public IXorCryptor Cryptor { get; private set; }
+        public List<BundleEntry> BundleFiles = new List<BundleEntry>();
+
         private string BundleFilename;
         private BinaryReader fileReader;
         private bool _disposed = false;
+        private string guid = null;
 
         //Constructor
         public BundleReader_ggpack(string ResourceFile)
@@ -71,29 +242,184 @@ namespace ThimbleweedLibrary
             try
             {
                 BundleFilename = ResourceFile;
-
-                fileReader = new BinaryReader(File.Open(BundleFilename, FileMode.Open));
-
-                if (DetectBundle() == false)
+                using (var originalFile = File.OpenRead(BundleFilename))
                 {
-                    throw new ArgumentException("Invalid ggpack file!");
+                    // Use a copy of the file to avoid keeping the original file open.
+                    fileReader = new BinaryReader(new FileSystemBackedStream(originalFile));
                 }
+                DetectBundle();
 
-                BundleFiles = new List<BundleEntry>();
-                ParseFiles();
-                UpdateFileTypes();
+                // parse files
+                {
+                    uint DictOffset = fileReader.ReadUInt32();
+                    uint DictSize = fileReader.ReadUInt32();
+
+                    fileReader.BaseStream.Position = DictOffset;
+                    using (var FileDict = new MemoryStream())
+                    {
+                        if (!Cryptor.Decrypt(fileReader.BaseStream, FileDict, BundleFilename, (int)DictSize)) throw new ArgumentException("Error parsing the packfile. Decode failed!");
+                        GGDict bundleDict = new GGDict(FileDict, Cryptor.FileVersion == BundleFileVersion.Version_RtMI);
+                        if (bundleDict.Root.ContainsKey("guid"))
+                        {
+                            Console.WriteLine($"Opened archive {bundleDict.Root["guid"]}");
+                            guid = bundleDict.Root["guid"] as string;
+                        }
+
+                        if (!bundleDict.Root.ContainsKey("files") || bundleDict.Root["files"].GetType() != typeof(object).MakeArrayType()) throw new Exception("Dictionary does not contain files or files is not an array.");
+                        Dictionary<string, object>[] files = (bundleDict.Root["files"] as object[]).Select(s => s as Dictionary<string, object>).Where(o => o != null).ToArray();
+
+                        foreach (var fileinfo in files)
+                        {
+                            string filename = fileinfo["filename"] as string ?? "";
+                            BundleFiles.Add(new BundleEntry(fileinfo, Cryptor, fileReader.BaseStream));
+                        }
+                    }
+                }
             }
-            catch (Exception ex)
+            catch (Exception)
             {
                 try
                 {
                     Dispose();
                 }
                 catch { }
+
                 throw;
             }
         }
 
+        protected virtual void Log(string e) => LogEvent?.Invoke(e);
+
+        private void DetectBundle()
+        {
+            uint DataOffset = fileReader.ReadUInt32();
+            uint DataSize = fileReader.ReadUInt32();
+
+            Cryptor = DetectFileVersion(fileReader.BaseStream, (int)DataOffset, (int)DataSize);
+            if (Cryptor == null) throw new ArgumentException("Invalid ggpack file!");
+
+            fileReader.BaseStream.Position = 0;
+        }
+
+        private IXorCryptor DetectFileVersion(Stream fileStream, int DataOffset, int DataSize)
+        {
+            using (BinaryReader decReader = new BinaryReader(new MemoryStream())) //Frees when done + underlying stream
+            {
+                foreach (var cryptor in XorCryptors.Cryptors.Values)
+                {
+                    decReader.BaseStream.Position = 0;
+                    decReader.BaseStream.SetLength(0);
+
+                    fileStream.Position = DataOffset;
+
+                    if (cryptor.Decrypt(fileStream, decReader.BaseStream, BundleFilename, DataSize))
+                    {
+                        int header = decReader.ReadInt32();
+                        //Seek past 4 unknown bytes = 0x00000001
+                        int unknown = decReader.ReadInt32();
+                        if (header == 0x04030201 && unknown == 0x00000001)
+                        {
+                            return cryptor;
+                        }
+                    }
+                }
+            }
+            return null;
+        }
+
+        public void SaveFileToStream(int FileNo, Stream DestStream, bool Autodecode = true)
+        {
+            if (FileNo < 0 || FileNo > BundleFiles.Count)
+                throw new ArgumentException(FileNo.ToString() + " Invalid file number! Save cancelled.");
+            BundleFiles[FileNo].Extract(DestStream, Autodecode);
+        }
+
+        public void SaveFile(int FileNo, string PathAndFileName, Boolean Autodecode = true)
+        {
+            if (FileNo < 0 || FileNo > BundleFiles.Count)
+                throw new ArgumentException(FileNo.ToString() + " Invalid file number! Save cancelled.");
+
+            using (Stream file = File.Create(PathAndFileName))
+            {
+                SaveFileToStream(FileNo, file, Autodecode);
+            }
+        }
+
+        public BundleEntry AddFile(Stream file, string filenameInPack)
+        {
+            var existingFile = BundleFiles.Where(f => f.FileName.ToLowerInvariant() == filenameInPack.ToLowerInvariant()).FirstOrDefault();
+            if (existingFile != null) BundleFiles.Remove(existingFile);
+
+            BundleEntry entry = new BundleEntry(file, Cryptor, filenameInPack);
+            BundleFiles.Add(entry);
+            return entry;
+        }
+
+        public BundleEntry AddFile(string filenameOnDisk)
+        {
+            string filename = Path.GetFileName(filenameOnDisk);
+            using (var file = File.OpenRead(filenameOnDisk))
+            {
+                return AddFile(file, filename);
+            }
+        }
+
+        public void Save()
+        {
+            string backupName = BundleFilename + ".backup";
+            int iBackup = 0;
+            while(File.Exists(backupName))
+            {
+                ++iBackup;
+                backupName = BundleFilename + $".backup{iBackup}";
+            }
+
+            Log($"The previous version of the file will be copied to \"{backupName}\".");
+            File.Copy(BundleFilename, backupName);
+            using (var filestream = File.Create(BundleFilename))
+            {
+                var bw = new BinaryWriter(filestream);
+                bw.Write((uint)0); // Reserved
+                bw.Write((uint)0); // Reserved
+
+                List<Dictionary<string, object>> files = new List<Dictionary<string, object>>();
+
+                foreach(var bundleFile in BundleFiles)
+                {
+                    int offset = (int)filestream.Position;
+                    int length = (int)bundleFile.Write(filestream);
+                    files.Add(new Dictionary<string, object>() { { "filename", bundleFile.FileName }, { "offset", offset }, { "size", length } });
+                }
+
+                Dictionary<string, object> root = new Dictionary<string, object>()
+                {
+                    { "files", files.Select(f => (object)f).ToArray() }
+                };
+
+                if (!String.IsNullOrWhiteSpace(guid)) root["guid"] = guid;
+
+                uint ggdictOffset = (uint)filestream.Position;
+
+                GGDict dict = new GGDict(root, Cryptor.FileVersion == BundleFileVersion.Version_RtMI);
+                using (var ms = new MemoryStream())
+                {
+                    dict.Write(ms);
+                    ms.Position = 0;
+                    Cryptor.Encrypt(ms, filestream, "");
+                }
+
+                uint ggdictLength = (uint)(filestream.Length - ggdictOffset);
+
+                filestream.Position = 0;
+                bw.Write(ggdictOffset);
+                bw.Write(ggdictLength);
+
+                filestream.Flush();
+            }
+        }
+
+
+        #region IDisposable
         //Destructor
         ~BundleReader_ggpack()
         {
@@ -123,461 +449,7 @@ namespace ThimbleweedLibrary
             Dispose(true);
             GC.SuppressFinalize(this);
         }
-
-
-        //Decrypt the file records and see if its a valid bundle
-        private bool DetectBundle()
-        {
-            bool isValid = false;
-
-            uint DataOffset = fileReader.ReadUInt32();
-            uint DataSize = fileReader.ReadUInt32();
-
-            using (BinaryReader decReader = new BinaryReader(new MemoryStream())) //Frees when done + underlying stream
-            {
-                //Try to decode all versions
-                var fileVersions = Enum.GetValues(typeof(BundleFileVersion)).Cast<BundleFileVersion>().Where(v => v != BundleFileVersion.Unknown); //Build an array of enums but exclude the unknown enum
-                foreach (var currentFileVersion in fileVersions)
-                {
-                    FileVersion = currentFileVersion;
-
-                    fileReader.BaseStream.Position = DataOffset;
-                    decReader.BaseStream.Position = 0;
-                    CopyStream(fileReader.BaseStream, decReader.BaseStream, Convert.ToInt32(DataSize));
-                    decReader.BaseStream.Position = 0;
-
-                    //Decode data records
-                    if (isValid = DecodeUnbreakableXor((MemoryStream)decReader.BaseStream))
-                    {
-                        //Check header is valid. First dword is 01,02,03,04
-                        int header = decReader.ReadInt32();
-                        //Seek past 4 unknown bytes = 0x00000001
-                        int unknown = decReader.ReadInt32();
-                        isValid = header == 0x04030201 && unknown == 0x00000001;
-                    }
-
-                    if (isValid)
-                        //Valid bundle found
-                        break;
-                }
-            }
-
-            if (!isValid)
-                FileVersion = BundleFileVersion.Unknown;
-            return isValid;
-        }
-
-        /// <summary>
-        /// Takes a stream and decodes it, overwriting the contents. Doesnt actually check if valid data produced.
-        /// Originally converted from code by mstr- https://github.com/mstr-/twp-ggdump 
-        /// </summary>
-        /// <param name="DecodeStream"></param>
-        /// <returns></returns>
-        private bool DecodeUnbreakableXor(MemoryStream DecodeStream)
-        {
-            if (FileVersion == BundleFileVersion.Version_RtMI)
-            {
-                var buffer = DecodeStream.ToArray(); //Put the stream data into a buffer
-
-                RtMIKeyReader.ComputeXOR(ref buffer, BundleFilename);
-
-                DecodeStream.SetLength(0); //empty the stream
-                DecodeStream.Write(buffer, 0, buffer.Length); //write the decoded bytes back
-                DecodeStream.Position = 0;
-
-                return true;
-            }
-            else
-            {
-                //Quick hack for Delores
-                byte[] magic_bytes;
-                if (FileVersion == BundleFileVersion.Version_Delores)
-                    magic_bytes = magic_bytes_delores;
-                else
-                    magic_bytes = magic_bytes_thimbleweed;
-
-
-                var buffer = DecodeStream.ToArray(); //Put the stream data into a buffer
-
-                var buf_len = buffer.Length;
-                var eax = buf_len;
-                var var4 = buf_len & 255;
-                var ebx = 0;
-                int f = FileVersion == BundleFileVersion.Version_957 ? -83 : 109; //Latest version of TP uses -83 here. All the others use 109
-                while (ebx < buf_len)
-                {
-                    eax = ebx & 255;
-                    eax = eax * f;
-                    var ecx = ebx & 15;
-                    eax = (eax ^ magic_bytes[ecx]) & 255;
-                    ecx = var4;
-                    eax = (eax ^ ecx) & 255;
-                    buffer[ebx] = Convert.ToByte(buffer[ebx] ^ eax);
-                    ecx = ecx ^ buffer[ebx];
-                    ebx = ebx + 1;
-                    var4 = ecx;
-                }
-
-                if (FileVersion != BundleFileVersion.Version_849 && FileVersion != BundleFileVersion.Version_Delores)
-                {
-                    //Loop through in blocks of 16 and xor the 6th and 7th bytes
-                    int i = 5;
-                    while (i + 1 < buf_len)
-                    {
-                        buffer[i] = Convert.ToByte(buffer[i] ^ 0x0D);
-                        buffer[i + 1] = Convert.ToByte(buffer[i + 1] ^ 0x0D);
-                        i += 16;
-                    }
-                }
-
-                //Check everything has decoded
-                if (buffer != null && buffer.Length > 0)
-                {
-                    DecodeStream.SetLength(0); //empty the stream
-                    DecodeStream.Write(buffer, 0, buffer.Length); //write the decoded bytes back
-                    DecodeStream.Position = 0;
-
-                    return true;
-                }
-                return false;
-            }
-        }
-
-        //Parse the bundle, extracting information about the files and adding BundleEntry objects for each
-        public void ParseFiles()
-        {
-            fileReader.BaseStream.Position = 0;
-            uint DataOffset = fileReader.ReadUInt32();
-            uint DataSize = fileReader.ReadUInt32();
-            fileReader.BaseStream.Position = DataOffset;
-
-            using (BinaryReader decReader = new BinaryReader(new MemoryStream())) //Frees when done + underlying stream
-            {
-                CopyStream(fileReader.BaseStream, decReader.BaseStream, Convert.ToInt32(DataSize));
-                decReader.BaseStream.Position = 0;
-
-                //Decode all data records
-                if (DecodeUnbreakableXor((MemoryStream)decReader.BaseStream) == false)
-                    throw new ArgumentException("Error parsing the packfile. Decode failed!");
-
-                decReader.BaseStream.Position = 0;
-
-                GGDict dict = new GGDict(decReader.BaseStream, FileVersion == BundleFileVersion.Version_RtMI);
-                if (!dict.Root.ContainsKey("files") || dict.Root["files"].GetType() != typeof(object).MakeArrayType()) throw new Exception("Dictionary does not contain files or files is not an array.");
-                Dictionary<string, object>[] files = (dict.Root["files"] as object[]).Select(s => s as Dictionary<string, object>).Where(o => o != null).ToArray();
-
-                foreach(var fileinfo in files)
-                {
-                    BundleEntry entry = new BundleEntry();
-                    entry.FileName = fileinfo["filename"] as string ?? "";
-                    entry.Offset = (int)fileinfo["offset"];
-                    entry.Size = (int)fileinfo["size"];
-                    entry.FileExtension = Path.GetExtension(entry.FileName).TrimStart('.');
-
-                    BundleFiles.Add(entry);
-                }
-
-                if (dict.Root.ContainsKey("guid")) Console.WriteLine($"Opened archive {dict.Root["guid"]}");
-            }
-        }
-
-        //Assign filetypes to particular file extensions
-        public void UpdateFileTypes()
-        {
-            for (int i = 0; i < BundleFiles.Count; i++)
-            {
-                switch (BundleFiles[i].FileExtension)
-                {
-                    case "ogg":
-                    case "wav":
-                        BundleFiles[i].FileType = BundleEntry.FileTypes.Sound;
-                        break;
-                    case "ktxbz":
-                    case "png":
-                        BundleFiles[i].FileType = BundleEntry.FileTypes.Image;
-                        break;
-
-                    case "bnut":
-                        BundleFiles[i].FileType = BundleEntry.FileTypes.Bnut;
-                        break;
-
-                    case "json":
-                        if(FileVersion == BundleFileVersion.Version_RtMI)
-                        {
-                            BundleFiles[i].FileType = BundleEntry.FileTypes.GGDict;
-                        } else
-                        {
-                            BundleFiles[i].FileType = BundleEntry.FileTypes.Text;
-                        }
-                        break;
-                    case "txt":
-                    case "tsv":
-                    case "nut":
-                    case "fnt":
-                    case "byack":
-                    case "lip":
-                    case "yack":
-                    case "dinky":
-                    case "atlas":
-                    case "anim":
-                    case "attach":
-                    case "blend":
-                        BundleFiles[i].FileType = BundleEntry.FileTypes.Text;
-                        break;
-
-                    case "emitter":
-                    case "wimpy":
-                        BundleFiles[i].FileType = BundleEntry.FileTypes.GGDict;
-                        break;
-                    case "bank":
-                        if (GetMultipleExtension(BundleFiles[i].FileName) == ".assets.bank") //only the assets.bank files contain the FSB in ReMI
-                        {
-                            BundleFiles[i].FileType = BundleEntry.FileTypes.Soundbank;
-                        }
-                        break;
-                }
-            }
-        }
-
-
-        public void SaveFile(int FileNo, string PathAndFileName, Boolean Autodecode = true)
-        {
-            if (FileNo < 0 || FileNo > BundleFiles.Count)
-                throw new ArgumentException(FileNo.ToString() + " Invalid file number! Save cancelled.");
-
-            using (Stream file = File.Create(PathAndFileName))
-            {
-                SaveFileToStream(FileNo, file, Autodecode);
-            }
-        }
-
-        public void SaveFileToStream(int FileNo, Stream DestStream, Boolean Autodecode = true)
-        {
-            if (FileNo < 0 || FileNo > BundleFiles.Count)
-                throw new ArgumentException(FileNo.ToString() + " Invalid file number! Save cancelled.");
-            if (BundleFiles[FileNo].Size == 0)
-                //throw new ArgumentException(BundleFiles[FileNo].FileName + " File num " + FileNo.ToString() + " Filesize = 0 Skipping this file.");
-                Log(BundleFiles[FileNo].FileName + " File num " + FileNo.ToString() + " Filesize = 0 Skipping this file.");
-
-            using (MemoryStream ms = new MemoryStream())
-            {
-                fileReader.BaseStream.Position = BundleFiles[FileNo].Offset;
-                CopyStream(fileReader.BaseStream, ms, BundleFiles[FileNo].Size);
-                ms.Position = 0;
-
-                bool skipDecode = false;
-                
-                // In Rtmi, the FMOD .bank files used for audio do not seem to be Xor'd. 
-                // Although it should be noted that the game uses FMOD's built-in encryption for the files. (The password is easily extracted from the .exe as well)
-                if ((FileVersion == BundleFileVersion.Version_RtMI && BundleFiles[FileNo].FileName.ToLowerInvariant().EndsWith(".bank"))) skipDecode = true;
-
-                //Decode data records
-                if (skipDecode || DecodeUnbreakableXor(ms) == true)
-                {
-                    ms.Position = 0;
-
-                    if ((Autodecode == true) && (BundleFiles[FileNo].FileType == BundleEntry.FileTypes.Bnut))
-                    {
-                        Decoders.DecodeBnut(ms);
-                    }
-
-                    if (FileVersion == BundleFileVersion.Version_RtMI && BundleFiles[FileNo].FileName.ToLowerInvariant().EndsWith(".yack"))
-                    {
-                        // yack files seem to be encrypted twice.
-                        var yack_bytes = ms.ToArray();
-                        RtMIKeyReader.ComputeXORYack(ref yack_bytes, BundleFiles[FileNo].FileName.Length - ".yack".Length, "");
-                        ms.Position = 0;
-                        ms.SetLength(0);
-                        ms.Write(yack_bytes, 0, yack_bytes.Length);
-                        ms.Position = 0;
-                    }
-
-                    ms.CopyTo(DestStream);
-                }
-
-                DestStream.Position = 0;
-            }
-        }
-
-        //Copy between streams
-        public static void CopyStream(Stream input, Stream output, int bytes)
-        {
-            byte[] buffer = new byte[32768];
-            int read;
-            while (bytes > 0 &&
-                   (read = input.Read(buffer, 0, Math.Min(buffer.Length, bytes))) > 0)
-            {
-                output.Write(buffer, 0, read);
-                bytes -= read;
-            }
-        }
-
-        //Used for the log event
-        protected virtual void Log(string e)
-        {
-            this.LogEvent?.Invoke(this, new StringEventArgs(e));
-        }
-
-        private static string GetMultipleExtension(string path)
-        {
-            var ret = "";
-            for (; ; )
-            {
-                var ext = Path.GetExtension(path);
-                if (String.IsNullOrEmpty(ext))
-                    break;
-                path = path.Substring(0, path.Length - ext.Length);
-                ret = ext + ret;
-            }
-            return ret;
-        }
+        #endregion
     }
 
-    /// <summary>
-    /// Helps decrypt Return to Monkey Island's resource files.
-    /// 
-    /// Return to Monkey Island seems to use longer keys than previous titles.
-    /// To prevent inclusion of the keys in this project (as the keys themselves might be considered part of the games data and therefore protected by copyright),
-    /// we only distribute the MD5-Checksum of the two data arrays (as well as the first byte of each key)
-    /// 
-    /// Two keys are used, a short 256 byte key beginning with 0x5D and a longer 65536 byte key starting with 0xF7
-    /// 
-    /// There is a third key used to decrypt the yack files. It is 1024 bytes in length and begins with 0x1F.
-    /// To decrypt the .yacks (after being decrypted normally!), it is necessary to know this number. 
-    /// By experiment I have discovered that the extra parameter for Carla.yack from Weird.ggpack1a appears to be 5.
-    /// </summary>
-    public class RtMIKeyReader
-    {
-        public static byte[] Key1 = null;
-        public static byte[] Key2 = null;
-
-        public static byte[] KeyYack = null;
-
-        // short key - checksum
-        private static readonly string Key1Checksum = "B190C421FE7FEAFC77C517A232ABBB4C";
-        // long key - checksum
-        private static readonly string Key2Checksum = "7FAAF6574F27EBD9D2744CC68E4115C8";
-
-        private static readonly string YackKeyChecksum = "506925BB6A72B6ED50C95094275485E6";
-
-        /// <summary>
-        /// Decrypts the files in the fashion used by Return to Monkey Island
-        /// </summary>
-        /// <param name="data">data to en/decrypt</param>
-        /// <param name="fileLocation">used to search for the game's executable if the keys have not yet been loaded.</param>
-        public static void ComputeXOR(ref byte[] data, string fileLocation)
-        {
-            EnsureKeys(fileLocation);
-
-            ushort var = (ushort)(((ushort)data.Length) + (ushort)0x78);
-
-            for (int i = 0; i < data.Length; ++i)
-            {
-                data[i] = (byte)(data[i] ^ (Key1[(byte)((byte)var + (byte)0x78)]) ^ Key2[var]);
-                var = (ushort)(var + (Key1[(byte)var]));
-            }
-        }
-
-        /// <summary>
-        /// Decrypts the .yack files. 
-        /// Currently unknown where the extra parameter comes from.
-        /// 
-        /// Working under the assumption that the first byte in the file is 0, I try to guess the correct offset.
-        /// The chosen offset the index of the first key-byte to equal the first data byte.
-        /// 
-        /// This seems to work and the largest offset I've seen was 20.
-        /// </summary>
-        /// <param name="data"></param>
-        /// <param name="fileLocation"></param>
-        public static void ComputeXORYack(ref byte[] data, int keyOffset, string fileLocation)
-        {
-            EnsureKeys(fileLocation);
-
-            // find possible value for extra parameter
-
-            if (keyOffset < 0)
-            {
-                for (int i = 0; i < KeyYack.Length; ++i)
-                {
-                    if (KeyYack[i] == data[0])
-                    {
-                        keyOffset = i;
-                        Console.WriteLine($"possible contestant: {i}");
-                        break;
-                    }
-                }
-            }
-
-            for (int i = 0; i < data.Length; ++i)
-            {
-                data[i] = (byte)(data[i] ^ KeyYack[(i + keyOffset) & 0x3ff]);
-            }
-        }
-
-        /// <summary>
-        /// Ensure we have the keys.
-        /// </summary>
-        /// <param name="fileLocation">If this directory contains a file called "Return to Monkey Island.exe", use this.</param>
-        /// <exception cref="KeyNotFoundException">thrown if one or both keys could not be extracted</exception>
-        private static void EnsureKeys(string fileLocation)
-        {
-
-            if (Key1 == null || Key2 == null || KeyYack == null)
-            {
-                // We need to get the Keys from the game executable.
-                // is there an appopriate file in the resource file's directory?
-                string executableName = Path.Combine(Path.GetDirectoryName(fileLocation), "Return to Monkey Island.exe");
-                if (!File.Exists(executableName))
-                {
-                    if (OnSearchForMonkeyIsland != null) executableName = OnSearchForMonkeyIsland();
-                    if (String.IsNullOrWhiteSpace(executableName) || !File.Exists(executableName))
-                    {
-                        throw new KeyNotFoundException("To extract files from Return To Monkey Island, the XOR Keys need to be extracted from the game's executable File. This file was not found.");
-                    }
-                }
-
-                var miexe = File.ReadAllBytes(executableName);
-                Key1 = SearchForKey(miexe, Key1Checksum, 256, 0xD5);
-                Key2 = SearchForKey(miexe, Key2Checksum, 65536, 0xF7);
-                KeyYack = SearchForKey(miexe, YackKeyChecksum, 1024, 0x1F);
-
-                if (Key1 == null || Key2 == null || KeyYack == null)
-                {
-                    string WholeFileChecksum = Checksum(miexe, 0, miexe.Length);
-                    throw new KeyNotFoundException($"The XOR-Key for Return to Monkey Island could not be extracted from the File \"{executableName}\": Checksum {WholeFileChecksum}");
-                }
-            }
-        }
-
-        private static byte[] SearchForKey(byte[] data, string keyChecksum, int keyLengthBytes, byte firstByte)
-        {
-            for (int i = 0; i < data.Length - keyLengthBytes; ++i)
-            {
-                // optimization - including a single byte should be fine.
-                if (data[i] == firstByte)
-                {
-                    string checksum = Checksum(data, i, keyLengthBytes);
-                    if (checksum == keyChecksum)
-                    {
-                        byte[] key = new byte[keyLengthBytes];
-                        for (int x = 0; x < keyLengthBytes; ++x) key[x] = data[i + x];
-                        return key;
-                    }
-                }
-            }
-            return null;
-        }
-
-        private static string Checksum(byte[] buffer, int start, int offset)
-        {
-            using (var MD5 = System.Security.Cryptography.MD5.Create())
-            {
-                return String.Join("", MD5.ComputeHash(buffer, start, offset).Select(s => s.ToString("X2")));
-            }
-        }
-
-
-        public delegate string SearchForMonkeyIslandExeEvent();
-        public static event SearchForMonkeyIslandExeEvent OnSearchForMonkeyIsland;
-    }
 }

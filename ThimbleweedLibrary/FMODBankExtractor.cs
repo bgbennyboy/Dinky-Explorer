@@ -13,12 +13,13 @@ namespace ThimbleweedLibrary
     {
         private static readonly byte[] remi_fsb_key = new byte[] { 0x73, 0x6B, 0x6B, 0x70, 0x79, 0x63, 0x77, 0x74, 0x78, 0x7A, 0x78, 0x6E, 0x62, 0x6F, 0x7A, 0x64, 0x30, 0x68, 0x62, 0x31, 0x69, 0x61, 0x6C, 0x30, 0x68, 0x78, 0x6E, 0x72, 0x62, 0x75, 0x6F, 0x30 };
 
-        public event EventHandler<StringEventArgs> LogEvent;
+        public delegate void LogEventType(string message);
+        public event LogEventType LogEvent;
 
         //Used for the log event
         protected virtual void Log(string e)
         {
-            this.LogEvent?.Invoke(this, new StringEventArgs(e));
+            this.LogEvent?.Invoke(e);
         }
 
         private static byte Reverse(byte b)

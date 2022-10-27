@@ -89,7 +89,9 @@
   <ItemGroup>
     <Compile Include="Decoders.cs" />
     <Compile Include="DinkDisassembler.cs" />
+    <Compile Include="DinkyPatchFile.cs" />
     <Compile Include="ExtensionMethods.cs" />
+    <Compile Include="FileSystemBackedStream.cs" />
     <Compile Include="FMODBankExtractor.cs" />
     <Compile Include="GGDict.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
@@ -99,6 +101,8 @@
       <DesignTime>True</DesignTime>
       <DependentUpon>Resources.resx</DependentUpon>
     </Compile>
+    <Compile Include="RtMIKeyReader.cs" />
+    <Compile Include="UnbreakableXOR.cs" />
     <Compile Include="YackDecompiler.cs" />
   </ItemGroup>
   <ItemGroup>

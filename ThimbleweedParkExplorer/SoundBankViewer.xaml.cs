@@ -94,9 +94,9 @@ namespace ThimbleweedParkExplorer
         public delegate void OnLog(string log);
         public event OnLog LogEvent;
 
-        private void Extractor_LogEvent(object sender, StringEventArgs e)
+        private void Extractor_LogEvent(string Message)
         {
-            LogEvent?.Invoke(e.Message);
+            LogEvent?.Invoke(Message);
         }
 
         private void soundSelected(object sender, SelectionChangedEventArgs e)
