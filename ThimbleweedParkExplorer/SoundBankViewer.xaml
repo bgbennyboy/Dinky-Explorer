@@ -6,7 +6,7 @@
              xmlns:local="clr-namespace:ThimbleweedParkExplorer"
              mc:Ignorable="d" 
              d:DesignHeight="450" d:DesignWidth="300">
-    <Grid Background="LightGray">
+    <Grid Background="{x:Static SystemColors.ControlBrush}">
         <Grid.RowDefinitions>
             <RowDefinition Height="auto"/>
             <RowDefinition/>
