@@ -275,7 +275,6 @@
     <None Include="Resources\gg.png" />
     <Content Include="Dinky Explorer Icon.ico" />
     <Content Include="Resources\DinkyExp_FullBackground.png" />
-    <Content Include="TP Explorer Icon.ico" />
   </ItemGroup>
   <ItemGroup>
     <BootstrapperPackage Include=".NETFramework,Version=v4.5.2">
