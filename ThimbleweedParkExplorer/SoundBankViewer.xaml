@@ -19,7 +19,7 @@
             </Grid.ColumnDefinitions>
             <TextBlock FontSize="15" Margin="5" VerticalAlignment="Center">Select a file to play:</TextBlock>
             <Button Grid.Column="1" Margin="5" Background="Transparent" BorderThickness="0" ToolTip="Save all files" Click="saveAllFiles_Click">
-                <Image Source="/Resources/save_32.png" MaxHeight="25"/>
+                <Image Source="/Resources/save_red_32.png" MaxHeight="25"/>
             </Button>
         </Grid>
         <ListView Name="lvSounds" Grid.Row="1" HorizontalContentAlignment="Stretch" ItemsSource="{Binding SoundFiles}" SelectionChanged="soundSelected">
