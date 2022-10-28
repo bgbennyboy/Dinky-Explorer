@@ -2,8 +2,6 @@ Dinky Explorer
 ===================
 ![Screenshot](https://quickandeasysoftware.net/wp/wp-content/uploads/2018/05/DinkyExplorer.png)
 
-An explorer/viewer/dumper tool for Thimbleweed Park / Return to Monkey Island.
-=======
 An explorer/viewer/dumper tool for games using the Dinky engine. That's Return to Monkey Island, Thimbleweed Park and Delores.
 
 Made as a test project for relearning C# so the code will be wonky.
