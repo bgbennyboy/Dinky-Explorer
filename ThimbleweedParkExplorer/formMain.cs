@@ -134,7 +134,9 @@ namespace ThimbleweedParkExplorer
                 else if (b.FileType == BundleEntry.FileTypes.Bnut)
                     return Properties.Resources.small_code;
                 else if (b.FileType == BundleEntry.FileTypes.GGDict)
-                    return Properties.Resources.gg;
+                    return Properties.Resources.small_code;
+                else if (b.FileType == BundleEntry.FileTypes.CompiledScript)
+                    return Properties.Resources.small_code2;
                 else
                     return Properties.Resources.small_circle_white;
             };
@@ -598,7 +600,10 @@ namespace ThimbleweedParkExplorer
                             item.Image = Properties.Resources.small_text;
                             break;
                         case BundleEntry.FileTypes.GGDict:
-                            item.Image = Properties.Resources.gg;
+                            item.Image = Properties.Resources.small_code;
+                            break;
+                        case BundleEntry.FileTypes.CompiledScript:
+                            item.Image = Properties.Resources.small_code2;
                             break;
                     }
                 }
