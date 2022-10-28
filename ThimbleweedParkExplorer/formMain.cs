@@ -9,6 +9,7 @@ using System.Drawing.Imaging;
 using System.IO;
 using System.IO.Compression;
 using System.Linq;
+using System.Reflection;
 using System.Runtime.InteropServices;
 using System.Windows.Forms;
 using ThimbleweedLibrary;
@@ -307,6 +308,18 @@ namespace ThimbleweedParkExplorer
                         {
                             if (TargetFileType == BundleEntry.FileTypes.None) //Dump all raw files
                                 Thimble.SaveFile(i, Path.Combine(openFolder.FileName, Thimble.BundleFiles[i].FileName));
+                            else if ((TargetFileType == BundleEntry.FileTypes.Sound) && (Thimble.BundleFiles[i].FileType == BundleEntry.FileTypes.Soundbank)) //Soundbank.
+                            {
+                                //This duplicates the SaveAll functionality in SoundBankViewer so TODO refactor
+                                using (MemoryStream ms = new MemoryStream())
+                                {
+                                    Thimble.SaveFileToStream(i, ms);
+                                    ms.Position = 0;
+                                    var extractor = new FMODBankExtractor(ms);
+                                    extractor.LogEvent += text => log(text);
+                                    extractor.SaveAllToDir(openFolder.FileName);
+                                }
+                            }
                             else if (TargetFileType == Thimble.BundleFiles[i].FileType) //Sound/image/text
                                 Thimble.SaveFile(i, Path.Combine(openFolder.FileName, Thimble.BundleFiles[i].FileName));
 
@@ -608,7 +621,7 @@ namespace ThimbleweedParkExplorer
 
             for (int i = 0; i < Thimble.BundleFiles.Count; i++)
             {
-                if (Thimble.BundleFiles[i].FileType == BundleEntry.FileTypes.Sound)
+                if (Thimble.BundleFiles[i].FileType == BundleEntry.FileTypes.Sound || Thimble.BundleFiles[i].FileType == BundleEntry.FileTypes.Soundbank)
                     toolStripSaveAllAudio.Visible = true;
                 if (Thimble.BundleFiles[i].FileType == BundleEntry.FileTypes.Image)
                     toolStripSaveAllImages.Visible = true;

@@ -36,6 +36,7 @@
             this.columnOffset = ((BrightIdeasSoftware.OLVColumn)(new BrightIdeasSoftware.OLVColumn()));
             this.columnSize = ((BrightIdeasSoftware.OLVColumn)(new BrightIdeasSoftware.OLVColumn()));
             this.imageList1 = new System.Windows.Forms.ImageList(this.components);
+            this.DinkOptionsHost = new System.Windows.Forms.Integration.ElementHost();
             this.panelAudio = new System.Windows.Forms.Panel();
             this.labelSoundProgress = new System.Windows.Forms.Label();
             this.trackBarSound = new System.Windows.Forms.TrackBar();
@@ -66,7 +67,6 @@
             this.toolStripSaveFileAsImage = new System.Windows.Forms.ToolStripMenuItem();
             this.toolStripSaveFileAsAudio = new System.Windows.Forms.ToolStripMenuItem();
             this.progressBar1 = new ThimbleweedParkExplorer.CustomProgressBar();
-            this.DinkOptionsHost = new System.Windows.Forms.Integration.ElementHost();
             this.panel1.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.splitContainer1)).BeginInit();
             this.splitContainer1.Panel1.SuspendLayout();
@@ -345,6 +345,17 @@
             this.imageList1.ColorDepth = System.Windows.Forms.ColorDepth.Depth32Bit;
             this.imageList1.ImageSize = new System.Drawing.Size(16, 16);
             this.imageList1.TransparentColor = System.Drawing.Color.Transparent;
+            // 
+            // DinkOptionsHost
+            // 
+            this.DinkOptionsHost.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.DinkOptionsHost.Location = new System.Drawing.Point(0, 0);
+            this.DinkOptionsHost.Margin = new System.Windows.Forms.Padding(0);
+            this.DinkOptionsHost.Name = "DinkOptionsHost";
+            this.DinkOptionsHost.Size = new System.Drawing.Size(282, 379);
+            this.DinkOptionsHost.TabIndex = 15;
+            this.DinkOptionsHost.Text = "elementHost1";
+            this.DinkOptionsHost.Child = null;
             // 
             // panelAudio
             // 
@@ -643,17 +654,6 @@
             this.progressBar1.Size = new System.Drawing.Size(894, 19);
             this.progressBar1.TabIndex = 10;
             this.progressBar1.Visible = false;
-            // 
-            // DinkOptionsHost
-            // 
-            this.DinkOptionsHost.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.DinkOptionsHost.Location = new System.Drawing.Point(0, 0);
-            this.DinkOptionsHost.Margin = new System.Windows.Forms.Padding(0);
-            this.DinkOptionsHost.Name = "DinkOptionsHost";
-            this.DinkOptionsHost.Size = new System.Drawing.Size(282, 379);
-            this.DinkOptionsHost.TabIndex = 15;
-            this.DinkOptionsHost.Text = "elementHost1";
-            this.DinkOptionsHost.Child = null;
             // 
             // formMain
             // 
