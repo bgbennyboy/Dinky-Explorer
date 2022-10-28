@@ -347,26 +347,24 @@ namespace ThimbleweedParkExplorer
             if (Thimble == null || Thimble.BundleFiles.Count == 0 || objectListView1.SelectedIndex == -1)
                 return;
 
+            saveFileDialog1.FileName = Path.GetFileNameWithoutExtension(((BundleEntry)objectListView1.SelectedObject).FileName);
+
             if (sender.Equals(toolStripSaveFileAsAudio))
             {
-                saveFileDialog1.Filter = "Audio Files|*.ogg*";
-                saveFileDialog1.FileName = ((BundleEntry)objectListView1.SelectedObject).FileName;
+                saveFileDialog1.Filter = "Audio Files|*.ogg";
             }
             else if (sender.Equals(toolStripSaveFileAsImage))
             {
-                saveFileDialog1.Filter = "Image Files|*.png;*.ktx";
-                saveFileDialog1.FileName = ((BundleEntry)objectListView1.SelectedObject).FileName;
-                if (saveFileDialog1.FileName.EndsWith(".ktxbz")) saveFileDialog1.FileName = saveFileDialog1.FileName.Replace(".ktxbz", ".ktx");
+                saveFileDialog1.Filter = "Png Images (*.png)|*.png|Ktx Images (*.ktx)|*.ktx";
             }
             else if (sender.Equals(toolStripSaveFileAsText))
             {
-                saveFileDialog1.Filter = "Text Files|*.txt*";
-                saveFileDialog1.FileName = ((BundleEntry)objectListView1.SelectedObject).FileName + ".txt";
+                saveFileDialog1.Filter = "Text Files|*.txt";
             }
             else if (sender.Equals(toolStripSaveFileRaw))
             {
-                saveFileDialog1.Filter = "All Files|*.**";
-                saveFileDialog1.FileName = ((BundleEntry)objectListView1.SelectedObject).FileName;
+                saveFileDialog1.Filter = "All Files|*.*";
+                saveFileDialog1.FileName = ((BundleEntry)objectListView1.SelectedObject).FileName; //Keep file ext for raw dump
             }
             else
             {
