@@ -321,8 +321,19 @@ namespace ThimbleweedParkExplorer
                                     extractor.LogEvent += text => log(text);
                                     extractor.SaveAllToDir(openFolder.FileName);
                                 }
+                            } 
+                            else if ((TargetFileType == BundleEntry.FileTypes.Image) && (Thimble.BundleFiles[i].FileExtension == "ktxbz")) //KTX images, decode to png.
+                            {
+                                byte[] ktxData;
+                                using (var memstr = new MemoryStream())
+                                {
+                                    Thimble.SaveFileToStream(i, memstr);
+                                    ktxData = DecompressStream(memstr);
+                                    ktxData = KtxToPng(new MemoryStream(ktxData));
+                                    File.WriteAllBytes(Path.Combine(openFolder.FileName, Path.GetFileNameWithoutExtension(Thimble.BundleFiles[i].FileName) + ".png"), ktxData);
+                                }
                             }
-                            else if (TargetFileType == Thimble.BundleFiles[i].FileType) //Sound/image/text
+                            else if (TargetFileType == Thimble.BundleFiles[i].FileType) //Other types. Sound/image/text etc
                                 Thimble.SaveFile(i, Path.Combine(openFolder.FileName, Thimble.BundleFiles[i].FileName));
 
                             progressBar1.PerformStep();
