@@ -3,6 +3,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Text;
 
 namespace ThimbleweedLibrary
 {
@@ -168,7 +169,6 @@ namespace ThimbleweedLibrary
                 // if the file was not in encrypted form to begin with, we do not need to decrypt it.
                 if (!EncryptedInSource) skipDecode = true;
                 // In Rtmi, the FMOD .bank files used for audio do not seem to be Xor'd. 
-                // Although it should be noted that the game uses FMOD's built-in encryption for the files. (The password is easily extracted from the .exe as well)
                 if ((Cryptor.FileVersion == BundleFileVersion.Version_RtMI && FileExtension == "bank")) skipDecode = true;
 
                 if (skipDecode)
@@ -194,6 +194,17 @@ namespace ThimbleweedLibrary
                     unpacked.Position = 0;
                     unpacked.SetLength(0);
                     unpacked.Write(yack_bytes, 0, yack_bytes.Length);
+                    unpacked.Position = 0;
+                }
+                //Decode GGDict
+                if ((autodecode == true) && (FileType == FileTypes.GGDict))
+                {
+                    GGDict dict = new GGDict(unpacked, Cryptor.FileVersion == BundleFileVersion.Version_RtMI);
+                    string line = dict.ToJsonString();
+                    unpacked.Position = 0;
+                    unpacked.SetLength(0);
+                    var data = Encoding.UTF8.GetBytes(line);
+                    unpacked.Write(data, 0, data.Length);
                     unpacked.Position = 0;
                 }
 

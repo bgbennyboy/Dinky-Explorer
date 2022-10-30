@@ -550,7 +550,7 @@
             this.toolStripSaveAllText,
             this.toolStripSaveAllBnut});
             this.contextMenuSaveAll.Name = "contextMenuView";
-            this.contextMenuSaveAll.Size = new System.Drawing.Size(239, 158);
+            this.contextMenuSaveAll.Size = new System.Drawing.Size(239, 136);
             // 
             // toolStripSaveAllRaw
             // 

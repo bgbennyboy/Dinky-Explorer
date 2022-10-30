@@ -299,7 +299,7 @@ namespace ThimbleweedParkExplorer
                         foreach (var item in objectListView1.FilteredObjects)
                         {
                             int index = Thimble.BundleFiles.IndexOf((BundleEntry)item);
-                            Thimble.SaveFile(index, Path.Combine(openFolder.FileName, Thimble.BundleFiles[index].FileName));
+                            Thimble.SaveFile(index, Path.Combine(openFolder.FileName, Thimble.BundleFiles[index].FileName), false); //No autodecode for raw dumps
                             progressBar1.PerformStep();
                             Application.DoEvents(); //HACK use backgroundworker or async task in future
                         }
@@ -309,7 +309,7 @@ namespace ThimbleweedParkExplorer
                         for (int i = 0; i < Thimble.BundleFiles.Count; i++)
                         {
                             if (TargetFileType == BundleEntry.FileTypes.None) //Dump all raw files
-                                Thimble.SaveFile(i, Path.Combine(openFolder.FileName, Thimble.BundleFiles[i].FileName));
+                                Thimble.SaveFile(i, Path.Combine(openFolder.FileName, Thimble.BundleFiles[i].FileName), false); //No autodecode for raw dumps
                             else if ((TargetFileType == BundleEntry.FileTypes.Sound) && (Thimble.BundleFiles[i].FileType == BundleEntry.FileTypes.Soundbank)) //Soundbank.
                             {
                                 //This duplicates the SaveAll functionality in SoundBankViewer so TODO refactor
@@ -333,6 +333,9 @@ namespace ThimbleweedParkExplorer
                                     File.WriteAllBytes(Path.Combine(openFolder.FileName, Path.GetFileNameWithoutExtension(Thimble.BundleFiles[i].FileName) + ".png"), ktxData);
                                 }
                             }
+                            //quick hack to save ggdict as text
+                            else if ((TargetFileType == BundleEntry.FileTypes.Text) && (Thimble.BundleFiles[i].FileType == BundleEntry.FileTypes.GGDict))
+                                Thimble.SaveFile(i, Path.Combine(openFolder.FileName, Thimble.BundleFiles[i].FileName));
                             else if (TargetFileType == Thimble.BundleFiles[i].FileType) //Other types. Sound/image/text etc
                                 Thimble.SaveFile(i, Path.Combine(openFolder.FileName, Thimble.BundleFiles[i].FileName));
 
@@ -359,7 +362,7 @@ namespace ThimbleweedParkExplorer
                 return;
 
             saveFileDialog1.FileName = Path.GetFileNameWithoutExtension(((BundleEntry)objectListView1.SelectedObject).FileName);
-
+ 
             if (sender.Equals(toolStripSaveFileAsAudio))
             {
                 saveFileDialog1.Filter = "Audio Files|*.ogg";
@@ -410,7 +413,7 @@ namespace ThimbleweedParkExplorer
                 {
                     log("Saving file " + saveFileDialog1.FileName);
                     EnableDisableControls(false);
-                    Thimble.SaveFile(index, saveFileDialog1.FileName);
+                    Thimble.SaveFile(index, saveFileDialog1.FileName, !sender.Equals(toolStripSaveFileRaw)); //If raw dump dont autodecode
                 }
             }
             finally
@@ -566,7 +569,9 @@ namespace ThimbleweedParkExplorer
                 //Different save context menu items make visible
                 toolStripSaveFileAsAudio.Visible = ((BundleEntry)objectListView1.SelectedObject).FileType == BundleEntry.FileTypes.Sound;
                 toolStripSaveFileAsImage.Visible = ((BundleEntry)objectListView1.SelectedObject).FileType == BundleEntry.FileTypes.Image;
-                toolStripSaveFileAsText.Visible = ((BundleEntry)objectListView1.SelectedObject).FileType == BundleEntry.FileTypes.Text || ((BundleEntry)objectListView1.SelectedObject).FileType == BundleEntry.FileTypes.Bnut;
+                toolStripSaveFileAsText.Visible = ((BundleEntry)objectListView1.SelectedObject).FileType == BundleEntry.FileTypes.Text || 
+                    ((BundleEntry)objectListView1.SelectedObject).FileType == BundleEntry.FileTypes.Bnut || 
+                    ((BundleEntry)objectListView1.SelectedObject).FileType == BundleEntry.FileTypes.GGDict;
             }
         }
 
@@ -639,7 +644,7 @@ namespace ThimbleweedParkExplorer
                     toolStripSaveAllAudio.Visible = true;
                 if (Thimble.BundleFiles[i].FileType == BundleEntry.FileTypes.Image)
                     toolStripSaveAllImages.Visible = true;
-                if (Thimble.BundleFiles[i].FileType == BundleEntry.FileTypes.Text)
+                if (Thimble.BundleFiles[i].FileType == BundleEntry.FileTypes.Text || Thimble.BundleFiles[i].FileType == BundleEntry.FileTypes.GGDict)
                     toolStripSaveAllText.Visible = true;
                 if (Thimble.BundleFiles[i].FileType == BundleEntry.FileTypes.Bnut)
                     toolStripSaveAllBnut.Visible = true;
@@ -828,7 +833,7 @@ namespace ThimbleweedParkExplorer
                     panelText.BringToFront();
                     using (MemoryStream ms = new MemoryStream())
                     {
-                        Thimble.SaveFileToStream(index, ms);
+                        Thimble.SaveFileToStream(index, ms, false);
 
                         GGDict dict = new GGDict(ms, Thimble.Cryptor.FileVersion == BundleFileVersion.Version_RtMI);
                         string[] lines = dict.ToJsonString().Split('\n').Select(s => s.Trim('\r')).ToArray();
