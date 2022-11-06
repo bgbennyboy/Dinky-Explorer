@@ -2,7 +2,7 @@
 "http://www.w3.org/TR/html4/loose.dtd">
 <html>
 <head>
-	<title>Thimbleweed Park Explorer ReadMe</title>
+	<title>Dinky Explorer ReadMe</title>
 	<meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1">
 	<style type="text/css">
 		<!--
@@ -20,25 +20,28 @@
 <body>
 	<span class="style7">
 		<span class="style10">Thimbleweed Park Explorer <br>
-			By Bennyboy<br>
-			Version 0.4<br>
+			By Bennyboy and Jan Frederick<br>
+			Version 0.5<br>
 			<a href="http://quickandeasysoftware.net">http://quickandeasysoftware.net</a></span><br><br>
 		</span>
 		
-		<p class="style7"><strong><em>New in this version (0.4):</em></strong><br>
+		<p class="style7"><strong><em>New in this version (0.5):</em></strong><br>
 		<ul class="style7">
-		<li>Added support for the Delores mini-adventure.</li>		
+		<li>Added support for Return to Monkey Island.</li>
+		<li>Renamed from Thimbleweed Park Explorer to Dinky Explorer as its now dealing with multiple games from the Dinky engine.</li>
+		<li>Added support for the wimpy and animation JSON files in Thimbleweed Park.</li>		
 		</ul>
 		
-		<p class="style7"><strong><em>What is Thimbleweed Park Explorer?:</em></strong><br>
-		An explorer tool for the excellent game Thimbleweed Park (and the Delores mini-adventure).<br>
+		<p class="style7"><strong><em>What is Dinky Explorer?:</em></strong><br>
+		An explorer tool for the excellent games Return to Monkey Island, Thimbleweed Park and the Delores mini-adventure.<br>
 		It does the following:
 		
 	<ul class="style7">
 		<li>Lets you browse through the game's files and dump individual files/all files.</li>
 		<li>Lets you play and dump the audio.</li>
 		<li>Lets you view and save the images.</li>
-		<li>Lets you view and save the scripts.</li>
+		<li>Lets you view and save the scripts. Decompiling them if necessary.</li>
+		<li>Lets you edit the functions in the Return to MI weird.dink script and create/apply patch files to modify it.</li>
 		<li>Decodes and displays various other filetypes as you browse through the files.</li>
 	</ul>		
 		
@@ -47,13 +50,13 @@
 	
 
 	<p class="style7"><em><strong>What versions are supported?:</strong></em><br> 
-	The game is available for different platforms but its only been tested on the windows version.<br>
+	The games are available for different platforms but its only been fully tested on the windows versions.<br>
 	</p>
 	
 
 	<p class="style7"><em><strong>How to use it:</strong></em><br>
 	<ul>
-		<li class="style7">Click <i><u>Open</i></u> and either click on open folder or choose one of the games and the game folder will automatically be found. Choose one of the resource files.</li><br>
+		<li class="style7">Click <i><u>Open</i></u> and browse to a game folder. Choose one of the resource files.<br>If the game is Return to Monkey Island the game will extract the decryption keys from the exe file. If it cant automatically find this file then it'll prompt you to browse and choose it.</li><br>
 		<li class="style7">Click <i><u>Save File</i></u> to save a file. Different options will appear here depending on the type of file you've selected.</li><br>
 
 		<li class="style7">Click <i><u>Save All Files</i></u> to save all files. Different options will be available here depending on the type of files available in the currently open resource file.</li><br>
@@ -72,18 +75,12 @@
 	</ul>
 
 	</p>
-
-	
-	<p class="style7"  id="limitations"><em><strong>Limitations/bugs:</strong></em><br> 
-		Three file formats cant be decoded yet:
-		<ul>
-		<li class="style7">.wimpy and the animation .json files - these appear to be some sort of directory file - they contain references to other files.</li>
-		</ul>
 		
 	<p class="style7"><em><strong>Thanks:</strong></em><br>
 		Many thanks to mstr- the bundle decoding in this program is based on his <a href="https://github.com/mstr-/twp-ggdump">twp-ggdump</a> tool.<br>
-		Everyone at Terrible Toybox for making such a great game.<br>
-		NorTreblig for his <a href="https://github.com/bgbennyboy/Thimbleweed-Park-Explorer/pull/1">contributions</a> including supporting older versions of the game and fixing a variety of bugs.
+		Everyone at Terrible Toybox for making such great games.<br>
+		NorTreblig for his <a href="https://github.com/bgbennyboy/Thimbleweed-Park-Explorer/pull/1">contributions</a> including supporting older versions of the game and fixing a variety of bugs.<br>
+		Jan Frederick who did a huge amount of work on adding support for Return to Monkey Island including decompilation and patching of the script files.
 	</p>
 	
 	<p class="style7"><em><strong>Source:</strong></em><br> 
@@ -102,6 +99,6 @@
 	</p>
 	
 	<br>
-	<p class="style7 style12">Bennyboy 12/05/20</p>
+	<p class="style7 style12">Bennyboy 06/11/22</p>
 </body>
 </html>
