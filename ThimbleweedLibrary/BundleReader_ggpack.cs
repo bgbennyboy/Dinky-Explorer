@@ -342,6 +342,13 @@ namespace ThimbleweedLibrary
         {
             if (FileNo < 0 || FileNo > BundleFiles.Count)
                 throw new ArgumentException(FileNo.ToString() + " Invalid file number! Save cancelled.");
+
+            if (BundleFiles[FileNo].Size == 0)
+            {
+                Log("Skipping file " + BundleFiles[FileNo].FileName + " Filesize is 0 (a few files in Thimbleweed Park do this)");
+                return;
+            }
+
             BundleFiles[FileNo].Extract(DestStream, Autodecode);
         }
 
